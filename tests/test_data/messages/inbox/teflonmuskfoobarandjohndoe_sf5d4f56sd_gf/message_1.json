@@ -1,0 +1,46 @@
+{
+  "participants": [
+    {
+      "name": "Teflon Musk"
+    },
+    {
+      "name": "Levente Cs\u00c5\u0091ke"
+    },
+    {
+      "name": "John Doe"
+    },
+    {
+      "name": "Foo Bar"
+    }
+  ],
+  "messages": [
+    {
+      "sender_name": "John Doe",
+      "timestamp_ms": 1310907774237,
+      "content": "ok",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Teflon Musk",
+      "timestamp_ms": 1310907632012,
+      "content": "basic group messages",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Foo Bar",
+      "timestamp_ms": 1310907613721,
+      "content": "what do you test",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "timestamp_ms": 1310907608580,
+      "content": "test",
+      "type": "Generic"
+    }
+  ],
+  "title": "Foo Bar, John Doe and Teflon Musk",
+  "is_still_participant": true,
+  "thread_type": "RegularGroup",
+  "thread_path": "inbox/teflonmuskfoobarandjohndoe_sf5d4f56sd_gf"
+}

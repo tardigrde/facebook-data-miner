@@ -1,0 +1,40 @@
+{
+  "friends": [
+    {
+      "name": "John Doe",
+      "timestamp": 1590673319
+    },
+    {
+      "name": "Donald Duck",
+      "timestamp": 1586461325
+    },
+    {
+      "name": "Szett Droxler",
+      "timestamp": 1584299908
+    },
+    {
+      "name": "Foo Bar",
+      "timestamp": 1584219292
+    },
+    {
+      "name": "T\u00c5\u0091ke Hal",
+      "timestamp": 1582290479
+    },
+    {
+      "name": "D\u00c3\u00a9r D\u00c3\u00a9nes",
+      "timestamp": 1581523312
+    },
+    {
+      "name": "Teflon Musk",
+      "timestamp": 1580999341
+    },
+    {
+      "name": "Daisy Duck",
+      "timestamp": 1580999200
+    },
+    {
+      "name": "Guy Fawkes",
+      "timestamp": 1580999100
+    }
+  ]
+}

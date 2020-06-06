@@ -1,0 +1,34 @@
+{
+  "participants": [
+    {
+      "name": "T\u00c5\u0091ke Hal"
+    },
+    {
+      "name": "Levente Cs\u00c5\u0091ke"
+    }
+  ],
+  "messages": [
+    {
+      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "timestamp_ms": 1415619045145,
+      "content": "not much",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "T\u00c5\u0091ke Hal",
+      "timestamp_ms": 1415618506047,
+      "content": "zup",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "timestamp_ms": 1415571228715,
+      "content": "yo",
+      "type": "Generic"
+    }
+  ],
+  "title": "T\u00c5\u0091ke Hal",
+  "is_still_participant": true,
+  "thread_type": "Regular",
+  "thread_path": "inbox/tokehal_sdf7fs9d876"
+}

@@ -1,0 +1,85 @@
+{
+  "participants": [
+    {
+      "name": "Teflon Musk"
+    },
+    {
+      "name": "Levente Cs\u00c5\u0091ke"
+    },
+    {
+      "name": "Foo Bar"
+    },
+    {
+      "name": "Donald Duck"
+    }
+  ],
+  "messages": [
+    {
+      "sender_name": "Donald Duck",
+      "timestamp_ms": 1524142359709,
+      "content": ":D",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "timestamp_ms": 1524137912776,
+      "content": "hmmm",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Donald Duck",
+      "timestamp_ms": 1524137882444,
+      "content": "we could go but running is free",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Donald Duck",
+      "timestamp_ms": 1524137859673,
+      "photos": [
+        {
+          "uri": "messages/inbox/marathon_sfFSFiD76/photos/index.jpeg",
+          "creation_timestamp": 1524137857
+        }
+      ],
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Donald Duck",
+      "timestamp_ms": 1524137749717,
+      "content": "i start today",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Donald Duck",
+      "timestamp_ms": 1524137737066,
+      "gifs": [
+        {
+          "uri": "messages/inbox/marathon_sfFSFiD76/gifs/21297336_10214236646047101_8870179296803553280_n_2116299178397271.gif"
+        }
+      ],
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "timestamp_ms": 1524133955273,
+      "content": "You named the group marathon.",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Foo Bar",
+      "timestamp_ms": 1524133941074,
+      "content": "yapp yapp :D",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "timestamp_ms": 1524133902152,
+      "content": "marathon?",
+      "type": "Generic"
+    }
+  ],
+  "title": "marathon",
+  "is_still_participant": true,
+  "thread_type": "RegularGroup",
+  "thread_path": "inbox/marathon_sffsfid76"
+}

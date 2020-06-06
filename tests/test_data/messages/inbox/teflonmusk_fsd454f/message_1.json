@@ -1,0 +1,48 @@
+{
+  "participants": [
+    {
+      "name": "Teflon Musk"
+    },
+    {
+      "name": "Levente Cs\u00c5\u0091ke"
+    }
+  ],
+  "messages": [
+    {
+      "sender_name": "Teflon Musk",
+      "timestamp_ms": 1415618506047,
+      "files": [
+        {
+          "uri": "messages/inbox/TeflonMusk_fSD454F/files/1810.04805.pdf"
+        }
+      ],
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "timestamp_ms": 1415619045145,
+      "photos": [
+        {
+          "uri": "messages/inbox/TeflonMusk_fSD454F/photos/index.jpeg"
+        }
+      ],
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Teflon Musk",
+      "timestamp_ms": 1415618506047,
+      "content": "no",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "timestamp_ms": 1415571228715,
+      "content": "are you the real teflon musk?",
+      "type": "Generic"
+    }
+  ],
+  "title": "Teflon Musk",
+  "is_still_participant": true,
+  "thread_type": "Regular",
+  "thread_path": "inbox/teflonmusk_fsd454f"
+}
