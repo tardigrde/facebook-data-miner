@@ -4,9 +4,10 @@ from FacebookData import FacebookData
 from reusables.cli import *
 import pandas as pd
 
-# from Miner import me
+from datetime import datetime
+import operator
 
-MESSAGE_SUBPATH = '/messages/inbox'
+MESSAGE_SUBPATH = 'messages/inbox'
 
 
 class Conversations:
@@ -32,27 +33,31 @@ class Conversations:
         # maybe even store how much memory they take up
         names = {}
         count = 0
-        c = 0
         for file in jsons:
             msg = Messages(file)
             for participant in msg.participants:
                 key = participant if msg.ttype == 'Regular' else f'group_{count}'
                 if key == 'Facebook User':  # TODO ?? what to do with this??
-                    c += 1
                     continue
-                if names.get(key):  # making sure run only once even if it is a group
+                if names.get(key) and key.startswith('group'):  # making sure run only once even if it is a group
                     continue
-                names[key] = {
-                    'title': msg.title,
-                    'compact_name': msg.compact_names,  # TODO is list ok for if length is  only  1??
-                    'participants': msg.participants,
-                    'messages': msg.df,
-                    'friend': None,
-                    'messages_dir': msg.messages_dir,
-                    'media_dir': msg.media_dir
-                }
+                if names.get(key):
+                    dfs = [names[key]['messages'], msg.df]
+                    names[key]['messages'] = pd.concat(dfs, ignore_index=True)
+                    # names[key]['messages']
+                else:
+                    names[key] = {
+                        'title': msg.title,
+                        'compact_name': msg.compact_names,  # TODO is list ok for if length is  only  1??
+                        'participants': msg.participants,
+                        'messages': msg.df,
+                        'friend': None,
+                        'messages_dir': msg.messages_dir,
+                        'media_dir': msg.media_dir
+                    }
             if msg.ttype == 'RegularGroup':
                 count += 1
+
         return names
 
 
@@ -60,9 +65,13 @@ class Messages(FacebookData):
     def __init__(self, json_path):
         super().__init__(json_path)
         self.to_df()
+        self.add_date_column()
 
     def to_df(self):
         self._df = pd.DataFrame(self.decoded.get('messages'))
+
+    def add_date_column(self):
+        self._df['date'] = self._df.timestamp_ms.apply(self.ts_to_date)
 
     @property
     def names(self):
@@ -102,3 +111,7 @@ class Messages(FacebookData):
                 uri = media_in_msg[0][0].get('uri')
                 return os.path.dirname(os.path.dirname(uri))
         return None
+
+    @staticmethod
+    def ts_to_date(date):
+        return datetime.fromtimestamp(date / 1000)  # .strftime('%Y-%m-%d')

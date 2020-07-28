@@ -19,6 +19,7 @@ def friends():
 
 
 def test_get_peoples_names_from_friends(friends):
+    # TODO refactor this two lines into a fixture
     f = Friends(f'{TEST_DATA_PATH}/friends/friends.json')
     people = f.get_people()
 
@@ -35,5 +36,5 @@ def test_get_peoples_compact_name_from_friends(friends):
 
     assert all([p.get('compact_name') in expected_compact_names for p in people.values()])
 
-# TODO what happens when two friends same name??
+# TODO what happens when two friends have same name??
 

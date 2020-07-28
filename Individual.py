@@ -10,6 +10,10 @@ class Individual:
         self._media_dir = media_dir
         self._member_of = member_of
 
+
+    def __repr__(self):
+        return self.name
+
     @property
     def name(self):
         return self._name

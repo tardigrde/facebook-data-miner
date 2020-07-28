@@ -8,6 +8,8 @@ import time
 from Group import Group
 
 
+# TODO we dont need both data and individuals... or??
+
 class People:
     def __init__(self, path=None):
         self.data_path = path if path else DATA_PATH
@@ -43,15 +45,9 @@ class People:
 
         return self.unify_people(people1, people2)
 
-    @staticmethod
-    def unify_people(friends, convos):
-        for person, data in friends.items():
-            if not convos.get(person):
-                convos[person] = data
-            convos[person]['friend'] = True
-        return convos
 
-    def to_individuals(self, ):
+
+    def to_individuals(self, ): # maybe rather split_convos or differentiate_convos
         start = time.time()
         for person, data in self._data.items():
             if person.startswith('group'):
@@ -66,6 +62,13 @@ class People:
                 self._individuals.append(indie)
         print('indies: ', time.time() - start)
 
+    @staticmethod
+    def unify_people(friends, convos):
+        for person, data in friends.items():
+            if not convos.get(person):
+                convos[person] = data
+            convos[person]['friend'] = True
+        return convos
 
 if __name__ == '__main__':
     p = People()

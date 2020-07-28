@@ -23,7 +23,8 @@ class FacebookData:
     @property
     def compact_names(self):
         # NOTE this is the place where we change pd/np to builtin
-        name_list =list(self.without_accent_and_whitespace(self.lower_names(self.names)))
+        # do we have to do this?
+        name_list = list(self.without_accent_and_whitespace(self.lower_names(self.names)))
         return name_list[0] if len(name_list) == 1 else name_list
 
     @staticmethod

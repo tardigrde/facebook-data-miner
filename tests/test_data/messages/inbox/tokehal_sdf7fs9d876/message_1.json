@@ -9,6 +9,12 @@
   ],
   "messages": [
     {
+      "sender_name": "Levente CsÅ\u0091ke",
+      "timestamp_ms": 1417619245145,
+      "content": "not",
+      "type": "Generic"
+    },
+    {
       "sender_name": "Levente Cs\u00c5\u0091ke",
       "timestamp_ms": 1415619045145,
       "content": "not much",
@@ -18,6 +24,12 @@
       "sender_name": "T\u00c5\u0091ke Hal",
       "timestamp_ms": 1415618506047,
       "content": "zup",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "T\u00c5\u0091ke Hal",
+      "timestamp_ms": 1415618406047,
+      "content": "yo",
       "type": "Generic"
     },
     {
