@@ -13,13 +13,18 @@ from Group import Group
 class People:
     def __init__(self, path=None):
         self.data_path = path if path else DATA_PATH
-        self._individuals = []
+        self._names = []
+        self._individuals = {}
         self._groups = []
-        self._data = self.get_people()
+        self._data = self.get_people()  # TODO is this supposed to be here or elsewhere
 
     @property
     def data(self):
         return self._data
+
+    @property
+    def names(self):
+        return self._names
 
     @property
     def individuals(self):
@@ -45,10 +50,9 @@ class People:
 
         return self.unify_people(people1, people2)
 
-
-
-    def to_individuals(self, ): # maybe rather split_convos or differentiate_convos
+    def to_individuals(self):  # maybe rather split_convos or differentiate_convos
         start = time.time()
+        # TODO whats the difference between person and data.get('title')
         for person, data in self._data.items():
             if person.startswith('group'):
                 g = Group(name=data.get('name'), title=data.get('title'), messages=data.get('messages'),
@@ -59,7 +63,8 @@ class People:
                 indie = Individual(name=person, title=data.get('title'), messages=data.get('messages'),
                                    compact=data.get('compact_name'), messages_dir=data.get('messages_dir'),
                                    media_dir=data.get('media_dir'), member_of=None)
-                self._individuals.append(indie)
+                self._names.append(person)
+                self._individuals[person] = indie
         print('indies: ', time.time() - start)
 
     @staticmethod
@@ -69,6 +74,7 @@ class People:
                 convos[person] = data
             convos[person]['friend'] = True
         return convos
+
 
 if __name__ == '__main__':
     p = People()

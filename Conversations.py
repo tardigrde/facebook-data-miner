@@ -1,11 +1,8 @@
 import os
 from FacebookData import FacebookData
-# import reusables
-from reusables.cli import *
 import pandas as pd
 
 from datetime import datetime
-import operator
 
 MESSAGE_SUBPATH = 'messages/inbox'
 
@@ -71,6 +68,7 @@ class Messages(FacebookData):
         self._df = pd.DataFrame(self.decoded.get('messages'))
 
     def add_date_column(self):
+        # TODO maybe not needed; could calculate real time
         self._df['date'] = self._df.timestamp_ms.apply(self.ts_to_date)
 
     @property

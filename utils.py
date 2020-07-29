@@ -1,5 +1,8 @@
 import json
 
+MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october',
+          'november', 'december']
+
 
 def get_messages(*files, decode=True):
     data = {}
@@ -61,3 +64,71 @@ accents_map = {
     # "Ü": "U",
     # "Ű": "U",
 }
+
+
+def year_and_month_checker(func):
+    """
+    Higher-order function for checking if specified @year passed to @func is in the data dict.
+    @param func:
+    @return:
+    """
+
+    def wrapper(*args, **kwargs):
+        self = args[0]
+        stats = args[1]
+        year = kwargs.get('year')
+        month = kwargs.get('month')
+
+        if year is not None and not isinstance(year, int):
+            kwargs['year'] = int(year)
+            year = kwargs.get('year')
+
+        if year is None and month is None:
+            return func(*args, **kwargs)
+
+        if year and stats.get('grouped').get(year) is None:
+            #print(f"{year} is not in the data dict.")
+            return 0
+        elif year and month and stats.get('grouped').get(year).get(month) is None:
+            #print(f"{year}/{month} is not in the data dict.")
+            return 0
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def year_converter(func):
+    """
+    Higher-order function that converts @year param passed to @func into numeric version.
+    @param func:
+    @return:
+    """
+
+    def wrapper(*args, **kwargs):
+        if not kwargs.get('year'):
+            return func(*args, **kwargs)
+        if not isinstance(kwargs.get('year'), int):
+            if kwargs.get('year').isdigit():
+                kwargs['year'] = int(kwargs.get('year'))
+            else:
+                print(f'Year is not a digit. Given year: {kwargs.get("year")}')
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def month_converter(func):
+    """
+    Higher-order function that converts @month param passed to @func into numeric version.
+    @param func:
+    @return:
+    """
+
+    def wrapper(*args, **kwargs):
+        if not kwargs.get('month'):
+            return func(*args, **kwargs)
+        if isinstance(kwargs['month'], str) and not kwargs['month'].isdigit():
+            kwargs['month'] = MONTHS.index(kwargs['month'].lower()) + 1
+        return func(*args, **kwargs)
+
+    return wrapper

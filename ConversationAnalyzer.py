@@ -1,14 +1,21 @@
-from datetime import datetime
 import pandas as pd
 
 
 class ConversationAnalyzer:
-    def __init__(self, name, messages):
-        self.name = name
-        self.df = messages
-        self.me_df = messages[messages.sender_name == 'Levente Csőke']
-        self.partner_df = messages[messages.sender_name == self.name]
-        self._grouped = {}
+    def __new__(cls, person, *args, **kwargs):
+        if person.messages is None:
+            return None
+        return super(ConversationAnalyzer, cls).__new__(cls, *args, **kwargs)
+
+    def __init__(self, person):
+        # TODO deal with no messages
+        # if no messages
+        self.name = person.name
+        self.df = person.messages
+
+        self.me_df = self.df[self.df.sender_name == 'Levente Csőke']  # TODO remove hardcoded
+        self.partner_df = self.df[self.df.sender_name == self.name]
+        self._monthly = {}
 
     # TODO
     # def __repr__(self):
@@ -21,43 +28,45 @@ class ConversationAnalyzer:
     def stats(self):
         return self.get_stats()
 
+    @property
+    def monthly(self):
+        return self._monthly
+
     def get_stats(self):
-        stats = {}
-        stats['all'] = ConversationStats(self.df)
-        stats['me'] = ConversationStats(self.me_df)
-        stats['partner'] = ConversationStats(self.partner_df)
-        stats['grouped'] = self.get_stats_by_month()
+        stats = {'all': ConversationStats(self.df), 'me': ConversationStats(self.me_df),
+                 'partner': ConversationStats(self.partner_df), 'grouped': self.get_stats_by_month()}
         return stats
 
     def get_stats_by_month(self):
-        # TODO write tests for teflon and tokehal
-        # TODO clear up msg frequency
         # TODO correct naming
-        monthly = {}
+        grouped = {}
         self.group_by_months()
-        for year in self._grouped.keys():
-            if not monthly.get(year):
-                monthly[year] = {}
-            for month in self._grouped.get(year):
-                df = self._grouped.get(year).get(month)
+        for year in self._monthly.keys():
+            if not grouped.get(year):
+                grouped[year] = {}
+            for month in self._monthly.get(year):
+                df = self._monthly.get(year).get(month)
                 me_df = df[df.sender_name == 'Levente Csőke']
                 partner_df = df[df.sender_name == self.name]
-                if not monthly.get(year).get(month):
-                    monthly.get(year)[month] = {}
-                    monthly.get(year)[month]['all'] = ConversationStats(df)
-                    monthly.get(year)[month]['me'] = ConversationStats(me_df)
-                    monthly.get(year)[month]['partner'] = ConversationStats(partner_df)
-        return monthly
+                if not grouped.get(year).get(month):
+                    grouped.get(year)[month] = {}
+                    grouped.get(year)[month]['all'] = ConversationStats(df)
+                    grouped.get(year)[month]['me'] = ConversationStats(me_df)
+                    grouped.get(year)[month]['partner'] = ConversationStats(partner_df)
+        return grouped
 
     def group_by_months(self):
+        # TODO do I need to do this????
+        # I could just simply filter pandas df (where df.date.year == year && df.date.month == month)
+        # although there could be some problems with multifiltering
         indices = self.get_indices_at_new_month(self.df)
         dfs = self.split_df_at_indices(self.df, indices)
 
         for df in dfs:
             date = df['date'][0]  # datetime.strptime(df['date'][0], '%Y-%m-%d')
-            if not self._grouped.get(date.year):
-                self._grouped[date.year] = {}
-            self._grouped[date.year][date.month] = df
+            if not self._monthly.get(date.year):
+                self._monthly[date.year] = {}
+            self._monthly[date.year][date.month] = df
 
     @staticmethod
     def get_indices_at_new_month(df):
@@ -78,6 +87,10 @@ class ConversationAnalyzer:
 
 
 class ConversationStats:
+    """
+    Statistics of conversation with one person.
+    """
+
     def __init__(self, df):
         self.df = df
 
@@ -110,7 +123,6 @@ class ConversationStats:
     def msg_frequency(self):
         # TODO this has been most likely depracated
         pass
-
 
     # 5.
     @property
@@ -267,4 +279,30 @@ class ConversationStats:
 
     def character_count_per_message(self):
         pass
+'''
+'''
+        # messages = 0
+        # # we have a dict of `name<string> : person <obj>`
+        # # we want to iterate over the dict
+        # for name in self.names:
+        #     # person = self.people.get(name)
+        #     stats = self.get_conversation_stats(name=name)
+        #     # if not year and not month
+        #     if not year and not month:
+        #         # add up all the messages count
+        #         messages += stats.get('all').msg_count
+        #     # if year and not month
+        #     elif year and not month:
+        #         def get_msg_count(stat):
+        #             return stat.msg_count
+        #
+        #         # add up all the messages count in that year
+        #         messages += self.loop_over_months(stats.get(year), func=get_msg_count)
+        #
+        #     # if year and month
+        #     elif year and month:
+        #         # add up all the messages count in that year and month
+        #         messages += stats.get(year).get(month)
+        # def get_msg_count(stat):
+        #     return stat.msg_count
 '''

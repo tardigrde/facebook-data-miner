@@ -1,33 +1,36 @@
-import pandas as pd
 import pytest
 from ConversationAnalyzer import ConversationAnalyzer
-from Conversations import Messages
 from People import People
-import os
 
 TEST_DATA_PATH = '/home/levente/projects/facebook-data-miner/tests/test_data'
 
 
 @pytest.fixture()
 def person_Toke_Hal():
-    p = People(path='/home/levente/projects/facebook-data-miner/tests/test_data')
+    p = People(path=TEST_DATA_PATH)
     p.to_individuals()
-    for person in p.individuals:
-        if person.name == 'Tőke Hal':
-            return person
+    return p.individuals['Tőke Hal']
+    # for name, person in p.individuals.items():
+    #     assert name == person.name, 'ERRRRRRROR!!!'
+    #     if person.name == 'Tőke Hal':
+    #         return person
 
 
 @pytest.fixture()
 def person_Teflon_Musk():
-    p = People(path='/home/levente/projects/facebook-data-miner/tests/test_data')
+    p = People(path=TEST_DATA_PATH)
     p.to_individuals()
-    for person in p.individuals:
-        if person.name == 'Teflon Musk':
-            return person
+    return p.individuals['Teflon Musk']
+    # for name, person in p.individuals.items():
+    #     assert name == person.name, 'ERRRRRRROR!!!'
+    #     if person.name == 'Teflon Musk':
+    #         return person
+
+# TODO this is ok now, but its a mess, somehow use parametized fixtures
 
 
 def test_stats_toke_hal(person_Toke_Hal):
-    analyzer = ConversationAnalyzer(person_Toke_Hal.name, person_Toke_Hal.messages)
+    analyzer = ConversationAnalyzer(person_Toke_Hal)
     stats = analyzer.stats
 
     assert stats.get('all').msg_count == 5
@@ -82,7 +85,7 @@ def test_stats_toke_hal(person_Toke_Hal):
 
 
 def test_stats_teflon_musk(person_Teflon_Musk):
-    analyzer = ConversationAnalyzer(person_Teflon_Musk.name, person_Teflon_Musk.messages)
+    analyzer = ConversationAnalyzer(person_Teflon_Musk)
     stats = analyzer.stats
 
     assert stats.get('all').msg_count == 6
