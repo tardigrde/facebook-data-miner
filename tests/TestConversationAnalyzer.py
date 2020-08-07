@@ -27,10 +27,11 @@ def person_Teflon_Musk():
     #         return person
 
 # TODO this is ok now, but its a mess, somehow use parametized fixtures
+# TODO ALL THE get('grouped') should be a function call now
 
 
 def test_stats_toke_hal(person_Toke_Hal):
-    analyzer = ConversationAnalyzer(person_Toke_Hal)
+    analyzer = ConversationAnalyzer('Tőke Hal',person_Toke_Hal.messages)
     stats = analyzer.stats
 
     assert stats.get('all').msg_count == 5
@@ -85,7 +86,7 @@ def test_stats_toke_hal(person_Toke_Hal):
 
 
 def test_stats_teflon_musk(person_Teflon_Musk):
-    analyzer = ConversationAnalyzer(person_Teflon_Musk)
+    analyzer = ConversationAnalyzer('Teflon Musk', person_Teflon_Musk.messages)
     stats = analyzer.stats
 
     assert stats.get('all').msg_count == 6

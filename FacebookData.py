@@ -1,5 +1,3 @@
-import pandas as pd
-from pathlib import Path
 from utils import read_json, decode_text, accents_map
 
 

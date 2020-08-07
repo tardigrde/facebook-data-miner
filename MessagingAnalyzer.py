@@ -1,4 +1,6 @@
-from utils import year_converter, month_converter, year_and_month_checker
+from utils import year_converter, month_converter, year_and_month_checker, generate_time_series
+from datetime import datetime, date
+import pandas as pd
 from ConversationAnalyzer import ConversationAnalyzer
 
 
@@ -11,45 +13,45 @@ from ConversationAnalyzer import ConversationAnalyzer
 
 
 class MessagingAnalyzer:
-    def __init__(self, names, people): # TODO input people only. class ill know what to do
+    def __init__(self, names, people):  # TODO input people only. class ill know what to do
 
         self.names = names
         self.people = people
 
-    def get_conversation_stats(self, name):
-        analyzer = ConversationAnalyzer(self.people.get(name))
-        if analyzer is None:  # TODO this is too explicit ?!
-            return None
-        return analyzer.get_stats()
-
-    def get_messages(self, name):
-        return self.people.get(name).messages
-
-    def get_count(self, year=None, month=None, subject='all', property=None):
-        count = 0
-        # we have a list of names we want to iterate over
-        for name in self.names:
-            stats = self.get_conversation_stats(name=name)
-            if stats is None:  # TODO too explicit
-                continue
-            count += self.get_count_for_a_person(stats, year=year, month=month, subject=subject, property=property)
-        return count
-
-    @year_and_month_checker
-    def get_count_for_a_person(self, stats, year=None, month=None, subject='all', property=None):
-        if year is None and month is None:
-            # add up all the messages count
-            return getattr(stats.get(subject), property)
-        elif year and not month:
-            # add up all the messages count in that year
-            return self.loop_over_months(stats.get('grouped').get(year), subject=subject, property=property)
-        elif year and month:
-            # add up all the messages count in that year and month
-            # TODO get month does not work if year has no messages
-            # TODO subject does not work if not year or month in grouped
-            # see bank transfers solution: year month checker
-            return getattr(stats.get('grouped').get(year).get(month).get(subject), property)
-
+    # def get_conversation_stats(self, name):
+    #     messages = self.get_messages(name)
+    #     analyzer = ConversationAnalyzer(name, messages)
+    #     if analyzer is None:  # TODO this is too explicit ?!
+    #         return None
+    #     return analyzer.get_stats()
+    #
+    # def get_messages(self, name):
+    #     return self.people.get(name).messages
+    #
+    # # TODO rename `property=` to `attribute=`
+    # def get_count(self, year=None, month=None, subject='all', property=None):
+    #     count = 0
+    #     # we have a list of names we want to iterate over
+    #     for name in self.names:
+    #         stats = self.get_conversation_stats(name=name)
+    #         if stats is None:  # TODO too explicit
+    #             continue
+    #         count += self.get_count_for_a_person(stats, year=year, month=month, subject=subject, property=property)
+    #     return count
+    #
+    # @year_and_month_checker
+    # def get_count_for_a_person(self, stats, year=None, month=None, subject='all', property=None):
+    #     if year is None and month is None:
+    #         # add up all the messages count
+    #         return getattr(stats.get(subject), property)
+    #     elif year and not month:
+    #         # add up all the messages count in that year
+    #         return None
+    #         # return self.loop_over_months(stats.get('grouped').get(year), subject=subject, property=property)
+    #     elif year and month:
+    #         # add up all the messages count in that year and month
+    #         return None
+    #         # return getattr(stats.get('grouped').get(year).get(month).get(subject), property)
 
     # 1. Ranking of friends by total count of messages/words/characters (also by year/month)
 
@@ -134,8 +136,72 @@ class MessagingAnalyzer:
     def hours_when_most_messages_received(self):
         pass
 
-    # 6. Time series: dict of 'year/month/day : number of messages/words/characters (also sent/got) for user/all convos'
-    # 7.
+    # 6. Time series: dict of 'year/month/day/hour : number of messages/words/characters (also sent/got) for user/all convos'
+    """
+    TODO:
+    - plan:
+      - ~~see if filtering the big df works as expected~~
+        - ~~filter by date, sender~~
+        - ~~output should be another df~~
+        - ~~output df is an input for ConvoAnalyzer~~
+      - ~~if there is a POC, decide on the data structure~~
+      - later nice time-based graph of the above numbers
+        - what do I need from global time-series:
+          - same as above, but is not implemented
+            - how to implement:
+              - **should have** ~~OR not have~~ an intermediate data container -> that is a HUGE FUCKING df OR dict with the above data structure, that has the stats
+
+    - implementation:    
+      - ~~time series data for one person:~~
+        - ~~have all the messages in one df for one person~~
+        - ~~date should be the index, first locally,~~ but later change it from the beginning
+        - ~~generate y/m/d/h timeseries~~
+        - ~~split df to sub-dfs, and generate stats from them right away~~
+        - ~~assign stats to  y/m/d/h timeseries entries~~
+      - time series data for all people:
+        - ~~stack the dfs together~~
+        - sort by date
+        - ~~generate y/m/d/h timeseries~~
+        - split df to sub-dfs, and generate stats from them right away:
+          - this would have a problem that ConvoAnalyzer is not general enough. it requires a name, that is only one person.
+          - TODO generalize ConvoAnalzyer for this purpose (maybe use `!=`)
+        - assign stats to  y/m/d/h timeseries entries
+        - somehow incorporate who the message was sent to
+
+    - changes to incorporate:
+      1. ~~i want to make the indices the dates of the messages (from the very begining), investigate what would this break~~
+      2. ~~i want to remove date column which is used in ConversationAnalyzer. this breaks number 3.~~
+      3. ~~i want to omit using multiple dfs for different months sooo `stats.get('grouped')` will be no longer ~~
+      4. create a new interface for filtering time on dfs
+
+    """
+
+    def time_series_analysis_for_user(self, name):
+        stats = self.get_conversation_stats(name=name).get('all')
+        time_series = generate_time_series()
+        self.get_stat_for_intervals(name, stats.df, time_series)
+
+    def get_stat_for_intervals(self, name, df, time_series):
+        data = {}
+        for offset, series in time_series.items():
+            data[offset] = {}
+            for i in range(len(series) - 1):  # only looping len - 1 times
+                start = series[i]
+                end = series[i + 1]  # TODO will we miss the last entry?
+                trimmed = df.loc[start:end]
+
+                # check if it has length
+                data[offset][start] = ConversationAnalyzer(name, trimmed) if len(trimmed.index) else None
+        return data
+
+    def stack_all_dfs(self):
+        dfs = []
+        for name, data in self.people.items():
+            df = data.messages
+            if df is not None:
+                dfs.append(df)
+        # TODO do I need to sort by index (date)
+        return pd.concat(dfs, ignore_index=True)  # TODO why ignore_index??
 
     @staticmethod
     def loop_over_months(data, subject='all', property=None):  # TODO generalize
@@ -147,4 +213,104 @@ class MessagingAnalyzer:
             count += getattr(stats.get(subject), property)
         return count
 
+    """
+    TODO:
+    - plan:
+      - ~~see if filtering the big df works as expected~~
+        - ~~filter by date, sender~~
+        - ~~output should be another df~~
+        - ~~output df is an input for ConvoAnalyzer~~
+      - if there is a POC, decide on the data structure
+        create one master df
+        BUT!!!
+        both has a problem of, we loose the information, whom I sent the message (is it even needed)
+        - what do I need from user-specific time series:
+          - timespan-specific msg/word/char count, down to year/month/day/hour level (basically the stats better filtered, not in a dict)
+          - how to implement:
+            - one idea would be to have time series lists like: (times = pd.date_range('2012-10-01', periods=289, freq='5min'))
+                - [dt(year=2011),2012,2013, ...],
+                - [dt(year=2012, month=1), dt(year=2012, month=2), ...],
+                - days,
+                - hours,
+                then we could filter for these timespans, extract the needed lines from the df and save it to another df
+                this other df would have stats
+                all the dfs for all the timespans would have stats
+                that we could plot
+                years: 2011: stats, 2012: stats ..... and so ooooooon
+          - later nice time-based graph of the above numbers
+        - what do I need from global time-series:
+          - same as above, but is not implemented
+            - how to implement:
+              - **should have** ~~OR not have~~ an intermediate data container -> that is a HUGE FUCKING df OR dict with the above data structure, that has the stats
 
+    - implementation:    
+      - time series data for one person:
+        - ~~have all the messages in one df for one person~~
+        - ~~date should be the index, first locally,~~ but later change it from the beginning
+        - ~~generate y/m/d/h timeseries~~
+        - ~~split df to sub-dfs, and generate stats from them right away~~
+        - ~~assign stats to  y/m/d/h timeseries entries~~
+      - time series data for all people:
+        - ~~stack the dfs together~~
+        - sort by date
+        - ~~generate y/m/d/h timeseries~~
+        - split df to sub-dfs, and generate stats from them right away:
+          - this would have a problem that ConvoAnalyzer is not general enough. it requires a name, that is only one person.
+          - TODO generalize ConvoAnalzyer for this purpose (maybe use `!=`)
+        - assign stats to  y/m/d/h timeseries entries
+
+    - changes to incorportae:
+      1. i want to make the indices the dates of the messages (from the very begining), investigate what would this break
+      2. i want to remove date column which is used in ConversationAnalyzer. this breaks number 3.
+      3. i want to omit using multiple dfs for different months sooo `stats.get('grouped')` will be no longer 
+
+    """
+
+
+# def hack_around_with_filtering(self, name=None):
+#     import datetime
+#     if not name:
+#         return
+#     stats = self.get_conversation_stats(name=name).get('all')
+#     df = stats.df
+#     print(df.head())
+#     df[(df['col1'] >= 1) & (df['col1'] <=1 )]
+#     df.query('col1 <= 1 & 1 <= col1')
+#     print(df[(df.sender_name == 'Levente Csőke') & (df.date.month == 12)])
+#     print(df.date.month)
+#     print(df.index)
+#     print(df.query('20141101 < date < 20141201'))
+#     print()
+#     df = df.set_index(['date']).iloc[::-1]
+#     print(df.index)
+#     print(df)
+#     print(df.loc['20141101':'20141201'])
+#     print(df.loc[datetime.date(year=2014, month=11, day=1):datetime.date(year=2014, month=12, day=1)])
+#     print(df.loc[datetime.datetime(year=2014, month=11, day=10, hour=12, minute=21):datetime.date(year=2014, month=12, day=1)])
+#     trimmed_df =df.loc[datetime.datetime(year=2014, month=11, day=10, hour=12, minute=21):datetime.date(year=2014, month=12, day=1)]
+#     print(trimmed_df)
+#     print(trimmed_df[trimmed_df.sender_name == 'Levente Csőke'])
+# 7.
+
+
+"""
+- ~~basic time series would look like this:~~ MAKES NO SENSE. we have the df, use it for filtering and for stats
+          - users
+          |_ Teflon Musk
+            |_ 2010
+              |_ january
+                |_ 1
+                  |_ 0-1
+                    |_ message 1 \\ this two
+                    |_ message 2 // are in a df
+                  |_ 1-2
+                  |_ 2-3
+                  |_ ...
+                |_ 2
+                |_ ...
+              |_ febr
+              |_ ...
+            |_ 2011
+            |_ 2012
+            ...
+"""

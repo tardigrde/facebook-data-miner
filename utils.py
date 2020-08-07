@@ -1,4 +1,6 @@
 import json
+from datetime import datetime
+import pandas as pd
 
 MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october',
           'november', 'december']
@@ -86,11 +88,13 @@ def year_and_month_checker(func):
         if year is None and month is None:
             return func(*args, **kwargs)
 
+        # TODO grouped would be removed!!
         if year and stats.get('grouped').get(year) is None:
-            #print(f"{year} is not in the data dict.")
+            # print(f"{year} is not in the data dict.")
             return 0
+        # TODO
         elif year and month and stats.get('grouped').get(year).get(month) is None:
-            #print(f"{year}/{month} is not in the data dict.")
+            # print(f"{year}/{month} is not in the data dict.")
             return 0
         return func(*args, **kwargs)
 
@@ -132,3 +136,14 @@ def month_converter(func):
         return func(*args, **kwargs)
 
     return wrapper
+
+def generate_time_series(start=None, end=None):
+    start = start or datetime(year=2009, month=10, day=2, hour=0)
+    end = end or datetime.now()
+    return {
+        'year': pd.date_range(start=start, end=end, freq='YS'),  # TODO does not include 2009
+        'month': pd.date_range(start=start, end=end, freq='1MS'),  # TODO does not include october
+        'day': pd.date_range(start=start, end=end, freq='1D'),  # TODO does not include 2. ?! not sure if it is true
+        # TODO put this back after dev phase is over
+        # 'hour': pd.date_range(start=start, end=end, freq='1H'), # TODO hour should only be run ONCE
+    }

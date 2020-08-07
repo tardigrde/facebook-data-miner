@@ -17,11 +17,11 @@ class Miner:
         stats = {}
 
         for name, person in p.individuals.items():
-            assert name == person.name, 'ERRRRRRROR!!!'
+            #assert name == person.name, 'ERRRRRRROR!!!'
             if person.messages is None:
                 stats[person.name] = None
                 continue
-            analyzer = ConversationAnalyzer(person)
+            analyzer = ConversationAnalyzer(person.name, person.messages)
             stats[person.name] = analyzer.stats
             # if stats[person.name].get('message_count').get('me') > 5000:
             #    top[person.name] = stats[person.name]

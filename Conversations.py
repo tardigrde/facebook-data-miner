@@ -62,14 +62,15 @@ class Messages(FacebookData):
     def __init__(self, json_path):
         super().__init__(json_path)
         self.to_df()
-        self.add_date_column()
+        self.set_date_as_index()
 
     def to_df(self):
         self._df = pd.DataFrame(self.decoded.get('messages'))
 
-    def add_date_column(self):
+    def set_date_as_index(self):
         # TODO maybe not needed; could calculate real time
-        self._df['date'] = self._df.timestamp_ms.apply(self.ts_to_date)
+        date_series = self._df.timestamp_ms.apply(self.ts_to_date)
+        self._df = self._df.set_index(date_series).iloc[::-1]
 
     @property
     def names(self):

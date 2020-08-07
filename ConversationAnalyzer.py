@@ -2,20 +2,19 @@ import pandas as pd
 
 
 class ConversationAnalyzer:
-    def __new__(cls, person, *args, **kwargs):
-        if person.messages is None:
+    def __new__(cls, name, messages, *args, **kwargs):
+        if messages is None:  # This deals with the case if no messages
             return None
         return super(ConversationAnalyzer, cls).__new__(cls, *args, **kwargs)
 
-    def __init__(self, person):
-        # TODO deal with no messages
-        # if no messages
-        self.name = person.name
-        self.df = person.messages
+    def __init__(self, name, messages):
+        self.name = name
+        self.df = messages
 
-        self.me_df = self.df[self.df.sender_name == 'Levente Csőke']  # TODO remove hardcoded
-        self.partner_df = self.df[self.df.sender_name == self.name]
-        self._monthly = {}
+        # self.me_df = self.df[self.df.sender_name == 'Levente Csőke']  # TODO remove hardcoded
+        # self.partner_df = self.df[self.df.sender_name == self.name]
+        # self.partner_df = self.df[self.df.sender_name != 'Levente Csőke']
+        # self._monthly = {}
 
     # TODO
     # def __repr__(self):
@@ -28,62 +27,37 @@ class ConversationAnalyzer:
     def stats(self):
         return self.get_stats()
 
+    # TODO THIS SHOULD BE somehow queryable
     @property
     def monthly(self):
         return self._monthly
 
-    def get_stats(self):
-        stats = {'all': ConversationStats(self.df), 'me': ConversationStats(self.me_df),
-                 'partner': ConversationStats(self.partner_df), 'grouped': self.get_stats_by_month()}
+    def get_stats(self, start=None, end=None, subject='all'):
+        # stats = {
+        #     'all': ConversationStats(self.df),
+        #     'me': ConversationStats(self.me_df),
+        #     'partner': ConversationStats(self.partner_df),
+        #     # TODO USE ANOTHER WAY. stats.get_monthly(year=..., month=...)
+        #     # instead of having the dfs already cut, we should only just filter the one and only df for a user
+        #     # 'grouped': self.get_stats_by_month()
+        # }
+        df = self.filter_by_input(start=None, end=None, subject='all')
+        stats = ConversationStats(df)
         return stats
 
-    def get_stats_by_month(self):
-        # TODO correct naming
-        grouped = {}
-        self.group_by_months()
-        for year in self._monthly.keys():
-            if not grouped.get(year):
-                grouped[year] = {}
-            for month in self._monthly.get(year):
-                df = self._monthly.get(year).get(month)
-                me_df = df[df.sender_name == 'Levente Csőke']
-                partner_df = df[df.sender_name == self.name]
-                if not grouped.get(year).get(month):
-                    grouped.get(year)[month] = {}
-                    grouped.get(year)[month]['all'] = ConversationStats(df)
-                    grouped.get(year)[month]['me'] = ConversationStats(me_df)
-                    grouped.get(year)[month]['partner'] = ConversationStats(partner_df)
-        return grouped
-
-    def group_by_months(self):
-        # TODO do I need to do this????
-        # I could just simply filter pandas df (where df.date.year == year && df.date.month == month)
-        # although there could be some problems with multifiltering
-        indices = self.get_indices_at_new_month(self.df)
-        dfs = self.split_df_at_indices(self.df, indices)
-
-        for df in dfs:
-            date = df['date'][0]  # datetime.strptime(df['date'][0], '%Y-%m-%d')
-            if not self._monthly.get(date.year):
-                self._monthly[date.year] = {}
-            self._monthly[date.year][date.month] = df
-
-    @staticmethod
-    def get_indices_at_new_month(df):
-        indices = []
-        last_month = -1
-
-        for i, date in enumerate(df['date']):
-            # date = datetime.strptime(timestamp, '%Y-%m-%d')
-            if date.month != last_month:
-                indices.append(i)
-                last_month = date.month
-        return indices
-
-    @staticmethod
-    def split_df_at_indices(df, indices):
-        indices += [len(df)]
-        return [df.iloc[indices[n]:indices[n + 1]].reset_index(drop=True) for n in range(len(indices) - 1)]
+    # @date_checker # TODO check if start and end a valid date
+    # @subject_checker # TODO check if subject in ('all', 'me', 'partner')
+    def filter_by_input(self, start=None, end=None, subject='all'):
+        if start and end:
+            self.df = self.df.loc[start:end]
+        elif start and not end:
+            self.df = self.df.loc[start:]
+        elif not start and end:
+            self.df = self.df.loc[:end]
+        if subject == 'me':
+            self.df = self.df[self.df.sender_name == 'Levente Csőke']
+        elif subject == 'partner':
+            self.df = self.df[self.df.sender_name != 'Levente Csőke']
 
 
 class ConversationStats:
@@ -158,6 +132,11 @@ class ConversationStats:
     def most_used_chars(self):
         return None  # TODO or not TODO https://stackoverflow.com/questions/4131123/finding-the-most-frequent-character-in-a-string
 
+    # 11.
+    @property
+    def rate_of_media_messages(self):
+        pass  # TODO what?
+
     def get_words(self):
         token_list = self.messages.str.lower().str.split()
         words = []
@@ -170,6 +149,55 @@ class ConversationStats:
                 words.append(token)
         return words
 
+
+# def get_stats_by_month(self):
+#     grouped = {}
+#
+#
+#     self.group_by_months()
+#     for year in self._monthly.keys():
+#         if not grouped.get(year):
+#             grouped[year] = {}
+#         for month in self._monthly.get(year):
+#             df = self._monthly.get(year).get(month)
+#             me_df = df[df.sender_name == 'Levente Csőke']
+#             #partner_df = df[df.sender_name == self.name]  # TODO maybe omit name and use `!=`
+#             partner_df = df[df.sender_name != 'Levente Csőke']  # TODO chaneg hardcoded lc
+#             if not grouped.get(year).get(month):
+#                 grouped.get(year)[month] = {}
+#                 grouped.get(year)[month]['all'] = ConversationStats(df)
+#                 grouped.get(year)[month]['me'] = ConversationStats(me_df)
+#                 grouped.get(year)[month]['partner'] = ConversationStats(partner_df)
+#     return grouped
+#
+# def group_by_months(self):
+#     # TODO REPLACE WITH DATE FILTERING!!
+#     # I could just simply filter pandas df (where df.date.year == year && df.date.month == month)
+#     indices = self.get_indices_at_new_month(self.df)
+#     dfs = self.split_df_at_indices(self.df, indices)
+#
+#     for df in dfs:
+#         date = df['date'][0]  # datetime.strptime(df['date'][0], '%Y-%m-%d')
+#         if not self._monthly.get(date.year):
+#             self._monthly[date.year] = {}
+#         self._monthly[date.year][date.month] = df
+#
+# @staticmethod
+# def get_indices_at_new_month(df):
+#     indices = []
+#     last_month = -1
+#
+#     for i, date in enumerate(df['date']):
+#         # date = datetime.strptime(timestamp, '%Y-%m-%d')
+#         if date.month != last_month:
+#             indices.append(i)
+#             last_month = date.month
+#     return indices
+#
+# @staticmethod
+# def split_df_at_indices(df, indices):
+#     indices += [len(df)]
+#     return [df.iloc[indices[n]:indices[n + 1]].reset_index(drop=True) for n in range(len(indices) - 1)]
 
 '''
         # me_wc, me_unique_wc = self.word_count(self.me_df)
