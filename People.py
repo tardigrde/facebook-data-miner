@@ -17,6 +17,7 @@ class People:
         self._individuals = {}
         self._groups = []
         self._data = self.get_people()  # TODO is this supposed to be here or elsewhere
+        self.to_individuals()  # TODO is this supposed to be here or elsewhere
 
     @property
     def data(self):
@@ -40,9 +41,9 @@ class People:
         people1 = friends.get_people()
         print('friends: ', time.time() - start)
 
-        # TODO too slow
+        # TODO LATER too slow
         # takes about 30 secs both
-        # TODO read it once, store it in DB
+        # read it once, store it in DB OR?
         start = time.time()
         conversations = Conversations(self.data_path)
         people2 = conversations.get_people()
@@ -50,9 +51,8 @@ class People:
 
         return self.unify_people(people1, people2)
 
-    def to_individuals(self):  # maybe rather split_convos or differentiate_convos
+    def to_individuals(self):  # TODO maybe rather split_convos or differentiate_convos
         start = time.time()
-        # TODO whats the difference between person and data.get('title')
         for person, data in self._data.items():
             if person.startswith('group'):
                 g = Group(name=data.get('name'), title=data.get('title'), messages=data.get('messages'),
@@ -76,6 +76,5 @@ class People:
         return convos
 
 
-if __name__ == '__main__':
-    p = People()
-    p.to_individuals()
+# if __name__ == '__main__':
+#     p = People()

@@ -1,94 +1,79 @@
-from utils import year_converter, month_converter, year_and_month_checker, generate_time_series
-from datetime import datetime, date
+from utils import year_converter, month_converter, generate_time_series
+from datetime import datetime, date, timedelta
 import pandas as pd
 from ConversationAnalyzer import ConversationAnalyzer
 
 
 # TODO
+# new column for data, to whom was the message sent? (needed for when we stack up all the dfs)
 # time series analysis
+#
 
 # later:
+# - use dependecy injection?!
 # implement and test most used msgs and words
 # implement and test most messages/(maybe words and chars) sent a day/hour/(maybe month and year)
 
 
 class MessagingAnalyzer:
-    def __init__(self, names, people):  # TODO input people only. class ill know what to do
+    def __init__(self, names, people):
+        # TODO input people only. class ill know what to do
+        # NO, USE DEPENDECY INJECTION
 
         self.names = names
         self.people = people
 
-    # def get_conversation_stats(self, name):
-    #     messages = self.get_messages(name)
-    #     analyzer = ConversationAnalyzer(name, messages)
-    #     if analyzer is None:  # TODO this is too explicit ?!
-    #         return None
-    #     return analyzer.get_stats()
-    #
-    # def get_messages(self, name):
-    #     return self.people.get(name).messages
-    #
-    # # TODO rename `property=` to `attribute=`
-    # def get_count(self, year=None, month=None, subject='all', property=None):
-    #     count = 0
-    #     # we have a list of names we want to iterate over
-    #     for name in self.names:
-    #         stats = self.get_conversation_stats(name=name)
-    #         if stats is None:  # TODO too explicit
-    #             continue
-    #         count += self.get_count_for_a_person(stats, year=year, month=month, subject=subject, property=property)
-    #     return count
-    #
-    # @year_and_month_checker
-    # def get_count_for_a_person(self, stats, year=None, month=None, subject='all', property=None):
-    #     if year is None and month is None:
-    #         # add up all the messages count
-    #         return getattr(stats.get(subject), property)
-    #     elif year and not month:
-    #         # add up all the messages count in that year
-    #         return None
-    #         # return self.loop_over_months(stats.get('grouped').get(year), subject=subject, property=property)
-    #     elif year and month:
-    #         # add up all the messages count in that year and month
-    #         return None
-    #         # return getattr(stats.get('grouped').get(year).get(month).get(subject), property)
+    def get_count(self, attribute, subject='all', start=None, end=None, period: str = None):
+        count = 0
+        # we have a list of names we want to iterate over
+        for name in self.names:
+            stats = self.get_conversation_stats(name=name, subject=subject, start=start, end=end, period=period)
+            if stats is not None:  # TODO too explicit; needed because it is possible that None will be returned, if t got an empty df
+                count += getattr(stats, attribute)
+        return count
 
-    # 1. Ranking of friends by total count of messages/words/characters (also by year/month)
+    def get_conversation_stats(self, name, subject='all', start=None, end=None, period: str = None):
+        messages = self.people.get(name).messages
+        analyzer = ConversationAnalyzer(name, messages)
+        if analyzer is None:  # TODO this is too explicit ?!
+            return None
+        return analyzer.get_stats(subject=subject, start=start, end=end, period=period)
 
-    def total_number_of_messages(self, year=None, month=None):
-        return self.get_count(year=year, month=month, subject='all', property='msg_count')
+    def total_number_of_(self, attribute, subject='all', **kwargs):
+        return self.get_count(attribute=attribute, subject=subject, **kwargs)
 
-    def total_number_of_words(self, year=None, month=None):
-        return self.get_count(year=year, month=month, subject='all', property='word_count')
+    # 1. Ranking of friends by total count of messages/words/characters (also by year/month/day/hour)
+    def total_number_of_messages(self, **kwargs):
+        return self.total_number_of_(attribute='msg_count', **kwargs)
 
-    def total_number_of_characters(self, year=None, month=None):
-        return self.get_count(year=year, month=month, subject='all', property='char_count')
+    def total_number_of_words(self, **kwargs):
+        return self.total_number_of_(attribute='word_count', **kwargs)
 
-    # 2. Ranking of friends who I sent the most messages/words/characters (also by year/month)
+    def total_number_of_characters(self, **kwargs):
+        return self.total_number_of_(attribute='char_count', **kwargs)
 
-    def total_number_of_messages_sent(self, year=None, month=None):
-        return self.get_count(year=year, month=month, subject='me', property='msg_count')
+    # 2. Ranking of friends who I sent the most messages/words/characters (also by year/month/day/hour)
+    def total_number_of_messages_sent(self, **kwargs):
+        return self.total_number_of_(attribute='msg_count', subject='me', **kwargs)
 
-    def total_number_of_words_sent(self, year=None, month=None):
-        return self.get_count(year=year, month=month, subject='me', property='word_count')
+    def total_number_of_words_sent(self, **kwargs):
+        return self.total_number_of_(attribute='word_count', subject='me', **kwargs)
 
-    def total_number_of_characters_sent(self, year=None, month=None):
-        return self.get_count(year=year, month=month, subject='me', property='char_count')
+    def total_number_of_characters_sent(self, **kwargs):
+        return self.total_number_of_(attribute='char_count', subject='me', **kwargs)
 
     # 3. Ranking of friends who sent the most messages/words/characters (also by year/month)
+    def total_number_of_messages_received(self, **kwargs):
+        return self.total_number_of_(attribute='msg_count', subject='partner', **kwargs)
 
-    def total_number_of_messages_received(self, year=None, month=None):
-        return self.get_count(year=year, month=month, subject='partner', property='msg_count')
+    def total_number_of_words_received(self, **kwargs):
+        return self.total_number_of_(attribute='word_count', subject='partner', **kwargs)
 
-    def total_number_of_words_received(self, year=None, month=None):
-        return self.get_count(year=year, month=month, subject='partner', property='word_count')
+    def total_number_of_characters_received(self, **kwargs):
+        return self.total_number_of_(attribute='char_count', subject='partner', **kwargs)
 
-    def total_number_of_characters_received(self, year=None, month=None):
-        return self.get_count(year=year, month=month, subject='partner', property='char_count')
-
-    # 4. Most used messages/words in convos by me/partner (also by year/month)
-
-    def most_used_messages_by_me(self, year=None, month=None):
+    # 4. Most used messages/words in convos by me/partner (also by year/month/day/hour)
+    def most_used_messages_by_me(self, **kwargs):
         """
         >>> s1 = pd.Series([3, 1, 2, 3, 4, 1, 1])
         >>> s2 = pd.Series([3, 2, 1, 1])
@@ -104,16 +89,16 @@ class MessagingAnalyzer:
         """
         pass
 
-    def most_used_messages_by_partners(self, year=None, month=None):
+    def most_used_messages_by_partners(self, **kwargs):
         pass
 
-    def most_used_words_by_me(self, year=None, month=None):
+    def most_used_words_by_me(self, **kwargs):
         pass
 
-    def most_used_words_by_partners(self, year=None, month=None):
+    def most_used_words_by_partners(self, **kwargs):
         pass
 
-    # 5. Number of messages sent/got (also by year/month/day/hour)
+    # 5. Number of messages sent/got on busiest period (by year/month/day/hour)
     def days_when_most_messages_sent(self):
         # TODO hard algorithmic problem
         pass
@@ -172,27 +157,9 @@ class MessagingAnalyzer:
       1. ~~i want to make the indices the dates of the messages (from the very begining), investigate what would this break~~
       2. ~~i want to remove date column which is used in ConversationAnalyzer. this breaks number 3.~~
       3. ~~i want to omit using multiple dfs for different months sooo `stats.get('grouped')` will be no longer ~~
-      4. create a new interface for filtering time on dfs
+      4. ~~create a new interface for filtering time on dfs~~
 
     """
-
-    def time_series_analysis_for_user(self, name):
-        stats = self.get_conversation_stats(name=name).get('all')
-        time_series = generate_time_series()
-        self.get_stat_for_intervals(name, stats.df, time_series)
-
-    def get_stat_for_intervals(self, name, df, time_series):
-        data = {}
-        for offset, series in time_series.items():
-            data[offset] = {}
-            for i in range(len(series) - 1):  # only looping len - 1 times
-                start = series[i]
-                end = series[i + 1]  # TODO will we miss the last entry?
-                trimmed = df.loc[start:end]
-
-                # check if it has length
-                data[offset][start] = ConversationAnalyzer(name, trimmed) if len(trimmed.index) else None
-        return data
 
     def stack_all_dfs(self):
         dfs = []
@@ -203,17 +170,47 @@ class MessagingAnalyzer:
         # TODO do I need to sort by index (date)
         return pd.concat(dfs, ignore_index=True)  # TODO why ignore_index??
 
-    @staticmethod
-    def loop_over_months(data, subject='all', property=None):  # TODO generalize
-        count = 0
-        if not data:
-            print('The selected year has no data.')
-            return count
-        for stats in data.values():  # stats is the statistics for a month
-            count += getattr(stats.get(subject), property)
-        return count
 
-    """
+# @staticmethod
+# def loop_over_months(data, subject='all', attribute=None):  # TODO generalize
+#     count = 0
+#     if not data:
+#         print('The selected year has no data.')
+#         return count
+#     for stats in data.values():  # stats is the statistics for a month
+#         count += getattr(stats.get(subject), attribute)
+#     return count
+
+# @staticmethod
+# def get_stat_for_intervals(name, df, time_series):
+#     data = {}
+#     for offset, series in time_series.items():
+#         data[offset] = {}
+#         for i in range(len(series) - 1):  # only looping len - 1 times
+#             start = series[i]
+#             end = series[i + 1]  # TODO will we miss the last entry?
+#             trimmed = df.loc[start:end]
+#
+#             # check if it has length
+#             data[offset][start] = ConversationAnalyzer(name, trimmed) if len(trimmed.index) else None
+#     return data
+
+# @year_and_month_checker
+# def get_count_for_a_person(self, stats, year=None, month=None, subject='all', attribute=None):
+#     if year is None and month is None:
+#         # add up all the messages count
+#         return getattr(stats.get(subject), attribute)
+#     elif year and not month:
+#         # add up all the messages count in that year
+#         return None
+#         # return self.loop_over_months(stats.get('grouped').get(year), subject=subject, attribute=attribute)
+#     elif year and month:
+#         # add up all the messages count in that year and month
+#         return None
+#         # return getattr(stats.get('grouped').get(year).get(month).get(subject), attribute)
+# def get_messages(self, name):
+#     return self.people.get(name).messages
+"""
     TODO:
     - plan:
       - ~~see if filtering the big df works as expected~~
@@ -264,8 +261,7 @@ class MessagingAnalyzer:
       2. i want to remove date column which is used in ConversationAnalyzer. this breaks number 3.
       3. i want to omit using multiple dfs for different months sooo `stats.get('grouped')` will be no longer 
 
-    """
-
+"""
 
 # def hack_around_with_filtering(self, name=None):
 #     import datetime

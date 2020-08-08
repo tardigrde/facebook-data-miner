@@ -12,7 +12,6 @@ class Miner:
     @staticmethod
     def analyze_messages():
         p = People(path=DATA_PATH)
-        p.to_individuals() # TODO looks ugly
 
         stats = {}
 
@@ -35,7 +34,6 @@ class Miner:
     @staticmethod
     def analyze_messaging():
         p = People(path=DATA_PATH)
-        p.to_individuals() # TODO looks ugly
 
         msg_analyzer = MessagingAnalyzer(p.names, p.individuals)
 

@@ -9,7 +9,6 @@ MESSAGE_SUBPATH = 'messages/inbox'
 
 class Conversations:
     def __init__(self, data_path):
-        # super().__init__(*args)
         self.data_path = f'{data_path}/{MESSAGE_SUBPATH}'
 
     def get_people(self):
@@ -24,11 +23,9 @@ class Conversations:
                     paths.append(os.path.join(root, name))
         return paths
 
-    def extract_names_from_convos(self, jsons):
-        # TODO should messages be assigned right away?
-        # I think yes but in a different funcion
-        # maybe even store how much memory they take up
-        names = {}
+    @staticmethod
+    def extract_names_from_convos(jsons):
+        name_data_map = {}
         count = 0
         for file in jsons:
             msg = Messages(file)
@@ -36,16 +33,17 @@ class Conversations:
                 key = participant if msg.ttype == 'Regular' else f'group_{count}'
                 if key == 'Facebook User':  # TODO ?? what to do with this??
                     continue
-                if names.get(key) and key.startswith('group'):  # making sure run only once even if it is a group
+                if name_data_map.get(key) and key.startswith(
+                        'group'):  # making sure run only once even if it is a group
                     continue
-                if names.get(key):
-                    dfs = [names[key]['messages'], msg.df]
-                    names[key]['messages'] = pd.concat(dfs, ignore_index=True)
-                    # names[key]['messages']
+                if name_data_map.get(key):
+                    dfs = [name_data_map[key]['messages'], msg.df]
+                    name_data_map[key]['messages'] = pd.concat(dfs, ignore_index=True)
                 else:
-                    names[key] = {
+                    name_data_map[key] = {
                         'title': msg.title,
                         'compact_name': msg.compact_names,  # TODO is list ok for if length is  only  1??
+                        #'participants': msg.participants + ['Levente Csőke'],
                         'participants': msg.participants,
                         'messages': msg.df,
                         'friend': None,
@@ -55,7 +53,7 @@ class Conversations:
             if msg.ttype == 'RegularGroup':
                 count += 1
 
-        return names
+        return name_data_map
 
 
 class Messages(FacebookData):
@@ -80,7 +78,9 @@ class Messages(FacebookData):
     def participants(self):
         participants = self.decoded.get('participants')
         # TODO I should be IN
+        # but this breaks stuff at TestMessagingAnalyzer
         return [p.get('name') for p in participants if p.get('name') != 'Levente Csőke']
+        #return [p.get('name') for p in participants if p.get('name')]
 
     @property
     def title(self):
@@ -92,10 +92,9 @@ class Messages(FacebookData):
 
     @property
     def messages_dir(self):
-        # todo what should the path contain
         thread_path = self.decoded.get('thread_path')
         if not thread_path.startswith('inbox/'):
-            raise SystemExit('Something is not okay.')
+            raise ValueError('Something is not okay.')
         # TODO here or in the upper function where we extract names
         return thread_path.split('/')[1].lower()
 

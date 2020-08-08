@@ -1,150 +1,239 @@
 import pytest
 from ConversationAnalyzer import ConversationAnalyzer
 from People import People
+from utils import dt
 
 TEST_DATA_PATH = '/home/levente/projects/facebook-data-miner/tests/test_data'
 
 
-@pytest.fixture()
-def person_Toke_Hal():
-    p = People(path=TEST_DATA_PATH)
-    p.to_individuals()
-    return p.individuals['Tőke Hal']
-    # for name, person in p.individuals.items():
-    #     assert name == person.name, 'ERRRRRRROR!!!'
-    #     if person.name == 'Tőke Hal':
-    #         return person
+# @pytest.mark.parametrize("test_input,expected", [("3+5", 8), ("2+4", 6), ("6*9", 42)])
+# def test_eval(test_input, expected):
+#     assert eval(test_input) == expected
+
+# get\(\'.*\'\)\.
 
 
-@pytest.fixture()
-def person_Teflon_Musk():
-    p = People(path=TEST_DATA_PATH)
-    p.to_individuals()
-    return p.individuals['Teflon Musk']
-    # for name, person in p.individuals.items():
-    #     assert name == person.name, 'ERRRRRRROR!!!'
-    #     if person.name == 'Teflon Musk':
-    #         return person
+# @pytest.fixture(scope='session')
+# def person_Teflon_Musk(people):
+#     return people.individuals['Teflon Musk']
 
-# TODO this is ok now, but its a mess, somehow use parametized fixtures
-# TODO ALL THE get('grouped') should be a function call now
+# @pytest.mark.parametrize("test_input,expected", [("3+5", 8), ("2+4", 6), ("6*9", 42)])
+# def test_eval(test_input, expected):
+#     assert eval(test_input) == expected
 
-
-def test_stats_toke_hal(person_Toke_Hal):
-    analyzer = ConversationAnalyzer('Tőke Hal',person_Toke_Hal.messages)
-    stats = analyzer.stats
-
-    assert stats.get('all').msg_count == 5
-    assert stats.get('all').unique_msg_count == 4
-    # assert stats.get('all').most_used_msgs == 0
-    # assert stats.get('all').msg_frequency == 0
-    assert stats.get('all').word_count == 6
-    assert stats.get('all').unique_word_count == 4
-    # assert stats.get('all').word_frequency == 0
-    assert stats.get('all').char_count == 17
-    # assert stats.get('all').most_used_chars == 0
-
-    assert stats.get('me').msg_count == 3
-    assert stats.get('me').unique_msg_count == 3
-    # assert stats.get('me').most_used_msgs == 0
-    # assert stats.get('me').msg_frequency == 0
-    assert stats.get('me').word_count == 4
-    assert stats.get('me').unique_word_count == 3
-    # assert stats.get('me').word_frequency == 0
-    assert stats.get('me').char_count == 12
-    # assert stats.get('me').most_used_chars == 0
-
-    assert stats.get('partner').msg_count == 2
-    assert stats.get('partner').unique_msg_count == 2
-    # assert stats.get('partner').most_used_msgs == 0
-    # assert stats.get('partner').msg_frequency == 0
-    assert stats.get('partner').word_count == 2
-    assert stats.get('partner').unique_word_count == 2
-    # assert stats.get('partner').word_frequency == 0
-    assert stats.get('partner').char_count == 5
-    # assert stats.get('partner').most_used_chars == 0
-
-    assert stats.get('grouped').get(2014).get(11).get('all').msg_count == 4
-    assert stats.get('grouped').get(2014).get(11).get('all').unique_msg_count == 3
-    # assert stats.get('grouped').get(2014).get(11).get('all').most_used_msgs == 0
-    # assert stats.get('grouped').get(2014).get(11).get('all').msg_frequency == 0
-    assert stats.get('grouped').get(2014).get(11).get('partner').word_count == 2
-    assert stats.get('grouped').get(2014).get(11).get('me').unique_word_count == 3
-    # assert stats.get('grouped').get(2014).get(11).get('all').word_frequency == 0
-    assert stats.get('grouped').get(2014).get(11).get('partner').char_count == 5
-    # assert stats.get('grouped').get(2014).get(11).get('all').most_used_chars == 0
-
-    assert stats.get('grouped').get(2014).get(12).get('all').msg_count == 1
-    assert stats.get('grouped').get(2014).get(12).get('me').unique_msg_count == 1
-    # assert stats.get('grouped').get(2014).get(12).get('all').most_used_msgs == 0
-    # assert stats.get('grouped').get(2014).get(12).get('all').msg_frequency == 0
-    assert stats.get('grouped').get(2014).get(12).get('partner').word_count == 0
-    assert stats.get('grouped').get(2014).get(12).get('all').unique_word_count == 1
-    # assert stats.get('grouped').get(2014).get(12).get('all').word_frequency == 0
-    assert stats.get('grouped').get(2014).get(12).get('all').char_count == 3
-    # assert stats.get('grouped').get(2014).get(12).get('all').most_used_chars == 0
+# input_vs_expected = (
+#         ("all", "me", "partner"), (5,3,2)
+# )
 
 
-def test_stats_teflon_musk(person_Teflon_Musk):
-    analyzer = ConversationAnalyzer('Teflon Musk', person_Teflon_Musk.messages)
-    stats = analyzer.stats
+# @pytest.mark.parametrize("test_input,expected", [(["all", "me", "partner"], [5, 3, 2])])
+# @pytest.mark.parametrize("test_input,expected", [input_vs_expected])
+# def test_dummy(statistics, test_input, expected):
+#     for i, e in zip(test_input, expected):
+#         stats = statistics('Tőke Hal', subject=i)
+#
+#         assert stats.msg_count == e
 
-    assert stats.get('all').msg_count == 6
-    assert stats.get('all').unique_msg_count == 2  # TODO this does not count media messages
-    # assert stats.get('all').most_used_msgs == 0 # TODO should only return the most used or e.g. top10 most used
-    # assert stats.get('all').msg_frequency == 0
-    assert stats.get('all').word_count == 14
-    assert stats.get('all').unique_word_count == 7
-    # assert stats.get('all').word_frequency == 0
-    assert stats.get('all').char_count == 52  # 23
-    # assert stats.get('all').most_used_chars == 0
 
-    assert stats.get('me').msg_count == 3
-    assert stats.get('me').unique_msg_count == 1
-    # assert stats.get('me').most_used_msgs == 0
-    # assert stats.get('me').msg_frequency == 0
-    assert stats.get('me').word_count == 12
-    assert stats.get('me').unique_word_count == 6
-    # assert stats.get('me').word_frequency == 0
-    assert stats.get('me').char_count == 48
-    # assert stats.get('me').most_used_chars == 0
+@pytest.fixture(scope='session')
+def person(people):
+    def __person(name):
+        return people.individuals[name]
 
-    assert stats.get('partner').msg_count == 3
-    assert stats.get('partner').unique_msg_count == 1
-    # assert stats.get('partner').most_used_msgs == 0
-    # assert stats.get('partner').msg_frequency == 0
-    assert stats.get('partner').word_count == 2
-    assert stats.get('partner').unique_word_count == 1
-    # assert stats.get('partner').word_frequency == 0
-    assert stats.get('partner').char_count == 4
-    # assert stats.get('partner').most_used_chars == 0
+    return __person
 
-    assert stats.get('grouped').get(2014).get(9).get('all').msg_count == 1
-    assert stats.get('grouped').get(2014).get(9).get('partner').unique_msg_count == 0
-    # assert stats.get('grouped').get(2014).get(9).get('all').most_used_msgs == 0
-    # assert stats.get('grouped').get(2014).get(9).get('all').msg_frequency == 0
-    assert stats.get('grouped').get(2014).get(9).get('all').word_count == 6
-    assert stats.get('grouped').get(2014).get(9).get('me').unique_word_count == 6
-    # assert stats.get('grouped').get(2014).get(9).get('all').word_frequency == 0
-    assert stats.get('grouped').get(2014).get(9).get('partner').char_count == 0
-    # assert stats.get('grouped').get(2014).get(9).get('all').most_used_chars == 0
 
-    assert stats.get('grouped').get(2014).get(11).get('all').msg_count == 4
-    assert stats.get('grouped').get(2014).get(11).get('partner').unique_msg_count == 1
-    # assert stats.get('grouped').get(2014).get(11).get('all').most_used_msgs == 0
-    # assert stats.get('grouped').get(2014).get(11).get('all').msg_frequency == 0
-    assert stats.get('grouped').get(2014).get(11).get('me').word_count == 6
-    assert stats.get('grouped').get(2014).get(11).get('partner').unique_word_count == 1
-    # assert stats.get('grouped').get(2014).get(11).get('all').word_frequency == 0
-    assert stats.get('grouped').get(2014).get(11).get('partner').char_count == 4
-    # assert stats.get('grouped').get(2014).get(11).get('all').most_used_chars == 0
+@pytest.fixture(scope='session')
+def statistics(person):
+    def _stats(name, **kwargs):
+        individual = person(name)
+        analyzer = ConversationAnalyzer(name, individual.messages)
+        if 'subject' in kwargs or 'start' in kwargs or 'end' in kwargs:  # and others
+            return analyzer.get_stats(**kwargs)
+        else:
+            return analyzer.stats
 
-    assert stats.get('grouped').get(2014).get(12).get('all').msg_count == 1
-    assert stats.get('grouped').get(2014).get(12).get('all').unique_msg_count == 0
-    # assert stats.get('grouped').get(2014).get(12).get('all').most_used_msgs == 0
-    # assert stats.get('grouped').get(2014).get(12).get('all').msg_frequency == 0
-    assert stats.get('grouped').get(2014).get(12).get('all').word_count == 0
-    assert stats.get('grouped').get(2014).get(12).get('all').unique_word_count == 0
-    # assert stats.get('grouped').get(2014).get(12).get('all').word_frequency == 0
-    assert stats.get('grouped').get(2014).get(12).get('all').char_count == 0
-    # assert stats.get('grouped').get(2014).get(12).get('all').most_used_chars == 0
+    return _stats
+
+
+# TODO extend all functions with all the data
+def test_stats_toke_hal_all(statistics):
+    stats = statistics('Tőke Hal')
+
+    assert stats.msg_count == 5
+    assert stats.unique_msg_count == 4
+    # assert stats.most_used_msgs == 0
+    # assert stats.msg_frequency == 0
+    assert stats.word_count == 6
+    assert stats.unique_word_count == 4
+    # assert stats.word_frequency == 0
+    assert stats.char_count == 17
+    # assert stats.most_used_chars == 0
+
+
+def test_stats_toke_hal_me(statistics):
+    stats = statistics('Tőke Hal', subject='me')
+
+    assert stats.msg_count == 3
+    assert stats.unique_msg_count == 3
+    # assert stats.most_used_msgs == 0
+    # assert stats.msg_frequency == 0
+    assert stats.word_count == 4
+    assert stats.unique_word_count == 3
+    # assert stats.word_frequency == 0
+    assert stats.char_count == 12
+    # assert stats.most_used_chars == 0
+
+
+def test_stats_toke_hal_partner(statistics):
+    stats = statistics('Tőke Hal', subject='partner')
+
+    assert stats.msg_count == 2
+    assert stats.unique_msg_count == 2
+    # assert stats.most_used_msgs == 0
+    # assert stats.msg_frequency == 0
+    assert stats.word_count == 2
+    assert stats.unique_word_count == 2
+    # assert stats.word_frequency == 0
+    assert stats.char_count == 5
+    # assert stats.most_used_chars == 0
+
+
+def test_stats_toke_hal_all_2014_11(statistics):
+    stats = statistics('Tőke Hal', subject='all', start=dt(2014, 11), period='m')
+
+    assert stats.msg_count == 4
+    assert stats.unique_msg_count == 3
+    # assert stats.most_used_msgs == 0
+    # assert stats.msg_frequency == 0
+    # assert stats.word_frequency == 0
+    # assert stats.most_used_chars == 0
+
+
+def test_stats_toke_hal_partner_2014_11(statistics):
+    stats = statistics('Tőke Hal', subject='partner', start=dt(2014, 11), period='m')
+    assert stats.char_count == 5
+    assert stats.word_count == 2
+
+
+def test_stats_toke_hal_me_2014_11(statistics):
+    stats = statistics('Tőke Hal', subject='me', start=dt(2014, 11), period='m')
+    assert stats.unique_word_count == 3
+
+
+#
+def test_stats_toke_hal_all_2014_12(statistics):
+    stats = statistics('Tőke Hal', subject='all', start=dt(2014, 12), period='m')
+    assert stats.msg_count == 1
+    # assert stats.most_used_msgs == 0
+    # assert stats.msg_frequency == 0
+    assert stats.unique_word_count == 1
+    # assert stats.word_frequency == 0
+    assert stats.char_count == 3
+    # assert stats.most_used_chars == 0
+
+
+#
+def test_stats_toke_hal_partner_2014_12(statistics):
+    stats = statistics('Tőke Hal', subject='partner', start=dt(2014, 12), period='m')
+    assert stats.word_count == 0
+
+
+def test_stats_toke_hal_me_2014_12(statistics):
+    stats = statistics('Tőke Hal', subject='me', start=dt(2014, 12), period='m')
+    assert stats.unique_msg_count == 1
+
+
+def test_stats_teflon_musk(statistics):
+    stats = statistics('Teflon Musk')
+    assert stats.msg_count == 6
+    assert stats.unique_msg_count == 2  # TODO this does not count media messages
+    # assert stats.most_used_msgs == 0 # TODO should only return the most used or e.g. top10 most used
+    # assert stats.msg_frequency == 0
+    assert stats.word_count == 14
+    assert stats.unique_word_count == 7
+    # assert stats.word_frequency == 0
+    assert stats.char_count == 52  # 23
+    # assert stats.most_used_chars == 0
+
+
+def test_stats_teflon_musk_me(statistics):
+    stats = statistics('Teflon Musk', subject='me')
+    assert stats.msg_count == 3
+    assert stats.unique_msg_count == 1
+    # assert stats.most_used_msgs == 0
+    # assert stats.msg_frequency == 0
+    assert stats.word_count == 12
+    assert stats.unique_word_count == 6
+    # assert stats.word_frequency == 0
+    assert stats.char_count == 48
+    # assert stats.most_used_chars == 0
+
+
+def test_stats_teflon_musk_partner(statistics):
+    stats = statistics('Teflon Musk', subject='partner')
+    assert stats.msg_count == 3
+    assert stats.unique_msg_count == 1
+    # assert stats.most_used_msgs == 0
+    # assert stats.msg_frequency == 0
+    assert stats.word_count == 2
+    assert stats.unique_word_count == 1
+    # assert stats.word_frequency == 0
+    assert stats.char_count == 4
+    # assert stats.most_used_chars == 0
+
+
+def test_stats_teflon_musk_all_2014_9(statistics):
+    stats = statistics('Teflon Musk', subject='all', start=dt(2014, 9), period='m')
+    assert stats.msg_count == 1
+    # assert stats.most_used_msgs == 0
+    # assert stats.msg_frequency == 0
+    assert stats.word_count == 6
+    # assert stats.word_frequency == 0
+    # assert stats.most_used_chars == 0
+
+
+def test_stats_teflon_musk_me_2014_9(statistics):
+    stats = statistics('Teflon Musk', subject='me', start=dt(2014, 9), period='m')
+    assert stats.unique_word_count == 6
+
+
+def test_stats_teflon_musk_partner_2014_9(statistics):
+    stats = statistics('Teflon Musk', subject='partner', start=dt(2014, 9), period='m')
+    assert stats.unique_msg_count == 0
+    assert stats.char_count == 0
+
+
+def test_stats_teflon_musk_all_2014_11(statistics):
+    stats = statistics('Teflon Musk', subject='all', start=dt(2014, 11), period='m')
+    assert stats.msg_count == 4
+    # assert stats.most_used_msgs == 0
+    # assert stats.msg_frequency == 0
+    # assert stats.word_frequency == 0
+    # assert stats.most_used_chars == 0
+
+
+def test_stats_teflon_musk_me_2014_11(statistics):
+    stats = statistics('Teflon Musk', subject='me', start=dt(2014, 11), period='m')
+    assert stats.word_count == 6
+
+
+def test_stats_teflon_musk_partner_2014_11(statistics):
+    stats = statistics('Teflon Musk', subject='partner', start=dt(2014, 11), period='m')
+    assert stats.unique_msg_count == 1
+    assert stats.unique_word_count == 1
+    assert stats.char_count == 4
+
+
+def test_stats_teflon_musk_all_2014_12(statistics):
+    stats = statistics('Teflon Musk', subject='all', start=dt(2014, 12), period='m')
+
+    assert stats.msg_count == 1
+    assert stats.unique_msg_count == 0
+    # assert stats.most_used_msgs == 0
+    # assert stats.msg_frequency == 0
+    assert stats.word_count == 0
+    assert stats.unique_word_count == 0
+    # assert stats.word_frequency == 0
+    assert stats.char_count == 0
+    # assert stats.most_used_chars == 0

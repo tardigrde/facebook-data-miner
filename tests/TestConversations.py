@@ -23,7 +23,7 @@ def test_get_all_people_from_convo(convos):
 
     expected = ['Dér Dénes', 'Facebook User', 'Foo Bar', 'John Doe', 'Teflon Musk', 'Benedek Elek', 'Donald Duck',
                 'Tőke Hal']
-    # TODO Facebook User??????
+    # TODO LATER what to do with Facebook User??????
     assert sorted(people) == sorted(expected)
 
 
@@ -46,7 +46,7 @@ def test_convo_media_has_one_folder_of_possibles(convos):
     assert 'audio' not in listed_dir
 
 def test_groups_have_more_than_two_participates(convos):
-    groups = {convo:data for convo, data in convos.items() if convo.startswith('group')}
+    groups = {convo: data for convo, data in convos.items() if convo.startswith('group')}
     # TODO participants should contain the user itself as well
     assert all([len(data.get('participants')) > 2 for data in groups.values()])
 

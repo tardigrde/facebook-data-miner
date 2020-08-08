@@ -1,4 +1,5 @@
 import pandas as pd
+from utils import date_checker, period_checker, subject_checker, generate_time_series
 
 
 class ConversationAnalyzer:
@@ -11,59 +12,61 @@ class ConversationAnalyzer:
         self.name = name
         self.df = messages
 
-        # self.me_df = self.df[self.df.sender_name == 'Levente Csőke']  # TODO remove hardcoded
-        # self.partner_df = self.df[self.df.sender_name == self.name]
-        # self.partner_df = self.df[self.df.sender_name != 'Levente Csőke']
-        # self._monthly = {}
-
-    # TODO
-    # def __repr__(self):
-    #     pass
-    #
-    # def __str__(self):
-    #     pass
+    def __str__(self):
+        return f'{self.name}: {list(self.df.index)}'
 
     @property
     def stats(self):
         return self.get_stats()
 
-    # TODO THIS SHOULD BE somehow queryable
-    @property
-    def monthly(self):
-        return self._monthly
-
-    def get_stats(self, start=None, end=None, subject='all'):
-        # stats = {
-        #     'all': ConversationStats(self.df),
-        #     'me': ConversationStats(self.me_df),
-        #     'partner': ConversationStats(self.partner_df),
-        #     # TODO USE ANOTHER WAY. stats.get_monthly(year=..., month=...)
-        #     # instead of having the dfs already cut, we should only just filter the one and only df for a user
-        #     # 'grouped': self.get_stats_by_month()
-        # }
-        df = self.filter_by_input(start=None, end=None, subject='all')
+    def get_stats(self, subject='all', start=None, end=None, period: str = None):
+        df = self.filter_by_input(self.df, subject=subject, start=start, end=end, period=period)
         stats = ConversationStats(df)
         return stats
 
-    # @date_checker # TODO check if start and end a valid date
-    # @subject_checker # TODO check if subject in ('all', 'me', 'partner')
-    def filter_by_input(self, start=None, end=None, subject='all'):
-        if start and end:
-            self.df = self.df.loc[start:end]
-        elif start and not end:
-            self.df = self.df.loc[start:]
-        elif not start and end:
-            self.df = self.df.loc[:end]
+    def time_series_analysis_for_user(self, subject='all', **kwargs):
+        time_series = generate_time_series(**kwargs)
+        self.get_stat_for_intervals(time_series, subject=subject)
+
+    def get_stat_for_intervals(self, time_series, subject='all'):
+        data = {}
+        for offset, series in time_series.items():
+            data[offset] = {}
+            for i in range(len(series) - 1):  # only looping len - 1 times
+                start = series[i]
+                # TODO will we miss the last entry? I dont think so (99%), but check and correct hand in hand with the timeseries bug
+                end = series[i + 1]
+                trimmed = self.get_stats(subject=subject, start=start, end=end)
+                data[offset][start] = trimmed
+        return data
+
+    @staticmethod
+    @subject_checker
+    @date_checker
+    @period_checker
+    def filter_by_input(df, subject='all', start=None, end=None, period=None):
         if subject == 'me':
-            self.df = self.df[self.df.sender_name == 'Levente Csőke']
+            df = df[df.sender_name == 'Levente Csőke']
         elif subject == 'partner':
-            self.df = self.df[self.df.sender_name != 'Levente Csőke']
+            df = df[df.sender_name != 'Levente Csőke']
+        if start and end:
+            df = df.loc[start:end]
+        elif start and not end:
+            df = df.loc[start:start + period]
+        elif not start and end:
+            df = df.loc[end - period:end]
+        return df
 
 
 class ConversationStats:
     """
     Statistics of conversation with one person.
     """
+    def __new__(cls, df, *args, **kwargs):
+        if not df.index:  # This deals with the case if input df is empty
+            return None
+        return super(ConversationStats, cls).__new__(cls, *args, **kwargs)
+
 
     def __init__(self, df):
         self.df = df
@@ -130,7 +133,7 @@ class ConversationStats:
     # 10.
     @property
     def most_used_chars(self):
-        return None  # TODO or not TODO https://stackoverflow.com/questions/4131123/finding-the-most-frequent-character-in-a-string
+        return None  # TODO or not  https://stackoverflow.com/questions/4131123/finding-the-most-frequent-character-in-a-string
 
     # 11.
     @property
@@ -150,6 +153,19 @@ class ConversationStats:
         return words
 
 
+# self.me_df = self.df[self.df.sender_name == 'Levente Csőke']
+# self.partner_df = self.df[self.df.sender_name == self.name]
+# self.partner_df = self.df[self.df.sender_name != 'Levente Csőke']
+# self._monthly = {}
+
+# stats = {
+#     'all': ConversationStats(self.df),
+#     'me': ConversationStats(self.me_df),
+#     'partner': ConversationStats(self.partner_df),
+#     # instead of having the dfs already cut, we should only just filter the one and only df for a user
+#     # 'grouped': self.get_stats_by_month()
+# }
+
 # def get_stats_by_month(self):
 #     grouped = {}
 #
@@ -161,8 +177,8 @@ class ConversationStats:
 #         for month in self._monthly.get(year):
 #             df = self._monthly.get(year).get(month)
 #             me_df = df[df.sender_name == 'Levente Csőke']
-#             #partner_df = df[df.sender_name == self.name]  # TODO maybe omit name and use `!=`
-#             partner_df = df[df.sender_name != 'Levente Csőke']  # TODO chaneg hardcoded lc
+#             #partner_df = df[df.sender_name == self.name]
+#             partner_df = df[df.sender_name != 'Levente Csőke']
 #             if not grouped.get(year).get(month):
 #                 grouped.get(year)[month] = {}
 #                 grouped.get(year)[month]['all'] = ConversationStats(df)
@@ -171,7 +187,6 @@ class ConversationStats:
 #     return grouped
 #
 # def group_by_months(self):
-#     # TODO REPLACE WITH DATE FILTERING!!
 #     # I could just simply filter pandas df (where df.date.year == year && df.date.month == month)
 #     indices = self.get_indices_at_new_month(self.df)
 #     dfs = self.split_df_at_indices(self.df, indices)
@@ -247,7 +262,7 @@ class ConversationStats:
     #         stats_sorted[name] = stats[name]
     #
     #     return stats_sorted
-        # self.tokens = None  # TODO
+        # self.tokens = None  
 
     # def messages_count(self):
     #     me = len(self.me_df)
@@ -262,7 +277,7 @@ class ConversationStats:
     #         # print(tokens)
     #         if not isinstance(tokens, list):
     #             print('WARNING! Not a list!')
-    #             continue  # TODO ??? check this
+    #             continue  
     #         for token in tokens:
     #             words.append(token)
     #     return words

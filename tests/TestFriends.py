@@ -6,7 +6,7 @@ TEST_DATA_PATH = '/home/levente/projects/facebook-data-miner/tests/test_data'
 
 
 @pytest.fixture()
-def friends():
+def expected_friends():
     return {'John Doe': {'compact_name': 'johndoe', 'path': None},
             'Donald Duck': {'compact_name': 'donaldduck', 'path': None},
             'Szett Droxler': {'compact_name': 'szettdroxler', 'path': None},
@@ -18,23 +18,21 @@ def friends():
             'Guy Fawkes': {'compact_name': 'guyfawkes', 'path': None}}
 
 
-def test_get_peoples_names_from_friends(friends):
-    # TODO refactor this two lines into a fixture
+@pytest.fixture()
+def friends():
     f = Friends(f'{TEST_DATA_PATH}/friends/friends.json')
-    people = f.get_people()
-
-    expected_people = friends.keys()
-
-    assert all([p in expected_people for p in people])
+    return f.get_people()
 
 
-def test_get_peoples_compact_name_from_friends(friends):
-    f = Friends(f'{TEST_DATA_PATH}/friends/friends.json')
-    people = f.get_people()
+def test_get_peoples_names_from_friends(friends, expected_friends):
+    assert all([p in expected_friends.keys() for p in friends])
 
-    expected_compact_names = [value.get('compact_name') for value in friends.values()]
 
-    assert all([p.get('compact_name') in expected_compact_names for p in people.values()])
+def test_get_peoples_compact_name_from_friends(friends, expected_friends):
+    expected_compact_names = [value.get('compact_name') for value in expected_friends.values()]
+
+    assert all([p.get('compact_name') in expected_compact_names for p in friends.values()])
+
+
 
 # TODO what happens when two friends have same name??
-

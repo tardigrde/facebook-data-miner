@@ -1,13 +1,5 @@
 import pytest
-from People import People
 
-
-@pytest.fixture()
-def people():
-    # TODO solve paths
-    p = People(path='/home/levente/projects/facebook-data-miner/tests/test_data')
-    p.to_individuals()
-    return p
 
 
 @pytest.fixture()
