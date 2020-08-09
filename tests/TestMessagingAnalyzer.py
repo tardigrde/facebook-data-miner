@@ -3,12 +3,6 @@ from MessagingAnalyzer import MessagingAnalyzer
 from utils import dt
 
 
-# TODO make this testing smarter
-# - extend test data
-# - more tests
-# - put them in a class
-
-
 @pytest.fixture(scope='session')
 def analyzer(people):
     return MessagingAnalyzer(people.names, people.individuals)
@@ -147,10 +141,3 @@ def test_total_number_of_characters_received(analyzer):
 
     assert analyzer.total_number_of_characters_received(start=dt(year=2018, month=1), period='m') == 3
     assert analyzer.total_number_of_characters_received(start=dt(year=2018, month=2), period='m') == 0
-
-# def test_time_series_analysis(people):
-#     analyzer = MessagingAnalyzer(people.names, people.individuals)
-# 
-#     analyzer.time_series_analysis_for_user(name='Tőke Hal')
-#     # master_df = analyzer.stack_all_dfs()
-#     # assert len(master_df) == 14

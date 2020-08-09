@@ -8,6 +8,19 @@ MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'augus
           'november', 'december']
 
 
+def get_stats_for_intervals(func, df, time_series, subject='all'):
+    data = {}
+    for offset, series in time_series.items():
+        data[offset] = {}
+        for i in range(len(series) - 1):  # only looping len - 1 times
+            start = series[i]
+            # TODO will we miss the last entry? I dont think so (99%), but check and correct hand in hand with the timeseries bug
+            # IT DOES NOT! HOWEVER test it with new data injected/modified at runtime <- this is hard
+            end = series[i + 1]
+            data[offset][start] = func(df, subject=subject, start=start, end=end)
+    return data
+
+
 # @date_checker
 def dt(year: int = 2004, month: int = 1, day: int = 1, hour: int = 0):
     return datetime(year=year, month=month, day=day, hour=hour)
@@ -115,6 +128,10 @@ def month_converter(func):
     return wrapper
 
 
+# TODO period can refer to 2 things
+# 1. I used it for y/m/d/h
+# 2. return only with one date_range series
+# decide wtf
 def generate_time_series(start=None, end=None, period=None):
     start = start or datetime(year=2009, month=10, day=2, hour=0)
     end = end or datetime.now()
@@ -172,43 +189,3 @@ def period_checker(func):
         return func(*args, **kwargs)
 
     return wrapper
-
-
-# def year_and_month_checker(func):
-#     """
-#     Higher-order function for checking if specified @year passed to @func is in the data dict.
-#     @param func:
-#     @return:
-#     """
-#
-#     def wrapper(*args, **kwargs):
-#         self = args[0]
-#         stats = args[1]
-#         year = kwargs.get('year')
-#         month = kwargs.get('month')
-#
-#         if year is not None and not isinstance(year, int):
-#             kwargs['year'] = int(year)
-#             year = kwargs.get('year')
-#
-#         if year is None and month is None:
-#             return func(*args, **kwargs)
-#
-#         if year and stats.get('grouped').get(year) is None:
-#             # print(f"{year} is not in the data dict.")
-#             return 0
-#         elif year and month and stats.get('grouped').get(year).get(month) is None:
-#             # print(f"{year}/{month} is not in the data dict.")
-#             return 0
-#         return func(*args, **kwargs)
-#
-#     return wrapper
-"""
-test
-now = datetime.datetime(2020, 8, 7, 20, 51, 59, 321360)
->>> now + timedelta(days=5*365)
-datetime.datetime(2025, 8, 6, 20, 51, 59, 321360)
->>> now + relativedelta(years=+5)
-datetime.datetime(2025, 8, 7, 20, 51, 59, 321360)
-
-"""

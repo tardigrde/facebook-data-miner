@@ -13,43 +13,30 @@ TEST_DATA_PATH = '/home/levente/projects/facebook-data-miner/tests/test_data'
 # get\(\'.*\'\)\.
 
 
-# @pytest.fixture(scope='session')
-# def person_Teflon_Musk(people):
-#     return people.individuals['Teflon Musk']
-
-# @pytest.mark.parametrize("test_input,expected", [("3+5", 8), ("2+4", 6), ("6*9", 42)])
-# def test_eval(test_input, expected):
-#     assert eval(test_input) == expected
-
-# input_vs_expected = (
-#         ("all", "me", "partner"), (5,3,2)
-# )
-
-
-# @pytest.mark.parametrize("test_input,expected", [(["all", "me", "partner"], [5, 3, 2])])
-# @pytest.mark.parametrize("test_input,expected", [input_vs_expected])
-# def test_dummy(statistics, test_input, expected):
-#     for i, e in zip(test_input, expected):
-#         stats = statistics('Tőke Hal', subject=i)
-#
-#         assert stats.msg_count == e
-
-
 @pytest.fixture(scope='session')
 def person(people):
-    def __person(name):
+    def _person(name):
         return people.individuals[name]
 
-    return __person
+    return _person
 
 
 @pytest.fixture(scope='session')
-def statistics(person):
+def analyze(person):
+    def _analyze(name):
+        individual = person(name)
+        return ConversationAnalyzer(name, individual.messages)
+
+    return _analyze
+
+
+@pytest.fixture(scope='session')
+def statistics(person, analyze):
     def _stats(name, **kwargs):
         individual = person(name)
-        analyzer = ConversationAnalyzer(name, individual.messages)
+        analyzer = analyze(name)
         if 'subject' in kwargs or 'start' in kwargs or 'end' in kwargs:  # and others
-            return analyzer.get_stats(**kwargs)
+            return analyzer.get_stats(individual.messages, **kwargs)
         else:
             return analyzer.stats
 
@@ -133,7 +120,6 @@ def test_stats_toke_hal_all_2014_12(statistics):
     # assert stats.most_used_chars == 0
 
 
-#
 def test_stats_toke_hal_partner_2014_12(statistics):
     stats = statistics('Tőke Hal', subject='partner', start=dt(2014, 12), period='m')
     assert stats.word_count == 0
@@ -237,3 +223,9 @@ def test_stats_teflon_musk_all_2014_12(statistics):
     # assert stats.word_frequency == 0
     assert stats.char_count == 0
     # assert stats.most_used_chars == 0
+
+
+def test_time_series_analysis_for_user(analyze):
+    analyzer = analyze('Teflon Musk')
+    analyzer.get_time_series_data(subject='all')
+    assert 1

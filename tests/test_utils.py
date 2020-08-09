@@ -5,6 +5,8 @@ import reusables
 from reusables.cli import *
 
 
+#TODO convert this to pytest
+
 class TestUtils(unittest.TestCase):
     def setUp(self):
         self.test_data_path = Path(f'{pwd()}/test_data')

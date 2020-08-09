@@ -75,6 +75,5 @@ class People:
             convos[person]['friend'] = True
         return convos
 
-
 # if __name__ == '__main__':
 #     p = People()

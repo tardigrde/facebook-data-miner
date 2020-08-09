@@ -23,6 +23,7 @@ class Conversations:
                     paths.append(os.path.join(root, name))
         return paths
 
+    # TODO simplify this function!! also this takes very long
     @staticmethod
     def extract_names_from_convos(jsons):
         name_data_map = {}
@@ -38,12 +39,12 @@ class Conversations:
                     continue
                 if name_data_map.get(key):
                     dfs = [name_data_map[key]['messages'], msg.df]
-                    name_data_map[key]['messages'] = pd.concat(dfs, ignore_index=True)
+                    name_data_map[key]['messages'] = pd.concat(dfs, ignore_index=False).sort_index()
                 else:
                     name_data_map[key] = {
                         'title': msg.title,
                         'compact_name': msg.compact_names,  # TODO is list ok for if length is  only  1??
-                        #'participants': msg.participants + ['Levente Csőke'],
+                        # 'participants': msg.participants + ['Levente Csőke'],
                         'participants': msg.participants,
                         'messages': msg.df,
                         'friend': None,
@@ -80,7 +81,7 @@ class Messages(FacebookData):
         # TODO I should be IN
         # but this breaks stuff at TestMessagingAnalyzer
         return [p.get('name') for p in participants if p.get('name') != 'Levente Csőke']
-        #return [p.get('name') for p in participants if p.get('name')]
+        # return [p.get('name') for p in participants if p.get('name')]
 
     @property
     def title(self):
