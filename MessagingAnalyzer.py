@@ -1,26 +1,22 @@
-from utils import year_converter, month_converter, generate_time_series, get_stats_for_intervals
+from utils import year_converter, month_converter, generate_date_series, get_stats_for_intervals
 from datetime import datetime, date, timedelta
 import pandas as pd
 from ConversationAnalyzer import ConversationAnalyzer
 
-"""
-
-"""
-
 
 class MessagingAnalyzer:
     def __init__(self, names, people):
-        # TODO input people only. class ill know what to do
+        # TODO input people only. class will know what to do
         self.names = names
         self.people = people
 
     def time_series_analysis_for_all(self, subject=None, **kwargs):
-        time_series = generate_time_series(**kwargs)
+        time_series = generate_date_series(**kwargs)
         stacked_df = self.stack_dfs(self.people)
         interval_stats = get_stats_for_intervals(self.get_stats, stacked_df, time_series, subject=subject)
 
     def get_stats(self, df, subject='all', start=None, end=None, period=None):
-        # TODO
+        # TODO LATER
         # here you have to do something with it
         pass
 
@@ -29,14 +25,14 @@ class MessagingAnalyzer:
         # we have a list of names we want to iterate over
         for name in self.names:
             stats = self.get_conversation_stats(name=name, subject=subject, start=start, end=end, period=period)
-            if stats is not None:  # TODO too explicit; needed because it is possible that None will be returned, if t got an empty df
+            if stats is not None:
                 count += getattr(stats, attribute)
         return count
 
     def get_conversation_stats(self, name, subject='all', start=None, end=None, period=None):
         messages = self.people.get(name).messages
         analyzer = ConversationAnalyzer(name, messages)
-        if analyzer is None:  # TODO this is too explicit ?!
+        if analyzer is None:
             return None
         return analyzer.get_stats(messages, subject=subject, start=start, end=end, period=period)
 
@@ -80,7 +76,7 @@ class MessagingAnalyzer:
         >>> s2 = pd.Series([3, 2, 1, 1])
         >>> s1_vc = s1.value_counts()
         >>> s2_vc = s2.value_counts()
-        TODO (later) most used is already a problem:
+        TODO LATER most used is already a problem:
           - because its a series of all the unique messages/words ever used in a convo
           - it contains strings like ':d', ':p' and 'xd'
           - from all the convos the result of value_counts has to be cleared
@@ -101,14 +97,14 @@ class MessagingAnalyzer:
 
     # 5. Number of messages sent/got on busiest period (by year/month/day/hour)
     def days_when_most_messages_sent(self):
-        # TODO hard algorithmic problem
+        # TODO LATER hard algorithmic problem
         pass
 
     def days_when_most_messages_received(self):
         pass
 
     def hours_when_most_messages_sent(self):
-        # TODO
+        # TODO LATER
         # is this referring to the absolute hour most messages sent??
         # like: 2014.07.25. 15h-16h
         # OR
@@ -131,5 +127,4 @@ class MessagingAnalyzer:
         for data in people.values():
             if data.messages is not None:
                 dfs.append(data.messages)
-        # TODO do I need to sort by index (date)? yes!
-        return pd.concat(dfs).sort_index()  # TODO why ignore_index??
+        return pd.concat(dfs).sort_index()

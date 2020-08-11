@@ -1,4 +1,4 @@
-# TODO groups should be searched by looking into jsons unfortunately :(
+# TODO LATER groups should be searched by looking into jsons unfortunately :(
 # because of directory says others
 # maybe we dont use groups right away?
 

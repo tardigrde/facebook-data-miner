@@ -19,21 +19,21 @@ class ConversationAnalyzer:
     def stats(self):
         return self.get_stats(self.df)
 
-    # TODO has to be tested
-    def get_time_series_data(self, subject='all', **kwargs):
-        time_series = generate_time_series(**kwargs)
-        return get_stats_for_intervals(self.get_stats, self.df, time_series, subject=subject)
-
-    def get_plotable_time_series_data(self, interval_stats, statistic):
-        for k, v in interval_stats.items():
-            if isinstance(v, ConversationStats):
-                interval_stats[k] = getattr(v, statistic)
-        return interval_stats
-
     def get_stats(self, df, subject='all', start=None, end=None, period=None):
         df = self.filter_by_input(df, subject=subject, start=start, end=end, period=period)
         stats = ConversationStats(df)
         return stats
+
+    def get_time_series_data(self, subject='all', **kwargs):
+        time_series = generate_time_series(**kwargs)
+        return get_stats_for_intervals(self.get_stats, self.df, time_series, subject=subject)
+
+    @staticmethod
+    def get_plottable_time_series_data(interval_stats, statistic):
+        for k, v in interval_stats.items():
+            if isinstance(v, ConversationStats):
+                interval_stats[k] = getattr(v, statistic)
+        return interval_stats
 
     @staticmethod
     @subject_checker
@@ -91,13 +91,13 @@ class ConversationStats:
     # 3.
     @property
     def most_used_msgs(self):
-        # TODO first few (1-10) messages
+        # TODO LATER first few (1-10) messages
         return self.messages.value_counts()
 
     # 4.
     @property
     def msg_frequency(self):
-        # TODO this has been most likely depracated
+        # NOTE this has been most likely depracated OR?
         pass
 
     # 5.
@@ -132,12 +132,12 @@ class ConversationStats:
     # 10.
     @property
     def most_used_chars(self):
-        return None  # TODO or not  https://stackoverflow.com/questions/4131123/finding-the-most-frequent-character-in-a-string
+        return None  # TODO LATER or not  https://stackoverflow.com/questions/4131123/finding-the-most-frequent-character-in-a-string
 
     # 11.
     @property
     def rate_of_media_messages(self):
-        pass  # TODO what?
+        pass  # NOTE what?
 
     def get_words(self):
         token_list = self.messages.str.lower().str.split()
