@@ -9,7 +9,7 @@ def people_names():
 
 
 def test_specific_people_has_or_has_not_got_messages(people):
-    # TODO parametrize
+    # TODO LATER parametrize
     import pandas as pd
     assert isinstance(people.data.get('Benedek Elek').get('messages'), pd.DataFrame)
     assert isinstance(people.data.get('Teflon Musk').get('messages'), pd.DataFrame)
@@ -33,4 +33,4 @@ def test_some_convos_are_with_friends(people):
 def test_specific_people_has_or_has_not_got_media(people):
     assert people.data.get('Teflon Musk').get('media_dir')
 
-#TODO test individuals too
+#TODO LATER test individuals too

@@ -1,0 +1,157 @@
+{
+  "participants": [
+    {
+      "name": "Foo Bar"
+    },
+    {
+      "name": "Levente Cs\u00c5\u0091ke"
+    }
+  ],
+  "messages": [
+    {
+      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "timestamp_ms": 1596910928321,
+      "content": "OUT! \u00e2\u009d\u00a4",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Foo Bar",
+      "timestamp_ms": 1588500928123,
+      "content": "OUT!",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "timestamp_ms": 1587850928047,
+      "videos": [
+        {
+          "uri": "messages/inbox/FooBar_n5fd6gG50h/videos/video1501528035_1573509826004448.mp4",
+          "creation_timestamp": 1587850940,
+          "thumbnail": {
+            "uri": "messages/inbox/FooBar_n5fd6gG50h/videos/thumbnails/20562500_1414664788613193_5052712665724834582_n.jpg"
+          }
+        }
+      ],
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "timestamp_ms": 1585850928047,
+      "content": "Whet? Check this! :P",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Foo Bar",
+      "timestamp_ms": 1583750928047,
+      "audio_files": [
+        {
+          "uri": "messages/inbox/FooBar_n5fd6gG50h/audio/audioclip15905232600004598_2621787141481389.mp4",
+          "creation_timestamp": 1583750927
+        }
+      ],
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "timestamp_ms": 1582720928145,
+      "photos": [
+        {
+          "uri": "messages/inbox/FooBar_n5fd6gG50h/photos/apple-5391076_960_720.jpg"
+        }
+      ],
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Foo Bar",
+      "timestamp_ms": 1582010928145,
+      "gifs": [
+        {
+          "uri": "messages/inbox/FooBar_n5fd6gG50h/gifs/19349964_1624604560892442_7457726181358436352_n_487109582171361.gif"
+        }
+      ],
+      "reactions": [
+        {
+          "reaction": "\u00e2\u009d\u00a4",
+          "actor": "Levente Cs\u00c5\u0091ke"
+        }
+      ],
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "timestamp_ms": 1581980928047,
+      "content": "What the hack? xdddddd :D",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "timestamp_ms": 1581700928145,
+      "gifs": [
+        {
+          "uri": "messages/inbox/FooBar_n5fd6gG50h/gifs/97999627_1419172538270405_8596479473619042304_n_2963870430335255.gif"
+        }
+      ],
+      "reactions": [
+        {
+          "reaction": "\u00f0\u009f\u0098\u00ae",
+          "actor": "Foo Bar"
+        }
+      ],
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Foo Bar",
+      "timestamp_ms": 1581690928047,
+      "content": "Excepteur...laborum. :D",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "timestamp_ms": 1581680928047,
+      "content": "Duis duia .. ! xdddddd :D",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Foo Bar",
+      "timestamp_ms": 1581650928047,
+      "files": [
+        {
+          "uri": "messages/inbox/FooBar_n5fd6gG50h/files/1810.04805.pdf"
+        }
+      ],
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "timestamp_ms": 1581640928145,
+      "photos": [
+        {
+          "uri": "messages/inbox/FooBar_n5fd6gG50h/photos/blueberry-5417154_960_720.jpg"
+        }
+      ],
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Foo Bar",
+      "timestamp_ms": 1581570938715,
+      "content": "Ut akar ... consequat. oO wow :P xd :D",
+      "reactions": [
+        {
+          "reaction": "\u00e2\u009d\u00a4",
+          "actor": "Levente Cs\u00c5\u0091ke"
+        }
+      ],
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "timestamp_ms": 1581570928715,
+      "content": "Lorem lorim.. foo bar \u00f0\u009f\u0098\u00a1\u00f0\u009f\u0098\u00a1\u00f0\u009f\u0098\u00a1",
+      "type": "Generic"
+    }
+  ],
+  "title": "Foo Bar",
+  "is_still_participant": true,
+  "thread_type": "Regular",
+  "thread_path": "inbox/foobar_n5fd6gG50h"
+}

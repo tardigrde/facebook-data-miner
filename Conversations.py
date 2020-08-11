@@ -43,7 +43,7 @@ class Conversations:
                 else:
                     name_data_map[key] = {
                         'title': msg.title,
-                        'compact_name': msg.compact_names,  # TODO is list ok for if length is  only  1??
+                        'compact_name': msg.compact_names,
                         # 'participants': msg.participants + ['Levente Csőke'],
                         'participants': msg.participants,
                         'messages': msg.df,
@@ -67,7 +67,7 @@ class Messages(FacebookData):
         self._df = pd.DataFrame(self.decoded.get('messages'))
 
     def set_date_as_index(self):
-        # TODO maybe not needed; could calculate real time
+        # NOTE maybe not needed; could calculate real time
         date_series = self._df.timestamp_ms.apply(self.ts_to_date)
         self._df = self._df.set_index(date_series).iloc[::-1]
 

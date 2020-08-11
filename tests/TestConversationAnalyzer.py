@@ -43,7 +43,7 @@ def statistics(person, analyze):
     return _stats
 
 
-# TODO extend all functions with all the data
+# TODO LATER or not extend all functions with all the data
 def test_stats_toke_hal_all(statistics):
     stats = statistics('Tőke Hal')
 
@@ -133,8 +133,8 @@ def test_stats_toke_hal_me_2014_12(statistics):
 def test_stats_teflon_musk(statistics):
     stats = statistics('Teflon Musk')
     assert stats.msg_count == 6
-    assert stats.unique_msg_count == 2  # TODO this does not count media messages
-    # assert stats.most_used_msgs == 0 # TODO should only return the most used or e.g. top10 most used
+    assert stats.unique_msg_count == 2
+    # assert stats.most_used_msgs == 0 # TODO LATER should only return the most used or e.g. top10 most used
     # assert stats.msg_frequency == 0
     assert stats.word_count == 14
     assert stats.unique_word_count == 7
@@ -223,6 +223,9 @@ def test_stats_teflon_musk_all_2014_12(statistics):
     # assert stats.word_frequency == 0
     assert stats.char_count == 0
     # assert stats.most_used_chars == 0
+
+class TestConversationAnalyzer: # Foo Bar
+    pass
 
 
 def test_time_series_analysis_for_user(analyze):
