@@ -1,0 +1,58 @@
+{
+  "participants": [
+    {
+      "name": "T\u00c5\u0091ke Hal"
+    },
+    {
+      "name": "Levente Cs\u00c5\u0091ke"
+    },
+    {
+      "name": "D\u00c3\u00a9r D\u00c3\u00a9nes"
+    },
+    {
+      "name": "Facebook User"
+    },
+    {
+      "name": "Donald Duck"
+    },
+    {
+      "name": "Foo Bar"
+    }
+  ],
+  "messages": [
+    {
+      "sender_name": "Facebook User",
+      "timestamp_ms": 1310907774237,
+      "content": "ok",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "D\u00c3\u00a9r D\u00c3\u00a9nes",
+      "timestamp_ms": 1310907632012,
+      "content": "blabla",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "T\u00c5\u0091ke Hal",
+      "timestamp_ms": 1310907632012,
+      "content": "basic group messages",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Foo Bar",
+      "timestamp_ms": 1310907613721,
+      "content": "what do you test",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Donald Duck",
+      "timestamp_ms": 1310907608580,
+      "content": "test",
+      "type": "Generic"
+    }
+  ],
+  "title": "T\u00c5\u0091ke Hal, Foo Bar, Donald Duck and 2 others",
+  "is_still_participant": true,
+  "thread_type": "RegularGroup",
+  "thread_path": "inbox/tokehalfoobardonaldduckand2others_safsdf_fdf3"
+}

@@ -236,4 +236,16 @@ data
 todo.md
 
 
+# ignoring trash file
+trash.py
+
+
+# ignoring jupyter notebook
+explore.ipynb
+
+
+# ignoring jupyter notebook
+tests/playground.py
+
+tests/.pytest_cache
 .pytest_cache
