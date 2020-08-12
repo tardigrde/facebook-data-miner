@@ -1,22 +1,16 @@
 import pytest
-from ConversationAnalyzer import ConversationAnalyzer
-from People import People
-from utils import dt
+from miner.ConversationAnalyzer import ConversationAnalyzer
+from miner.People import People
+from miner.utils import dt
 
 TEST_DATA_PATH = '/home/levente/projects/facebook-data-miner/tests/test_data'
 
 
-# @pytest.mark.parametrize("test_input,expected", [("3+5", 8), ("2+4", 6), ("6*9", 42)])
-# def test_eval(test_input, expected):
-#     assert eval(test_input) == expected
-
-# get\(\'.*\'\)\.
-
-
 @pytest.fixture(scope='session')
-def person(people):
+def person(get_people):
     def _person(name):
-        return people.individuals[name]
+        people = get_people(name)
+        return people.data[name]
 
     return _person
 
@@ -224,11 +218,12 @@ def test_stats_teflon_musk_all_2014_12(statistics):
     assert stats.char_count == 0
     # assert stats.most_used_chars == 0
 
-class TestConversationAnalyzer: # Foo Bar
+
+class TestConversationAnalyzer:  # Foo Bar
     pass
 
 
 def test_time_series_analysis_for_user(analyze):
     analyzer = analyze('Teflon Musk')
-    analyzer.get_time_series_data(subject='all')
+    analyzer.get_time_series_data(subject='all', period='y')
     assert 1

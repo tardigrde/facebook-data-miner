@@ -1,5 +1,5 @@
 import pandas as pd
-from utils import date_checker, period_checker, subject_checker, generate_time_series, get_stats_for_intervals
+from miner.utils import date_checker, period_checker, subject_checker, generate_date_series, get_stats_for_intervals
 
 
 class ConversationAnalyzer:
@@ -25,7 +25,7 @@ class ConversationAnalyzer:
         return stats
 
     def get_time_series_data(self, subject='all', **kwargs):
-        time_series = generate_time_series(**kwargs)
+        time_series = generate_date_series(**kwargs)
         return get_stats_for_intervals(self.get_stats, self.df, time_series, subject=subject)
 
     @staticmethod
@@ -57,12 +57,6 @@ class ConversationStats:
     """
     Statistics of conversation with one person.
     """
-
-    # TODO do we need this or not?!?! smh
-    # def __new__(cls, df, *args, **kwargs):
-    #     if not len(df.index):  # This deals with the case if input df is empty
-    #         return None
-    #     return super(ConversationStats, cls).__new__(cls, *args, **kwargs)
 
     def __init__(self, df):
         self.df = df
@@ -131,13 +125,13 @@ class ConversationStats:
 
     # 10.
     @property
-    def most_used_chars(self):
-        return None  # TODO LATER or not  https://stackoverflow.com/questions/4131123/finding-the-most-frequent-character-in-a-string
-
-    # 11.
-    @property
     def rate_of_media_messages(self):
-        pass  # NOTE what?
+        """
+        TODO LATER
+        search for media messages all 5 of them
+        rate is only the second or third abstraction
+        """
+        pass
 
     def get_words(self):
         token_list = self.messages.str.lower().str.split()

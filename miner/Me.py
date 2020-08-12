@@ -1,4 +1,4 @@
-from FacebookData import FacebookData
+from miner.FacebookData import FacebookData
 
 
 class Me(FacebookData):

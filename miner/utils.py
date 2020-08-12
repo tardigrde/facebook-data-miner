@@ -1,11 +1,31 @@
+import os
 import json
 import pandas as pd
 import dateparser
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
+MESSAGE_SUBPATH = 'messages/inbox'
+MEDIA_DIRS = ['photos', 'gifs', 'files', 'videos', 'audio']
 MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october',
           'november', 'december']
+DELTA_MAP = {
+    'y': relativedelta(years=+1),
+    'm': relativedelta(months=+1),
+    'd': timedelta(days=1),
+    'h': timedelta(hours=1)
+}
+ACCENTS_MAP = {
+    "á": "a",
+    "é": "e",
+    "í": "i",
+    "ó": "o",
+    "ö": "o",
+    "ő": "o",
+    "ú": "u",
+    "ü": "u",
+    "ű": "u",
+}
 
 
 def read_json(file):
@@ -20,28 +40,6 @@ def dump_to_json(data=None, file=None):
 
 def order_list_of_dicts(lst, key='timestamp_ms'):
     return sorted(lst, key=lambda k: k[key])
-
-
-accents_map = {
-    "á": "a",
-    "é": "e",
-    "í": "i",
-    "ó": "o",
-    "ö": "o",
-    "ő": "o",
-    "ú": "u",
-    "ü": "u",
-    "ű": "u",
-    # "Á": "A",
-    # "É": "E",
-    # "Í": "I",
-    # "Ó": "O",
-    # "Ö": "O",
-    # "Ő": "O",
-    # "Ú": "U",
-    # "Ü": "U",
-    # "Ű": "U",
-}
 
 
 #
@@ -110,14 +108,6 @@ def date_checker(func):
     return wrapper
 
 
-DELTA_MAP = {
-    'y': relativedelta(years=+1),
-    'm': relativedelta(months=+1),
-    'd': timedelta(days=1),
-    'h': timedelta(hours=1)
-}
-
-
 def period_checker(func):
     def wrapper(*args, **kwargs):
         if kwargs.get('start') is not None and kwargs.get('end') is not None:
@@ -134,7 +124,7 @@ def period_checker(func):
 def generate_date_series(start=None, end=None, period=None):
     if period is None or DELTA_MAP.get(period) is None:
         raise ValueError('Parameter `period` should be one of {y, m, d, h}')
-    start = start or datetime(year=2009, month=10, day=2, hour=0) # TODO change this to date when user joined FB
+    start = start or datetime(year=2009, month=10, day=2, hour=0)  # TODO LATER change this to date when user joined FB
     end = end or datetime.now()
 
     dates = []
@@ -147,14 +137,12 @@ def generate_date_series(start=None, end=None, period=None):
 
 def get_stats_for_intervals(func, df, time_series, subject='all'):
     data = {}
-    for offset, series in time_series.items():
-        data[offset] = {}
-        for i in range(len(series) - 1):  # only looping len - 1 times
-            start = series[i]
-            # TODO LATER will we miss the last entry? I dont think so (99%), but check and correct hand in hand with the timeseries bug
-            # IT DOES NOT! HOWEVER test it with new data injected/modified at runtime <- this is hard
-            end = series[i + 1]
-            data[offset][start] = func(df, subject=subject, start=start, end=end)
+    for i in range(len(time_series) - 1):  # only looping len - 1 times
+        start = time_series[i]
+        # TODO test it with new data injected/modified at runtime <- this is hard
+        # what is this about actually?
+        end = time_series[i + 1]
+        data[start] = func(df, subject=subject, start=start, end=end)
     return data
 
 
@@ -186,3 +174,27 @@ def decode_text(obj):
         return {key: decode_text(item) for key, item in obj.items()}
 
     return obj
+
+
+def lower_names(col):
+    return col.str.lower()
+
+
+def replace_accents(text):
+    for char in ACCENTS_MAP.keys():
+        if char in text:
+            text = text.replace(char, ACCENTS_MAP[char])
+    return text.replace(' ', '')
+
+
+def without_accent_and_whitespace(col):
+    return col.apply(replace_accents)
+
+
+def walk_directory_and_search(path, extension):
+    paths = []
+    for root, dirs, files in os.walk(path):
+        for file_name in files:
+            if file_name.endswith(extension):
+                paths.append(os.path.join(root, file_name))
+    return paths

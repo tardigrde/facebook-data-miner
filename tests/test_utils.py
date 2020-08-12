@@ -1,5 +1,5 @@
 import unittest
-from utils import *
+from miner.utils import *
 from pathlib import Path
 import reusables
 from reusables.cli import *

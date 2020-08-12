@@ -1,8 +1,8 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-from People import People
-from ConversationAnalyzer import ConversationAnalyzer
+from miner.People import People
+from miner.ConversationAnalyzer import ConversationAnalyzer
 
 # plt.rcParams.update({'figure.figsize': (10, 7), 'figure.dpi': 120})
 
@@ -22,7 +22,7 @@ class Visualizer:
 
     @staticmethod
     def set_up_data(people, name, period='y'):
-        analyzer = ConversationAnalyzer(name, people.individuals.get(name).messages)
+        analyzer = ConversationAnalyzer(name, people.data.get(name).messages)
         interval_stats = analyzer.get_time_series_data(subject='all', start=None, end=None, period=period)
         return analyzer.get_plottable_time_series_data(interval_stats, statistic='msg_count')
 

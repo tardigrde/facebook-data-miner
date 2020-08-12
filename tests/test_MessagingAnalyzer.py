@@ -1,10 +1,11 @@
 import pytest
-from MessagingAnalyzer import MessagingAnalyzer
-from utils import dt
+from miner.MessagingAnalyzer import MessagingAnalyzer
+from miner.utils import dt
 
 @pytest.fixture(scope='session')
-def analyzer(people):
-    return MessagingAnalyzer(people.names, people.individuals)
+def analyzer(get_people):
+    people = get_people()
+    return MessagingAnalyzer(people)
 
 
 def test_total_number_of_messages(analyzer):

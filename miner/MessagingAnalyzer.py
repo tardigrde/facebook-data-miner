@@ -1,19 +1,13 @@
-from utils import year_converter, month_converter, generate_date_series, get_stats_for_intervals
+from miner.utils import year_converter, month_converter, generate_date_series, get_stats_for_intervals
 from datetime import datetime, date, timedelta
 import pandas as pd
-from ConversationAnalyzer import ConversationAnalyzer
+from miner.ConversationAnalyzer import ConversationAnalyzer
 
 
 class MessagingAnalyzer:
-    def __init__(self, names, people):
-        # TODO input people only. class will know what to do
-        self.names = names
-        self.people = people
-
-    def time_series_analysis_for_all(self, subject=None, **kwargs):
-        time_series = generate_date_series(**kwargs)
-        stacked_df = self.stack_dfs(self.people)
-        interval_stats = get_stats_for_intervals(self.get_stats, stacked_df, time_series, subject=subject)
+    def __init__(self, people):
+        self.names = people.names
+        self.people = people.data
 
     def get_stats(self, df, subject='all', start=None, end=None, period=None):
         # TODO LATER
@@ -97,14 +91,13 @@ class MessagingAnalyzer:
 
     # 5. Number of messages sent/got on busiest period (by year/month/day/hour)
     def days_when_most_messages_sent(self):
-        # TODO LATER hard algorithmic problem
         pass
 
     def days_when_most_messages_received(self):
         pass
 
     def hours_when_most_messages_sent(self):
-        # TODO LATER
+        # TODO LATER hard algorithmic problem
         # is this referring to the absolute hour most messages sent??
         # like: 2014.07.25. 15h-16h
         # OR
@@ -119,7 +112,11 @@ class MessagingAnalyzer:
         pass
 
     # 6. Time series: dict of 'year/month/day/hour : number of messages/words/characters (also sent/got) for user/all convos'
-    # TODO
+    def time_series_analysis_for_all(self, subject=None, **kwargs):
+        time_series = generate_date_series(**kwargs)
+        stacked_df = self.stack_dfs(self.people)
+        interval_stats = get_stats_for_intervals(self.get_stats, stacked_df, time_series, subject=subject)
+        # TODO finsh this for time series for all
 
     @staticmethod
     def stack_dfs(people):
