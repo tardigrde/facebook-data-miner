@@ -3,8 +3,6 @@ import time
 from miner.Conversations import Conversations
 from miner.Friends import Friends
 
-# from Me import Me
-
 DATA_PATH = '/home/levente/projects/facebook-data-miner/data'
 
 
@@ -21,7 +19,7 @@ class People:
 
     @property
     def names(self):
-        return self._names
+        return self._names #if len(self._names) > 1 else self._names[0]
 
     @property
     def groups(self):
@@ -36,9 +34,10 @@ class People:
         # TODO LATER too slow -> store in file
         start = time.time()
         conversations = Conversations(self.data_path)
-        individuals = conversations.get_people_from_private_messages()
-
-        print('convos: ', time.time() - start)
+        print('convos1: ', time.time() - start)
+        start = time.time()
+        individuals = conversations.get_people_from_private_messages(name=name)
+        print('convos2: ', time.time() - start)
 
         return self.unify_people(friends, individuals)
 

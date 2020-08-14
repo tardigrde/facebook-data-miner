@@ -65,19 +65,20 @@ import pytest
 
 
 def test_generate_date_series():
+    # TODO resolve
     start = datetime(2020, 1, 1, 0, 0)
     end = datetime(2021, 1, 1, 0, 0)
 
-    date_range_year = generate_date_series(start, end, 'y')
+    date_range_year = generate_date_series('y', start, end)
     assert len(date_range_year) == 1 + 1
 
-    date_range_month = generate_date_series(start, end, 'm')
+    date_range_month = generate_date_series('m', start, end)
     assert len(date_range_month) == 12 + 1
 
-    date_range_day = generate_date_series(start, end, 'd')
+    date_range_day = generate_date_series('d', start, end)
     assert len(date_range_day) == 366 + 1
 
-    date_range_hour = generate_date_series(start, end, 'h')
+    date_range_hour = generate_date_series('h', start, end)
     assert len(date_range_hour) == (366 * 24) + 1
 
     for day in date_range_day:

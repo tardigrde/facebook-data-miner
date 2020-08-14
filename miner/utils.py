@@ -1,6 +1,5 @@
 import os
 import json
-import pandas as pd
 import dateparser
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
@@ -9,6 +8,13 @@ MESSAGE_SUBPATH = 'messages/inbox'
 MEDIA_DIRS = ['photos', 'gifs', 'files', 'videos', 'audio']
 MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october',
           'november', 'december']
+WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+PERIOD_MAP = {
+    'y': None,
+    'm': MONTHS,
+    'd': WEEKDAYS,
+    'h': None,
+}
 DELTA_MAP = {
     'y': relativedelta(years=+1),
     'm': relativedelta(months=+1),
@@ -34,15 +40,12 @@ def read_json(file):
 
 
 def dump_to_json(data=None, file=None):
-    with open(file, 'w') as f:
-        json.dump(data, f)
+    with open(file, 'w', encoding='utf8') as f:
+        json.dump(data, f, ensure_ascii=False)
 
 
 def order_list_of_dicts(lst, key='timestamp_ms'):
     return sorted(lst, key=lambda k: k[key])
-
-
-#
 
 
 def year_converter(func):
@@ -121,29 +124,20 @@ def period_checker(func):
     return wrapper
 
 
-def generate_date_series(start=None, end=None, period=None):
+def generate_date_series(period, start=None, end=None):
     if period is None or DELTA_MAP.get(period) is None:
         raise ValueError('Parameter `period` should be one of {y, m, d, h}')
     start = start or datetime(year=2009, month=10, day=2, hour=0)  # TODO LATER change this to date when user joined FB
     end = end or datetime.now()
 
+    # TODO THIS HAS A PROBLEM. msgs happened in 2020 getting assigned to 2019 because: 2019 + 1 year + start.month + start.day < now()
+    # TODO serious problem!
     dates = []
     intermediate = start
-    while intermediate <= end:
+    while intermediate <= (end + DELTA_MAP.get(period)):  # means that we want to have the end in it as well
         dates.append(intermediate)
         intermediate = intermediate + DELTA_MAP.get(period)
     return dates
-
-
-def get_stats_for_intervals(func, df, time_series, subject='all'):
-    data = {}
-    for i in range(len(time_series) - 1):  # only looping len - 1 times
-        start = time_series[i]
-        # TODO test it with new data injected/modified at runtime <- this is hard
-        # what is this about actually?
-        end = time_series[i + 1]
-        data[start] = func(df, subject=subject, start=start, end=end)
-    return data
 
 
 def dt(year: int = 2004, month: int = 1, day: int = 1, hour: int = 0):
@@ -191,10 +185,42 @@ def without_accent_and_whitespace(col):
     return col.apply(replace_accents)
 
 
-def walk_directory_and_search(path, extension):
+def walk_directory_and_search(path, extension, contains_string=None):
     paths = []
     for root, dirs, files in os.walk(path):
         for file_name in files:
             if file_name.endswith(extension):
-                paths.append(os.path.join(root, file_name))
+                if contains_string is not None and contains_string in file_name:
+                    paths.append(os.path.join(root, file_name))
     return paths
+
+
+def fill_dict(dictionary, key, value):
+    if dictionary.get(key) is not None:
+        dictionary[key] += value
+    else:
+        dictionary[key] = value
+    return dictionary
+
+
+def month_sorter(x):
+    return MONTHS.index(x[0])
+
+
+def count_stat_for_period(data, period):
+    # TODO sort by lists
+    periods = {}
+    for key, value in data.items():
+        if period == 'y':
+            periods = fill_dict(periods, key.year, value)
+            periods = dict(sorted(periods.items()))
+        elif period == 'm':
+            periods = fill_dict(periods, MONTHS[key.month - 1], value)
+            periods = dict(sorted(periods.items(), key=lambda x: MONTHS.index(x[0])))
+        elif period == 'd':
+            periods = fill_dict(periods, WEEKDAYS[key.weekday()], value)
+            periods = dict(sorted(periods.items(), key=lambda x: WEEKDAYS.index(x[0])))
+        elif period == 'h':
+            periods = fill_dict(periods, key.hour, value)
+            periods = dict(sorted(periods.items()))
+    return periods

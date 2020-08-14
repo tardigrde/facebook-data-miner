@@ -7,4 +7,4 @@ class Me(FacebookData):
 
     @property
     def name(self):
-        return 'Levente Csőke'
+        return ''

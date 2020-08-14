@@ -1,9 +1,8 @@
 class Individual:
-    def __init__(self, name=None, title=None, compact=None, messages=None, friend=None, messages_dir=None,
+    def __init__(self, name=None, compact=None, messages=None, friend=None, messages_dir=None,
                  media_dir=None,
                  member_of=None):
         self._name = name
-        self._title = title
         self._compact_name = compact
         self._messages = messages
         self._friend = friend
@@ -16,8 +15,7 @@ class Individual:
 
     def __add__(self, other):
         return Individual(
-            name=self.title if self.title else other.title,
-            title=self.title if self.title else other.title,  # TODO depracate one of (name, title)
+            name=self.name if self.name else other.name,
             friend=self.friend if self.friend else other.friend,
             compact=self.compact_name if self.compact_name else other.compact_name,
             messages=self.messages if len(self.messages) else other.messages,
@@ -29,10 +27,6 @@ class Individual:
     @property
     def name(self):
         return self._name
-
-    @property
-    def title(self):
-        return self._title
 
     @property
     def messages(self):

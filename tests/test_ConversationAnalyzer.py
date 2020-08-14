@@ -1,36 +1,35 @@
 import pytest
-from miner.ConversationAnalyzer import ConversationAnalyzer
-from miner.People import People
+
+from miner.Analyzer import Analyzer
 from miner.utils import dt
 
 TEST_DATA_PATH = '/home/levente/projects/facebook-data-miner/tests/test_data'
 
 
+# @pytest.fixture(scope='session')
+# def person(get_people):
+#     def _person(name):
+#         people = get_people(name)
+#         return people.data[name]
+#
+#     return _person
+
+
 @pytest.fixture(scope='session')
-def person(get_people):
-    def _person(name):
-        people = get_people(name)
-        return people.data[name]
-
-    return _person
-
-
-@pytest.fixture(scope='session')
-def analyze(person):
+def analyze(get_people):
     def _analyze(name):
-        individual = person(name)
-        return ConversationAnalyzer(name, individual.messages)
+        people = get_people(name)
+        return Analyzer(people)
 
     return _analyze
 
 
 @pytest.fixture(scope='session')
-def statistics(person, analyze):
+def statistics(analyze):
     def _stats(name, **kwargs):
-        individual = person(name)
         analyzer = analyze(name)
         if 'subject' in kwargs or 'start' in kwargs or 'end' in kwargs:  # and others
-            return analyzer.get_stats(individual.messages, **kwargs)
+            return analyzer.get_stats(**kwargs)
         else:
             return analyzer.stats
 
@@ -217,10 +216,6 @@ def test_stats_teflon_musk_all_2014_12(statistics):
     # assert stats.word_frequency == 0
     assert stats.char_count == 0
     # assert stats.most_used_chars == 0
-
-
-class TestConversationAnalyzer:  # Foo Bar
-    pass
 
 
 def test_time_series_analysis_for_user(analyze):
