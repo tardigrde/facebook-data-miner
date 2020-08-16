@@ -1,8 +1,9 @@
 import pytest
+import os
 
 from miner.Friends import Friends
 
-TEST_DATA_PATH = '/home/levente/projects/facebook-data-miner/tests/test_data'
+TEST_DATA_PATH = f'{os.getcwd()}/test_data'
 
 
 @pytest.fixture()

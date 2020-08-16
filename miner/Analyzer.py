@@ -1,34 +1,45 @@
+import pandas as pd
+
 from miner.ConversationStats import ConversationStats
 from miner import utils
-import pandas as pd
 
 
 class Analyzer:
-    # TODO do we need to override __subclasscheck__ ?
+    """
+    Analyzer for analyzing specific and/or all conversations
 
-    # def __new__(cls, name, messages, *args, **kwargs):
-    #     if messages is None:  # This deals with the case if no messages
-    #         return None
-    #     return super(Analyzer, cls).__new__(cls, *args, **kwargs)
+    """
 
     def __init__(self, people):
         self.people = people
         self.people_data = people.data
-        self.names = people.names
+        self.names = list(people.names)
         self.multi = len(self.people_data) > 1
 
         if self.multi:
-            self.df = self.stack_dfs()
+            self.df = self.stack_dfs(self.people_data)
         else:
-            # TODO solve this hand in hand with the __new__ method. too ugly
-            self.df = self.people_data.get(list(self.names)[0]).messages
+            self.df = self.people_data.get(self.names[0]).messages
 
-    def get_stats_for_intervals(self, time_series, subject='all'):
+    def __str__(self):
+        if self.multi:
+            return self.names
+        else:
+            return f'{self.names[0]}: {list(self.df.index)}'
+
+    @property
+    def stats(self):
+        return self.get_stats()
+
+    def get_stats_for_intervals(self, time_series, period, subject='all'):
         data = {}
-        for i in range(len(time_series) - 1):  # only looping len - 1 times
+        for i in range(len(time_series)):
             start = time_series[i]
-            end = time_series[i + 1]
-            data[start] = self.get_stats(self.df, subject=subject, start=start, end=end)
+            try:  # with this solution we will have data for the very last moments until datetime.now()
+                end = time_series[i + 1]
+            except IndexError:
+                end = None
+            data[start] = self.get_stats(df=self.df, subject=subject, start=start, end=end, period=period)
         return data
 
     def get_stats(self, df=None, subject='all', start=None, end=None, period=None):
@@ -37,38 +48,12 @@ class Analyzer:
         stats = ConversationStats(df)
         return stats
 
-    @staticmethod
-    def get_plottable_time_series_data(interval_stats, statistic):
-        for k, v in interval_stats.items():
-            if isinstance(v, ConversationStats):
-                interval_stats[k] = getattr(v, statistic)
-        return interval_stats
-
-    @property
-    def stats(self):
-        return self.get_stats()
-
-    def __str__(self):
-        if self.multi:
-            return self.names
-        else:
-            return f'{self.names[0]}: {list(self.df.index)}'
-
-    def stack_dfs(self):
-        dfs = []
-        for data in self.people_data.values():
-            if data.messages is not None:
-                dfs.append(data.messages)
-        return pd.concat(dfs).sort_index()
-
     # 1. Total count of messages/words/characters (also by year/month/day/hour)
     # 2. Total count of messages/words/characters sent (also by year/month/day/hour)
     # 3. Total count of messages/words/characters received (also by year/month)
     def get_count(self, attribute, subject='all', start=None, end=None, period=None):
         stats = self.get_stats(subject=subject, start=start, end=end, period=period)
         return getattr(stats, attribute)
-
-    #################
 
     # 4. Most used messages/words in convos by me/partner (also by year/month/day/hour)
     def most_used_messages_(self, **kwargs):
@@ -88,38 +73,47 @@ class Analyzer:
         pass
 
     # 5. Number of messages sent/got on busiest period (by year/month/day/hour)
-    def stat_per_period(self, period, attribute, **kwargs):
+    def stat_per_period(self, period, statistic, **kwargs):
         interval_stats = self.get_time_series_data(period, **kwargs)
-        # TODO attribute is one of (msg, word, char)
-        time_series_data = self.get_plottable_time_series_data(interval_stats, statistic=attribute)
+        time_series_data = self.get_stat_count(interval_stats, statistic=statistic)
         return utils.count_stat_for_period(time_series_data, period)
 
-    # 6. Time series: dict of 'year/month/day/hour : number of messages/words/characters (also sent/got) for user/all convos'
+    # 6. Time series: dict of 'y/m/d/h : number of messages/words/characters (also sent/got) for user/all convos'
     def get_time_series_data(self, period, subject='all', **kwargs):
-        time_series = utils.generate_date_series(period, **kwargs)
-        return self.get_stats_for_intervals(self.df, time_series, subject=subject)
+        time_series = utils.generate_date_series(period=period, **kwargs)
+        return self.get_stats_for_intervals(time_series, period, subject=subject)
 
-    # # 7. Ranking of friends by messages by y/m/d/h, by different stats, by sent/got
-    def get_ranking_of_friends_by_messages(self, attribute='msg_count', subject='all', start=None, end=None,
-                                           period=None):
-        # TODO almost the same function as get_count
+    # # 7. Ranking of partners by messages by y/m/d/h, by different stats, by sent/got
+    def get_ranking_of_partners_by_messages(self, statistic='msg_count', **kwargs):
         count_dict = {}
         for name in self.names:
-            # analyzer = Analyzer({name: self.people.get(name)}) # this has to be a people instance?! OR?
-            # analyzer = Analyzer(People(self.people.data_path, name=name))  # this has to be a people instance?! OR?
             df = self.df[self.df.partner == name]
-            stats = self.get_stats(df=df, subject=subject, start=start, end=end, period=period)
+            stats = self.get_stats(df=df, **kwargs)
             if stats is not None:
-                count_dict = utils.fill_dict(count_dict, name, getattr(stats, attribute))
-
-        count_dict = {key: value for key, value in sorted(count_dict.items(), key=lambda item: item[1], reverse=True)}
+                count_dict = utils.fill_dict(count_dict, name, getattr(stats, statistic))
         return count_dict
+
+    @staticmethod
+    def stack_dfs(people_data):
+        dfs = []
+        for data in people_data.values():
+            if data.messages is not None:
+                dfs.append(data.messages)
+        return pd.concat(dfs).sort_index()
+
+    @staticmethod
+    @utils.attribute_checker
+    def get_stat_count(interval_stats, statistic='msg_count'):
+        for k, v in interval_stats.items():
+            interval_stats[k] = getattr(v, statistic)
+        return interval_stats
 
     @staticmethod
     @utils.subject_checker
     @utils.date_checker
-    @utils.period_checker
+    @utils.start_end_period_checker
     def filter_by_input(df, subject='all', start=None, end=None, period=None):
+
         if subject == 'me':
             df = df[df.sender_name == 'Levente Csőke']
         elif subject == 'partner':

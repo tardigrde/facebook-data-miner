@@ -3,6 +3,10 @@ import pandas as pd
 
 
 class FacebookData:
+    """
+    Base class for reading in tabular data from JSONs.
+    """
+
     def __init__(self, json_path):
         self.json_path = json_path
         self._df = None
@@ -21,7 +25,7 @@ class FacebookData:
 
     @property
     def compact_names(self):
-        name_list = list(utils.without_accent_and_whitespace(utils.lower_names(self.names)))  # should be just fine
+        name_list = list(utils.without_accent_and_whitespace(utils.lower_names(self.names)))
         return name_list[0] if len(name_list) == 1 else name_list
 
     def to_df(self, field=None):

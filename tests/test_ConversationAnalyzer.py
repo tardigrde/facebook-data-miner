@@ -3,8 +3,6 @@ import pytest
 from miner.Analyzer import Analyzer
 from miner.utils import dt
 
-TEST_DATA_PATH = '/home/levente/projects/facebook-data-miner/tests/test_data'
-
 
 # @pytest.fixture(scope='session')
 # def person(get_people):
@@ -218,7 +216,4 @@ def test_stats_teflon_musk_all_2014_12(statistics):
     # assert stats.most_used_chars == 0
 
 
-def test_time_series_analysis_for_user(analyze):
-    analyzer = analyze('Teflon Musk')
-    analyzer.get_time_series_data(subject='all', period='y')
-    assert 1
+

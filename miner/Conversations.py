@@ -1,7 +1,6 @@
 import pandas as pd
 import os
 
-
 from miner.Messages import Messages
 from miner.Individual import Individual
 
@@ -9,9 +8,13 @@ from miner import utils
 
 
 class Conversations:
+    """
+    Class for managing and parsing conversations
+    """
+
     def __init__(self, data_path):
         self.private_convo_paths = {}
-        self.group_convo_paths = {} # TODO fill this as well
+        self.group_convo_paths = {}  # TODO LATER fill this as well
         self.deleted_user_convo_paths = []  # NOTE these are collected but not yet used
 
         self.data_path = f'{data_path}/{utils.MESSAGE_SUBPATH}'
@@ -41,7 +44,7 @@ class Conversations:
 
     def register_paths(self):
         utils.dump_to_json(self.private_convo_paths, f'{self.data_path}/private_messages.json')
-        
+
     def read_paths(self, file):
         self.private_convo_paths = utils.read_json(file)
         print()
@@ -55,6 +58,8 @@ class Conversations:
 
     def map_group_convo_files(self, msg, file):
         for participant in msg.participants:
+            if participant == 'Levente Csőke':
+                continue
             if self.group_convo_paths.get(file):
                 self.group_convo_paths[file].append(participant)
             else:
@@ -100,7 +105,4 @@ class Conversations:
         return None
 
     def get_people_from_group_messages(self):
-        pass  # TODO for v0.0.4
-
-
-
+        pass

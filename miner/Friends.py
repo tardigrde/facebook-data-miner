@@ -3,6 +3,9 @@ from miner.Individual import Individual
 
 
 class Friends(FacebookData):
+    """
+    Class for storing data in friends.json
+    """
 
     def __init__(self, *args):
         super().__init__(*args)

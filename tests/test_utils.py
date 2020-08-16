@@ -69,20 +69,20 @@ def test_generate_date_series():
     start = datetime(2020, 1, 1, 0, 0)
     end = datetime(2021, 1, 1, 0, 0)
 
-    date_range_year = generate_date_series('y', start, end)
+    date_range_year = generate_date_series(period='y', start=start, end=end)
     assert len(date_range_year) == 1 + 1
 
-    date_range_month = generate_date_series('m', start, end)
+    date_range_month = generate_date_series(period='m', start=start, end=end)
     assert len(date_range_month) == 12 + 1
 
-    date_range_day = generate_date_series('d', start, end)
+    date_range_day = generate_date_series(period='d', start=start, end=end)
     assert len(date_range_day) == 366 + 1
 
-    date_range_hour = generate_date_series('h', start, end)
+    date_range_hour = generate_date_series(period='h', start=start, end=end)
     assert len(date_range_hour) == (366 * 24) + 1
 
     for day in date_range_day:
         assert isinstance(day, datetime)
 
     with pytest.raises(ValueError):
-        faulty_date_range = generate_date_series(start, end, )
+        faulty_date_range = generate_date_series(start=start, end=end, )

@@ -1,4 +1,8 @@
 class Individual:
+    """
+    Class for holding a person's data the user ever interacted with
+    """
+
     def __init__(self, name=None, compact=None, messages=None, friend=None, messages_dir=None,
                  media_dir=None,
                  member_of=None):

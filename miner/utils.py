@@ -1,8 +1,9 @@
-import os
-import json
-import dateparser
-from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from datetime import datetime, timedelta
+import dateparser
+from itertools import islice
+import json
+import os
 
 MESSAGE_SUBPATH = 'messages/inbox'
 MEDIA_DIRS = ['photos', 'gifs', 'files', 'videos', 'audio']
@@ -111,11 +112,10 @@ def date_checker(func):
     return wrapper
 
 
-def period_checker(func):
+def start_end_period_checker(func):
     def wrapper(*args, **kwargs):
         if kwargs.get('start') is not None and kwargs.get('end') is not None:
             return func(*args, **kwargs)
-
         if not kwargs.get('period') or DELTA_MAP[kwargs.get('period')] is None:
             raise ValueError('Parameter `period` should be one of {y, m, d, h}')
         kwargs['period'] = DELTA_MAP[kwargs.get('period')]
@@ -124,17 +124,33 @@ def period_checker(func):
     return wrapper
 
 
-def generate_date_series(period, start=None, end=None):
-    if period is None or DELTA_MAP.get(period) is None:
-        raise ValueError('Parameter `period` should be one of {y, m, d, h}')
-    start = start or datetime(year=2009, month=10, day=2, hour=0)  # TODO LATER change this to date when user joined FB
+def period_checker(func):
+    def wrapper(*args, **kwargs):
+        if not kwargs.get('period') or DELTA_MAP[kwargs.get('period')] is None:
+            raise ValueError('Parameter `period` should be one of {y, m, d, h}')
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def get_start_based_on_period(join_date, period):
+    if period == 'y':
+        return datetime(join_date.year, 1, 1)
+    elif period == 'm':
+        return datetime(join_date.year, join_date.month, 1)
+    return join_date
+
+
+@period_checker
+def generate_date_series(period='y', start=None, end=None):
+    dates = []
+
+    join_date = datetime(year=2009, month=10, day=2)  # TODO later get this from somewhere
+    start = start or get_start_based_on_period(join_date, period)
     end = end or datetime.now()
 
-    # TODO THIS HAS A PROBLEM. msgs happened in 2020 getting assigned to 2019 because: 2019 + 1 year + start.month + start.day < now()
-    # TODO serious problem!
-    dates = []
     intermediate = start
-    while intermediate <= (end + DELTA_MAP.get(period)):  # means that we want to have the end in it as well
+    while intermediate <= end:  # means that we want to have the end in it as well
         dates.append(intermediate)
         intermediate = intermediate + DELTA_MAP.get(period)
     return dates
@@ -224,3 +240,26 @@ def count_stat_for_period(data, period):
             periods = fill_dict(periods, key.hour, value)
             periods = dict(sorted(periods.items()))
     return periods
+
+
+def sort_dict(dictionary, func=lambda x: x, reverse=False):
+    return {key: value for key, value in sorted(dictionary.items(), key=func, reverse=reverse)}
+
+
+def remove_items_where_value_is_falsible(dictionary):
+    return {k: v for k, v in dictionary.items() if v}
+
+
+# keep only first 20 entries
+def slice_dict(dictionary, n):
+    return dict(islice(dictionary.items(), n))
+
+
+def attribute_checker(func):
+    def wrapper(*args, **kwargs):
+        statistic = kwargs.get('statistic')
+        if not statistic or statistic not in ('msg_count', 'word_count', 'char_count'):
+            raise ValueError('Parameter `statistic` should be one of {msg_count, word_count, char_count}')
+        return func(*args, **kwargs)
+
+    return wrapper

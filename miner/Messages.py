@@ -7,6 +7,10 @@ from miner import utils
 
 
 class Messages(FacebookData):
+    """
+    Class for representing data of all the messages with a user or a group
+    """
+
     def __init__(self, json_path):
         super().__init__(json_path)
         self.to_df('messages')
@@ -15,7 +19,6 @@ class Messages(FacebookData):
 
     @property
     def names(self):
-        # TODO ugly
         try:
             return pd.DataFrame(self.participants)[0]
         except KeyError:
@@ -24,10 +27,7 @@ class Messages(FacebookData):
     @property
     def participants(self):
         participants = self.decoded.get('participants')
-        # TODO I should be IN
-        # but this breaks stuff at TestMessagingAnalyzer
-        return [p.get('name') for p in participants if p.get('name') != 'Levente Csőke']
-        # return [p.get('name') for p in participants if p.get('name')]
+        return [p.get('name') for p in participants if p.get('name')]
 
     @property
     def title(self):

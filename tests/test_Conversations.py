@@ -5,7 +5,7 @@ from miner.Individual import Individual
 from miner import utils
 import os
 
-TEST_DATA_PATH = '/home/levente/projects/facebook-data-miner/tests/test_data'
+TEST_DATA_PATH = f'{os.getcwd()}/test_data'
 
 
 @pytest.fixture()
@@ -72,5 +72,4 @@ def test_individual_media_has_one_folder_of_possibles(people_from_private_convos
 
 def test_groups_have_more_than_two_participates(people_from_private_convos):
     groups = {convo: data for convo, data in people_from_private_convos.items() if convo.startswith('group')}
-    # TODO participants should contain the user itself as well
     assert all([len(data.get('participants')) > 2 for data in groups.values()])
