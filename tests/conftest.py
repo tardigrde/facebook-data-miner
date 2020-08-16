@@ -1,10 +1,14 @@
 import pytest
-from People import People
+import os
 
-TEST_DATA_PATH = '/home/levente/projects/facebook-data-miner/tests/test_data'
+from miner.People import People
+
+TEST_DATA_PATH = f'{os.getcwd()}/test_data'
 
 
 @pytest.fixture(scope='session')
-def people():
-    p = People(path=TEST_DATA_PATH)
-    return p
+def get_people():
+    def _get_people(name=None):
+        return People(path=TEST_DATA_PATH, name=name)
+    return _get_people
+

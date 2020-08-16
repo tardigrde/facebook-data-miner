@@ -1,9 +1,13 @@
-# TODO LATER groups should be searched by looking into jsons unfortunately :(
+# NOTE groups should be searched by looking into jsons unfortunately :(
 # because of directory says others
 # maybe we dont use groups right away?
 
 
 class Group:
+    """
+    Class for holding a group-message's data
+    """
+
     def __init__(self, name=None, title=None, messages=None, compact=None, messages_dir=None, media_dir=None,
                  members=None):
         self._name = name
@@ -25,10 +29,6 @@ class Group:
     @property
     def messages(self):
         return self._messages
-
-    # @property
-    # def get_message_jsons(self):
-    #     return self._messages
 
     @property
     def media_dir(self):

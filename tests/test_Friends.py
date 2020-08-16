@@ -1,8 +1,9 @@
 import pytest
+import os
 
-from Friends import Friends
+from miner.Friends import Friends
 
-TEST_DATA_PATH = '/home/levente/projects/facebook-data-miner/tests/test_data'
+TEST_DATA_PATH = f'{os.getcwd()}/test_data'
 
 
 @pytest.fixture()
@@ -31,7 +32,7 @@ def test_get_peoples_names_from_friends(friends, expected_friends):
 def test_get_peoples_compact_name_from_friends(friends, expected_friends):
     expected_compact_names = [value.get('compact_name') for value in expected_friends.values()]
 
-    assert all([p.get('compact_name') in expected_compact_names for p in friends.values()])
+    assert all([p.compact_name in expected_compact_names for p in friends.values()])
 
 
 
