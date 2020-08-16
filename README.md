@@ -12,3 +12,9 @@ More info soon...
 Help is more than welcome. If somebody feel the urge to contribute, I would share my plans with them.
 
 Ideas are welcome too. Feel free to open a new issue.
+
+
+For running VIsualizer CLI:
+```shell script
+export PYTHONPATH="$PWD"
+```

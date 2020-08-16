@@ -228,24 +228,19 @@ dmypy.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python,jupyternotebook,pycharm,visualstudiocode
 
-
-# ignoring data
-data 
-
-# ignoring todo 
-todo.md
-
-
-# ignoring trash file
-trash.py
-
-
-# ignoring jupyter notebook
-explore.ipynb
-
+# ignoring data folder
+data
 
 # ignoring jupyter notebook
 tests/playground.py
+
+# ignoring various files created during development
+plots
+*.png
+todo.md
+trash.py
+explore.ipynb
+tests/test_data/messages/inbox/private_messages.json
 
 tests/.pytest_cache
 .pytest_cache
