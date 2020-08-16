@@ -8,13 +8,19 @@ Don't expect too fast development tho'.
 
 More info soon...
 
+## Visualizer CLI
+A command-line interface for some visualization capabilities. The feature is not even alpha yet.
+
+For running Visualizer CLI:
+```shell script
+export PYTHONPATH="$PWD"
+python miner/Visualizer.py --help
+```
+
 ## Contribution
 Help is more than welcome. If somebody feel the urge to contribute, I would share my plans with them.
 
 Ideas are welcome too. Feel free to open a new issue.
 
 
-For running VIsualizer CLI:
-```shell script
-export PYTHONPATH="$PWD"
-```
+
