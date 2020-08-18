@@ -4,6 +4,7 @@ import dateparser
 from itertools import islice
 import json
 import os
+import pandas as pd
 
 MESSAGE_SUBPATH = 'messages/inbox'
 MEDIA_DIRS = ['photos', 'gifs', 'files', 'videos', 'audio']
@@ -33,6 +34,10 @@ ACCENTS_MAP = {
     "ü": "u",
     "ű": "u",
 }
+
+
+def ts_to_date(date):
+    return datetime.fromtimestamp(date / 1000)
 
 
 def read_json(file):
@@ -184,6 +189,11 @@ def decode_text(obj):
         return {key: decode_text(item) for key, item in obj.items()}
 
     return obj
+
+
+def get_dataframe(data, field=None):
+    data = data.get(field) if field else data
+    return pd.DataFrame(data)
 
 
 def lower_names(col):

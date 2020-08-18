@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 
-from miner.Messages import Messages
+from miner.Conversation import Conversation
 from miner.Individual import Individual
 
 from miner import utils
@@ -37,7 +37,7 @@ class Conversations:
         # TODO DP: Dodge: if statements
         # https://python-patterns.guide/gang-of-four/composition-over-inheritance/#dodge-if-statements
         for file in jsons:
-            msg = Messages(file)
+            msg = Conversation(file)
             if msg.title == 'Facebook User':
                 self.deleted_user_convo_paths.append(msg.messages_dir)
             elif msg.ttype == 'RegularGroup':
@@ -84,7 +84,7 @@ class Conversations:
         convo_path_map = self.filter_by_name(name) if name is not None else self.private_convo_paths.values()
         for paths in convo_path_map:
             for file in paths:
-                messages = Messages(file)
+                messages = Conversation(file)
                 name = messages.title
                 if name_data_map.get(name) is not None:
                     dfs = [name_data_map[name].messages, messages.df]
