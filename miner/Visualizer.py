@@ -81,6 +81,7 @@ class Visualizer:
         p = People(path=TEST_DATA_PATH, name='Foo Bar')
         analyzer = Analyzer(p)
         ranks_dict = analyzer.get_ranking_of_partners_by_messages(attribute=stat)
+        # TODO filteration not with dicts
         # NOTE maybe this could be done by pandas, but maybe we will use these functions elsewhere
         sorted_dict = utils.sort_dict(ranks_dict, func=lambda item: item[1], reverse=True)
         sliced_dict = utils.slice_dict(sorted_dict, 20) if len(sorted_dict) > 20 else sorted_dict

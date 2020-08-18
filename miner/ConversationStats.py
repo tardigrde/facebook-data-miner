@@ -1,4 +1,8 @@
+# TODO this should be something like a low-level wrapper getting the stats from the messages
+# plan ahead
 
+
+# maybe somthing like dataclasses
 class ConversationStats:
     """
     Statistics of conversation with one person.

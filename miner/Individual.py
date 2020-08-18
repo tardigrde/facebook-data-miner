@@ -3,6 +3,9 @@ class Individual:
     Class for holding a person's data the user ever interacted with
     """
 
+
+    # TODO this is actually only a data schema. could be a dataframe. should be a dataframe
+
     def __init__(self, name=None, compact=None, messages=None, friend=None, messages_dir=None,
                  media_dir=None,
                  member_of=None):

@@ -12,6 +12,7 @@ class Friends(FacebookData):
         self.to_df('friends')
 
     def get_people(self, name=None):
+        # TODO make this iterable
         names = {}
         for full_name, compact in zip(self.names, self.compact_names):
             if name is not None and name != full_name:  # filtering for name

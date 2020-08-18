@@ -7,6 +7,8 @@ class Group:
     """
     Class for holding a group-message's data
     """
+    # TODO SHOULD BE A DATAFRAME same kind like Indies
+    # on top of it there shjould be low-level getter functions
 
     def __init__(self, name=None, title=None, messages=None, compact=None, messages_dir=None, media_dir=None,
                  members=None):
