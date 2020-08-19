@@ -1,42 +1,34 @@
-from miner.FacebookData import TabularFacebookData, FacebookData
-from miner.Individual import Individual
+from miner.FacebookData import  FacebookData
 from miner import utils
 import pandas as pd
 from typing import Union, List, Dict, Callable, Any
 
-
-# TODO get_people is not implemented yet
-class Friends:
-    sub_path = '/friends'
+# TODO all the other jsons whic are in friends as subclasses
+class Friends(FacebookData):
+    sub_path = 'friends'
 
     def __init__(self, path: str, reader: Callable = None, processors: List[Callable] = None) -> None:
-        self.path = self.make_path(path)
-        self._reader = reader
-        self._processors = processors
-
-        fb = FacebookData(self.path)
-        self._data = fb.get_data(reader=self.reader, processors=self.processors)
+        self.path: str = path
+        self._reader: Callable = reader
+        self._processors: List[Callable] = processors
+        super().__init__()
 
     @property
-    def data(self):
-        return self._data
-
-    @property
-    def reader(self):
+    def reader(self) -> Callable:
         return utils.read_json if not self._reader else self._reader
 
     @property
     def processors(self) -> Any:
-        # TODO maybe a better solution for passing in args and kwargs?!
-        # TODO decorator!!
         if self._processors:
             return self._processors
-        return [(utils.decode_text, None), (utils.get_dataframe, ['friends'])]
+        return [self.decode_text, self.get_dataframe]
 
-    def make_path(self, path):
-        return path + self.sub_path + '/friends.json'
 
-# TODO all the other jsons whic are in friends as subclasses
+    @staticmethod
+    def get_dataframe(data: Dict) -> pd.DataFrame:
+        return pd.DataFrame(data.get('friends'), columns=['name', 'timestamp'])
+
+
 
 # class Friends(TabularFacebookData):
 #     """

@@ -2,7 +2,7 @@ import pytest
 import os
 import pandas as pd
 
-from miner.Friends import Friends
+
 from miner import utils
 
 TEST_DATA_PATH = f'{os.getcwd()}/test_data'
@@ -22,9 +22,7 @@ def expected_friends():
             'Guy Fawkes': {'compact_name': 'guyfawkes', 'path': None}}
 
 
-@pytest.fixture(scope='session')
-def friends():
-    return Friends(path=TEST_DATA_PATH)
+
 
 
 def test_data_is_df(friends):

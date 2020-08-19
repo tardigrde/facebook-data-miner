@@ -1,12 +1,12 @@
 import pytest
 
-from miner.Analyzer import Analyzer
+from miner.ConversationAnalyzer import ConversationAnalyzer
 from miner.utils import dt
 
 @pytest.fixture(scope='session')
 def analyzer(get_people):
     people = get_people()
-    return Analyzer(people)
+    return ConversationAnalyzer(people)
 
 
 def test_total_number_of_messages(analyzer):

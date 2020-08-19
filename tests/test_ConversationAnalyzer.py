@@ -1,6 +1,6 @@
 import pytest
 
-from miner.Analyzer import Analyzer
+from miner.ConversationAnalyzer import ConversationAnalyzer
 from miner.utils import dt
 
 
@@ -17,7 +17,7 @@ from miner.utils import dt
 def analyze(get_people):
     def _analyze(name):
         people = get_people(name)
-        return Analyzer(people)
+        return ConversationAnalyzer(people)
 
     return _analyze
 

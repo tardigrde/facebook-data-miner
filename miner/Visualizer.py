@@ -5,7 +5,7 @@ import argparse
 import os
 
 from miner.People import People
-from miner.Analyzer import Analyzer
+from miner.ConversationAnalyzer import ConversationAnalyzer
 from miner import utils
 
 TEST_DATA_PATH = f'{os.getcwd()}/tests/test_data'
@@ -20,7 +20,7 @@ class Visualizer:
 
     @staticmethod
     def set_up_data(people, period, stat='msg_count', **kwargs):
-        analyzer = Analyzer(people)
+        analyzer = ConversationAnalyzer(people)
         interval_stats = analyzer.get_time_series_data(period, **kwargs)
         return analyzer.get_stat_count(interval_stats, statistic=stat)
 
@@ -53,7 +53,7 @@ class Visualizer:
 
     def bar_plot_stat_per_time_period(self, period, name=None, stat='msg_count', **kwargs):
         people = People(path=TEST_DATA_PATH, name=name)
-        analyzer = Analyzer(people)
+        analyzer = ConversationAnalyzer(people)
         me_stat = analyzer.stat_per_period(period, statistic=stat, subject='me', **kwargs)
         partner_stat = analyzer.stat_per_period(period, statistic=stat, subject='partner', **kwargs)
         d = {
@@ -79,7 +79,7 @@ class Visualizer:
 
     def plot_ranking_of_friends_by_message_stats(self, stat='msg_count'):
         p = People(path=TEST_DATA_PATH, name='Foo Bar')
-        analyzer = Analyzer(p)
+        analyzer = ConversationAnalyzer(p)
         ranks_dict = analyzer.get_ranking_of_partners_by_messages(attribute=stat)
         # TODO filteration not with dicts
         # NOTE maybe this could be done by pandas, but maybe we will use these functions elsewhere

@@ -211,14 +211,16 @@ def without_accent_and_whitespace(col):
     return col.apply(replace_accents)
 
 
-def walk_directory_and_search(path, extension, contains_string=None):
+def walk_directory_and_search(path, func, extension, contains_string=''):
     paths = []
-    for root, dirs, files in os.walk(path):
-        for file_name in files:
-            if file_name.endswith(extension):
-                if contains_string is not None and contains_string in file_name:
-                    paths.append(os.path.join(root, file_name))
-    return paths
+    for root, _, files in os.walk(path):
+        res = func(root, files, extension, contains_string)
+        if isinstance(res, list):
+            paths += res
+        elif isinstance(res, str):
+            paths.append(res)
+    for path in paths:
+        yield path
 
 
 def fill_dict(dictionary, key, value):

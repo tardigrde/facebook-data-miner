@@ -4,7 +4,7 @@ from miner.ConversationStats import ConversationStats
 from miner import utils
 
 
-class Analyzer:
+class ConversationAnalyzer:
     """
     Analyzer for analyzing specific and/or all conversations
 
