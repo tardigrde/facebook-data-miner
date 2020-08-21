@@ -1,4 +1,7 @@
 # Facebook Data Miner
+
+[![BCH compliance](https://bettercodehub.com/edge/badge/tardigrde/facebook-data-miner?branch=master)](https://bettercodehub.com/)
+
 This repository has a purpose to provide a set of tools, with which one can analyze their facebook data locally.
 
 The codebase is under development. 
