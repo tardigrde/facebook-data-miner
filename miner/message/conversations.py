@@ -62,9 +62,8 @@ class Conversations:
         return utils.walk_directory_and_search(path, utils.get_all_jsons, extension='.json', contains_string='message_')
 
 
-# Note: there should be no need for making this more robust, private and group messages are the two only
-# types of messages
-# TODO do we need this?
+# Note: there should be no need for making this more robust,
+# private and group messages are the two only types of messages
 class ConversationPathFactory:
     def __init__(self, path: str) -> None:
         self.path = path
@@ -106,7 +105,7 @@ class ConversationsPaths:
                 self._directories.append(directory)
 
     def register_paths(self) -> None:
-        # TODO what if later I want to write this in a database?
+        # Question: what if later I want to write this in a database?
         utils.dump_to_json(self.directories, self.paths_json)
 
     def read_paths(self) -> None:
@@ -117,5 +116,3 @@ class ConversationsPaths:
 
         return utils.walk_directory_and_search(path, utils.get_parent_directory_of_file, extension='.json',
                                                contains_string='message_1')
-
-

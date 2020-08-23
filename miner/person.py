@@ -22,9 +22,10 @@ class Person:
         self.compact_name = utils.replace_accents(self.name.lower()).replace(' ', '')
 
     def __add__(self, other: Person) -> Person:
-        # TODO test this
+        if not self.name == other.name:
+            raise ValueError('The two person has different names!')
         return Person(
-            name=self.name if self.name else other.name,
+            name=self.name,
             compact_name=self.compact_name if self.compact_name else other.compact_name,
             friend=self.friend if self.friend else other.friend,
             messages=self.messages if len(self.messages) else other.messages,

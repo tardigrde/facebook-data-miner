@@ -56,13 +56,13 @@ class FacebookData:
     def read_data(reader: Callable, path: str) -> Dict:
         return reader(path)
 
-
     @staticmethod
     def get_dataframe(data, field=None, **kwargs):
         data = data.get(field) if field else data
         return pd.DataFrame(data, **kwargs)
+
     @staticmethod
-    def set_date_as_index(data: pd.DataFrame, column:str) -> pd.DataFrame:
+    def set_date_as_index(data: pd.DataFrame, column: str) -> pd.DataFrame:
         date_series = data[column].apply(utils.ts_to_date)
         data = data.drop(columns=[column])
         return data.set_index(date_series).iloc[::-1]

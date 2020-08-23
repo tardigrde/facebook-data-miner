@@ -21,7 +21,6 @@ class Conversation(FacebookData):
         self.data = pd.concat([self.data, other.data]).sort_index()
         return self
 
-    #TODO how to deduplicate this frim friends' same emthod
     def register_processors(self, preprocessor):
         preprocessor.register_command(utils.decode_data, utils.utf8_decoder)
         preprocessor.register_command(self.set_metadata)
@@ -59,8 +58,6 @@ class Conversation(FacebookData):
     @staticmethod
     def get_participants(data: Dict) -> List[str]:
         return [participant.get('name') for participant in data.get('participants')]
-
-
 
     @staticmethod
     def get_dirname(dirname: str) -> str:

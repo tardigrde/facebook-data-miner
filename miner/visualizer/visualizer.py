@@ -4,9 +4,11 @@ import numpy as np
 import argparse
 import os
 
-from miner.people import People
+from miner.visualizer.data_adapter import DataAdapter
+
 from miner.message.conversation_analyzer import ConversationAnalyzer
 from miner.message.conversations import Conversations
+from miner.people import People
 from miner import utils
 
 TEST_DATA_PATH = f'{os.getcwd()}/tests/test_data'
@@ -14,9 +16,6 @@ TEST_DATA_PATH = f'{os.getcwd()}/tests/test_data'
 
 # TEST_DATA_PATH = f'{os.getcwd()}/data'
 
-# TODO TEST these, especially the data getters
-# TODO implement an adapter for this (for getting data)
-# decouple stuff here
 
 class Visualizer:
     def __init__(self, path):
@@ -52,7 +51,6 @@ class Visualizer:
     @staticmethod
     def plot_time_series(df, title="Time series analysis", xlabel='Date', stat='msg_count'):
         ylabel = f'Stat for {stat}'
-        # TODO THIS is faulty
         df.plot(kind='line', linestyle='dashdot', figsize=(16, 5))
         plt.gca().set(xlabel=xlabel, ylabel=ylabel)
         plt.title(title)  # does not work
@@ -84,8 +82,6 @@ class Visualizer:
     def plot_ranking_of_friends_by_message_stats(self, stat='msg_count'):
         analyzer = self.get_analyzer()
         ranks_dict = analyzer.get_ranking_of_partners_by_messages(statistic=stat)
-        # TODO filteration not with dicts
-        # NOTE maybe this could be done by pandas, but maybe we will use these functions elsewhere
         sorted_dict = utils.sort_dict(ranks_dict, func=lambda item: item[1], reverse=True)
         sliced_dict = utils.slice_dict(sorted_dict, 20) if len(sorted_dict) > 20 else sorted_dict
         cleared_dict = utils.remove_items_where_value_is_falsible(sliced_dict)
@@ -118,16 +114,14 @@ if __name__ == "__main__":
         '-s', '--stat', metavar='stat', type=str, default='msg',
         help="One of {msg|word|char}, indicating which statistics do you want to get.")
 
-    # TODO add possibility for adding dates from teh command line
+    # TODO add possibility for adding dates from the command line
     # https://docs.python.org/3/library/argparse.html#the-add-argument-method
     args = parser.parse_args()
     period = args.period
     name = args.name
     stat = args.stat
     v = Visualizer(path=TEST_DATA_PATH)
-    # TODO bad visualization!!
-    #v.plot_time_series_data_of_messages(period, names=name, stat=f'{stat}_count')
-    # TODO to little values, check if true
+    # TODO bad visualization!! maybe needs augmentation
+    # v.plot_time_series_data_of_messages(period, names=name, stat=f'{stat}_count')
     # v.bar_plot_stat_per_time_period(period, names=name, stat=f'{stat}_count')
-    # seems fine; works OK
-    #v.plot_ranking_of_friends_by_message_stats()
+    # v.plot_ranking_of_friends_by_message_stats()

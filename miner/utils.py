@@ -9,12 +9,11 @@ import os
 import time
 import pandas as pd
 
-ME = 'Levente Csőke'
-
-FACEBOOK_FOUNDATION_DATE = datetime(year=2004, month=2, day=4)
 # https://en.wikipedia.org/wiki/ISO_8601
 DATE_FORMAT = '%Y-%m-%d'
-# TODO TEST THESE FUNCTIONS
+HUNDRED_YEARS_IN_SECONDS = 100 * 365 * 24 * 60 * 60
+FACEBOOK_FOUNDATION_DATE = datetime(year=2004, month=2, day=4)
+
 MESSAGE_SUBPATH = 'messages/inbox'
 MEDIA_DIRS = ['photos', 'gifs', 'files', 'videos', 'audio']
 MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october',
@@ -48,90 +47,9 @@ MESSAGE_TYPE_MAP = {
     'private': 'Regular',
     'group': 'RegularGroup'
 }
-
-
-class PeriodManager:
-    @staticmethod
-    def set_df_grouping_indices_to_datetime(df, period):
-        datetimes = []
-        for index, row in df.iterrows():
-            key = PERIOD_MANAGER.ordinal_to_datetime(period, index)
-            datetimes.append(key)
-
-        df['timestamp'] = datetimes
-        return df.set_index('timestamp', drop=True)
-
-    @staticmethod
-    def get_grouping_rules(period, df):
-        if period == 'y':
-            return [df.index.year, ]
-        if period == 'm':
-            return [df.index.year, df.index.month]
-        if period == 'd':
-            return [df.index.year, df.index.month, df.index.day]
-        if period == 'h':
-            return [df.index.year, df.index.month, df.index.day, df.index.hour]
-
-    # TODO clear this class up
-    @staticmethod
-    def ordinal_to_datetime(period, index):
-        if period == 'y':
-            return datetime(year=index, month=1, day=1)
-        if period == 'm':
-            return datetime(year=index[0], month=index[1], day=1)
-        if period == 'd':
-            return datetime(*index)
-        if period == 'h':
-            return datetime(*index)
-
-        # if period == 'y':
-        #     date = datetime(year=index, month=1, day=1)
-        #     return date.year
-        # if period == 'm':
-        #     date = datetime(year=index[0], month=index[1], day=1)
-        #     return MONTHS[date.month - 1]
-        # if period == 'd':
-        #     date = datetime(*index)
-        #     return WEEKDAYS[date.weekday()]
-        # if period == 'h':
-        #     date = datetime(*index)
-        #     return date.day
-
-    @staticmethod
-    def date_to_period(date, period):
-        if period == 'y':
-            return date.year
-        if period == 'm':
-            return MONTHS[date.month - 1]
-        if period == 'd':
-            return WEEKDAYS[date.weekday()]
-        if period == 'h':
-            return date.day
-
-    @staticmethod
-    def sorting_method(period):
-        if period == 'y':
-            return lambda x: x
-        if period == 'm':
-            return lambda x: MONTHS.index(x[0])
-        if period == 'd':
-            return lambda x: WEEKDAYS.index(x[0])
-        if period == 'h':
-            return lambda x: x
-
-    @staticmethod
-    def delta(period):
-        if period == 'y':
-            return relativedelta(years=+1)
-        if period == 'm':
-            return relativedelta(months=+1)
-        if period == 'd':
-            return timedelta(days=1)
-        if period == 'h':
-            return timedelta(hours=1)
-
-
-PERIOD_MANAGER = PeriodManager()
+# TODO: get this from somewhere
+ME = 'Levente Csőke'
+JOIN_DATE = datetime(year=2009, month=10, day=2)
 
 
 class CommandChainCreator:
@@ -155,9 +73,6 @@ class Command:
         self._kwargs = kwargs
 
     def __call__(self, *args):
-        # TODO watch out the args of ordering
-        # totally not cool.
-        # on the other hand test_utils, and
         return self._cmd(*(args + self._args), **self._kwargs)
 
 
@@ -165,6 +80,29 @@ def subject_checker(func):
     def wrapper(*args, **kwargs):
         if not kwargs.get('subject') or kwargs.get('subject') not in ('all', 'me', 'partner'):
             raise ValueError('Parameter `subject` should be one of {all, me, partner}')
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def column_checker(func):
+    def wrapper(*args, **kwargs):
+        if not kwargs.get('column') or not isinstance(kwargs.get('column'), str):
+            raise ValueError(f'Parameter `column` should be type of pd.Series, got: {type(kwargs["column"])}')
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def names_checker(func):
+    def wrapper(*args, **kwargs):
+        names = kwargs.get('names')
+        if not names:
+            return func(*args, **kwargs)
+        if isinstance(names, str):
+            kwargs['names'] = [names]
+        if not isinstance(kwargs['names'], list):
+            raise ValueError(f'Parameter `names` should be type of Union[str, List[str]], got: {type(kwargs["names"])}')
         return func(*args, **kwargs)
 
     return wrapper
@@ -189,7 +127,6 @@ def attribute_checker(func):
     return wrapper
 
 
-# TODO merge this with period checker
 def start_end_period_checker(func):
     def wrapper(*args, **kwargs):
         if kwargs.get('start') is not None and kwargs.get('end') is not None:
@@ -219,8 +156,8 @@ def dump_to_json(data=None, file=None):
 
 
 def ts_to_date(date):
-    # TODO a nicer solution
-    if date > time.time():
+    # Note: not too robust.
+    if date > time.time() + HUNDRED_YEARS_IN_SECONDS:
         date /= 1000
     return datetime.fromtimestamp(date)
 
@@ -240,7 +177,7 @@ def get_start_based_on_period(join_date, period):
 @period_checker
 def generate_date_series(period='y', start=None, end=None):
     dates = []
-    join_date = datetime(year=2009, month=10, day=2)  # TODO later get this from somewhere
+    join_date = JOIN_DATE
     start = start or get_start_based_on_period(join_date, period)
     end = end or datetime.now()
 
@@ -370,7 +307,7 @@ def stack_dfs(*args, sort=True):
 
 
 @start_end_period_checker
-def filter_by_date(df, start=None, end=None, period=None):
+def filter_by_date(df: pd.DataFrame, start=None, end=None, period=None):
     """
     @param df:
     @param start: datetime object or date string with format `YYYY-MM-DD`
@@ -385,66 +322,99 @@ def filter_by_date(df, start=None, end=None, period=None):
     elif not start and end:
         return df.loc[end - period:end]
 
+
+@column_checker
+@names_checker
+def filter_by_names(df: pd.DataFrame, column: str = '', names: Union[str, List[str]] = None):
+    if not names:
+        return df
+    partner_matched = df[df[column].isin(names)]
+    return partner_matched
+
+
+@column_checker
+@subject_checker
+def filter_for_subject(df: pd.DataFrame, column: str = '', subject: str = 'all'):
+    if subject == 'me':
+        return df[df[column] == ME]
+    elif subject == 'partner':
+        return df[df[column] != ME]
+    return df
+
+
+class TooFewPeopleError(Exception):
+    pass
+
+
+class PeriodManager:
+    # TODO clear this class up
+    #  maybe subclasses? do we need it?
+    @staticmethod
+    def set_df_grouping_indices_to_datetime(df, period):
+        datetimes = []
+        for index, row in df.iterrows():
+            key = PERIOD_MANAGER.ordinal_to_datetime(period, index)
+            datetimes.append(key)
+
+        df['timestamp'] = datetimes
+        return df.set_index('timestamp', drop=True)
+
+    @staticmethod
+    def get_grouping_rules(period, df):
+        if period == 'y':
+            return [df.index.year, ]
+        if period == 'm':
+            return [df.index.year, df.index.month]
+        if period == 'd':
+            return [df.index.year, df.index.month, df.index.day]
+        if period == 'h':
+            return [df.index.year, df.index.month, df.index.day, df.index.hour]
+
+    @staticmethod
+    def ordinal_to_datetime(period, index):
+        if period == 'y':
+            return datetime(year=index, month=1, day=1)
+        if period == 'm':
+            return datetime(year=index[0], month=index[1], day=1)
+        if period == 'd':
+            return datetime(*index)
+        if period == 'h':
+            return datetime(*index)
+
+    @staticmethod
+    def date_to_period(date, period):
+        if period == 'y':
+            return date.year
+        if period == 'm':
+            return MONTHS[date.month - 1]
+        if period == 'd':
+            return WEEKDAYS[date.weekday()]
+        if period == 'h':
+            return date.day
+
+    @staticmethod
+    def sorting_method(period):
+        if period == 'y':
+            return lambda x: x
+        if period == 'm':
+            return lambda x: MONTHS.index(x[0])
+        if period == 'd':
+            return lambda x: WEEKDAYS.index(x[0])
+        if period == 'h':
+            return lambda x: x
+
+    @staticmethod
+    def delta(period):
+        if period == 'y':
+            return relativedelta(years=+1)
+        if period == 'm':
+            return relativedelta(months=+1)
+        if period == 'd':
+            return timedelta(days=1)
+        if period == 'h':
+            return timedelta(hours=1)
+
+
+PERIOD_MANAGER = PeriodManager()
+
 #################################################
-
-
-# # TODO maybe needed for cli to turn date to datetime
-# def year_converter(func):
-#     """
-#     Higher-order function that converts @year param passed to @func into numeric version.
-#     @param func:
-#     @return:
-#     """
-#
-#     def wrapper(*args, **kwargs):
-#         if not kwargs.get('year'):
-#             return func(*args, **kwargs)
-#         if not isinstance(kwargs.get('year'), int):
-#             if kwargs.get('year').isdigit():
-#                 kwargs['year'] = int(kwargs.get('year'))
-#             else:
-#                 print(f'Year is not a digit. Given year: {kwargs.get("year")}')
-#         return func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# def month_converter(func):
-#     """
-#     Higher-order function that converts @month param passed to @func into numeric version.
-#     @param func:
-#     @return:
-#     """
-#
-#     def wrapper(*args, **kwargs):
-#         if not kwargs.get('month'):
-#             return func(*args, **kwargs)
-#         if isinstance(kwargs['month'], str) and not kwargs['month'].isdigit():
-#             kwargs['month'] = MONTHS.index(kwargs['month'].lower()) + 1
-#         return func(*args, **kwargs)
-#
-#     return wrapper
-#
-#
-# def month_sorter(x):
-#     return MONTHS.index(x[0])
-#
-#
-# def lower_names(col):
-#     return col.str.lower()
-#
-#
-# def without_accent_and_whitespace(col):
-#     return col.apply(replace_accents)
-#
-# def get_messages(*files, decode=True):
-#     data = {}
-#     for file in files:
-#         temp = decode_text(read_json(file)) if decode else read_json(file)
-#         if not data:
-#             data = temp
-#         elif data.get('messages') and temp.get('messages'):
-#             data['messages'] += temp.get('messages')
-#             if sorted(temp.keys()) != sorted(data.keys()):
-#                 data = {**temp, **data}
-#     return data

@@ -1,12 +1,10 @@
 from typing import Union, List, Dict, Callable, Any
 from collections import namedtuple
-import pandas as pd
 
 from miner.data import FacebookData
 from miner import utils
 
 
-# TODO all the other jsons which are in friends as subclasses
 class Friends(FacebookData):
     def __init__(self, path: str, reader: Callable = None, processors: List[Callable] = None) -> None:
         super().__init__(path, reader=reader, processors=processors)

@@ -9,6 +9,11 @@ from helpers import lower_string, add_string, split_string, tempfile_tree
 TEST_DATA_PATH = f'{os.getcwd()}/test_data'
 
 
+@pytest.fixture(scope='session')
+def tempfiles():
+    return tempfile_tree()
+
+
 @pytest.fixture(scope='module')
 def command_chain():
     ccc = utils.CommandChainCreator()
@@ -19,11 +24,6 @@ def command_chain():
     ccc.register_command(split_string)
 
     return ccc
-
-
-@pytest.fixture(scope='session')
-def tempfiles():
-    return tempfile_tree()
 
 
 class TestCommandChainCreator:
@@ -42,15 +42,14 @@ class TestUtils:
         expected_date = utils.dt(year=2020, month=8, day=21, hour=23, minute=50, second=30)
         assert expected_date == utils.ts_to_date(date)
 
-    # def test_walk_directory_and_search_dirs_that_contain_(self):
-    #     parent = utils.walk_directory_and_search('/tmp', utils.get_parent_directory_of_file, '.json', '')
-    #
-    #     assert ['/tmp'] == list(parent)
-    #
-    # def test_walk_directory_and_search_jsons(self, tempfiles):
-    #     jsons_found = utils.walk_directory_and_search('/tmp', utils.get_all_jsons, '.json', '')
-    #     assert len(tempfiles) == 5
-    #     assert len(list(set(tempfiles) & set(jsons_found))) == 5
+    def test_walk_directory_and_search_dirs_that_contain_(self):
+        parent = utils.walk_directory_and_search('/tmp', utils.get_parent_directory_of_file, '.json', '')
+        assert '/tmp' in list(parent)
+
+    def test_walk_directory_and_search_jsons(self, tempfiles):
+        jsons_found = utils.walk_directory_and_search('/tmp', utils.get_all_jsons, '.json', '')
+        assert len(tempfiles) == 5
+        assert len(list(set(tempfiles) & set(jsons_found))) == 5
 
 
 class TestDataFrameUtils:
@@ -66,7 +65,3 @@ class TestDataFrameUtils:
 
         filtered = utils.filter_by_date(df, start='2020-03-01', end='2020-04-30')
         assert len(filtered) == 3
-
-# decode_text('Minden jot Levii \u00e2\u009d\u00a4\u00ef\u00b8\u008f')
-# decode_text('Hat \u00f0\u009f\u008e\u00a9\u00f0\u009f\u00a4\u0094')
-# decode_text('\u00f0\u009f\u0098\u00a1\u00f0\u009f\u0098\u00a1\u00f0\u009f\u0098\u00a1')

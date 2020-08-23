@@ -39,7 +39,8 @@ def test_stats_per_period(analyzer):
     assert yearly == {2014: 13, 2018: 3, 2020: 15}
 
     monthly = analyzer.stat_per_period('m', 'msg_count')
-    assert monthly == {'april': 2,'august': 1,'december': 2,'february': 10,'january': 3,'march': 1,'may': 1,'november': 10,'september': 1}
+    assert monthly == {'april': 2, 'august': 1, 'december': 2, 'february': 10, 'january': 3, 'march': 1, 'may': 1,
+                       'november': 10, 'september': 1}
 
     daily = analyzer.stat_per_period('d', 'msg_count')
     assert daily == {'monday': 6, 'tuesday': 2, 'wednesday': 6, 'thursday': 3, 'friday': 6, 'saturday': 3, 'sunday': 5}

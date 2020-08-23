@@ -35,6 +35,7 @@ def facebook_data():
 
     return _facebook_data
 
+
 @pytest.fixture(scope='session')
 def analyzer(conversations):
     return ConversationAnalyzer(conversations)

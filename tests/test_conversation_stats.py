@@ -1,3 +1,6 @@
+import pytest
+
+
 def test_stats_are_in_df(analyzer):
     stats_df = analyzer.get_stats(names='Teflon Musk').get_conversation_statistics()
 
@@ -55,3 +58,10 @@ def test_stats_per_period(analyzer):
 def test_ranking(analyzer):
     ranking = analyzer.stats.get_ranking_of_partners_by_messages()
     assert ranking == {'Foo Bar': 15, 'Tőke Hal': 7, 'Teflon Musk': 6, 'Benedek Elek': 3}
+
+
+def test_properties(analyzer):
+    stats = analyzer.stats
+    percentage_of_media_msgs = stats.percentage_of_media_messages
+    print()
+    assert percentage_of_media_msgs == pytest.approx(29.03, 0.1)

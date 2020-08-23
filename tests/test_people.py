@@ -66,5 +66,3 @@ def test_individual_media_has_one_folder_of_possibles(people):
     assert 'files' in listed_dir
     assert 'photos' in listed_dir
     assert 'audio' not in listed_dir
-
-
