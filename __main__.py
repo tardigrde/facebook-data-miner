@@ -1,4 +1,4 @@
-from miner.App import App
+from miner.app import App
 
 if __name__ == '__main__':
     app = App()

@@ -241,6 +241,8 @@ todo.md
 trash.py
 explore.ipynb
 tests/test_data/messages/inbox/private_messages.json
+miner/visualizer_utils.py
+miner/composite.py
 
 tests/.pytest_cache
 .pytest_cache
