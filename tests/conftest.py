@@ -1,10 +1,11 @@
 import pytest
 import os
 
-from miner.People import People
-from miner.FacebookData import FacebookData
-from miner.Messaging import Messaging
-from miner.Friends import Friends
+from miner.message.conversation_analyzer import ConversationAnalyzer
+from miner.message.conversations import Conversations
+from miner.people import People
+from miner.data import FacebookData
+from miner.friends import Friends
 
 TEST_DATA_PATH = f'{os.getcwd()}/test_data'
 
@@ -16,13 +17,13 @@ def friends():
 
 @pytest.fixture(scope='session')
 def conversations():
-    return Messaging(f'{TEST_DATA_PATH}')
+    return Conversations(f'{TEST_DATA_PATH}')
 
 
 @pytest.fixture(scope='session')
 def get_people(friends, conversations, ):
     def _get_people(name=None):
-        return People(TEST_DATA_PATH, friends, conversations)
+        return People(friends=friends, conversations=conversations)
 
     return _get_people
 
@@ -33,3 +34,7 @@ def facebook_data():
         return FacebookData(path=TEST_DATA_PATH + sub_path)
 
     return _facebook_data
+
+@pytest.fixture(scope='session')
+def analyzer(conversations):
+    return ConversationAnalyzer(conversations)

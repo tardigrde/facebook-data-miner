@@ -14,7 +14,7 @@ A command-line interface for some visualization capabilities. The feature is not
 For running Visualizer CLI:
 ```shell script
 export PYTHONPATH="$PWD"
-python miner/Visualizer.py --help
+python miner/visualizer.py --help
 ```
 
 ## Contribution

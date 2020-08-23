@@ -1,7 +1,4 @@
-from miner.FacebookData import TabularFacebookData
-
-
-class Me(TabularFacebookData):
+class Me:
     """
     Class for storing basic data about the user
     """

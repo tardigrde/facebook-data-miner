@@ -1,13 +1,12 @@
 import os
+import time
 
-from miner.ConversationAnalyzer import ConversationAnalyzer
-from miner.People import People
-from miner.Friends import Friends
-from miner.Messaging import Messaging
+from miner.message.conversations import Conversations
+from miner.message.conversation_analyzer import ConversationAnalyzer
+from miner.people import People
+from miner.friends import Friends
 
 DATA_PATH = f'{os.getcwd()}/data'
-
-import time
 
 
 class App:
@@ -17,13 +16,14 @@ class App:
     """
 
     def __init__(self):
+        # TODO where to filter
         self._friends = Friends(f'{DATA_PATH}/friends/friends.json')
-        self._conversations = Messaging(DATA_PATH)
-        self.people = People(DATA_PATH, friends=self._friends, conversations=self._conversations)
+        self._conversations = Conversations(DATA_PATH)
+        self.people = People(friends=self._friends, conversations=self._conversations)
 
     def analyze_messages(self):
         start = time.time()
-        analyzer = ConversationAnalyzer(self.people)
+        analyzer = ConversationAnalyzer(self._conversations)
         rank = analyzer.get_ranking_of_partners_by_messages(statistic='char_count')
         print('app: ', time.time() - start)
 
