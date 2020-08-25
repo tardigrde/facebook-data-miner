@@ -64,6 +64,13 @@ ACCENTS_MAP = {
 }
 
 MESSAGE_TYPE_MAP = {"private": "Regular", "group": "RegularGroup"}
+STAT_MAP = {
+    "msg_count": "Message",
+    "text_msg_count": "Text message",
+    "media_count": "Media message",
+    "word_count": "Word",
+    "char_count": "Character",
+}
 # TODO: get this from somewhere
 ME = "Levente Csőke"
 JOIN_DATE = datetime(year=2009, month=10, day=2)
@@ -434,7 +441,7 @@ class PeriodManager:
         if period == "d":
             return WEEKDAYS[date.weekday()]
         if period == "h":
-            return date.day
+            return date.hour
 
     @staticmethod
     def sorting_method(period):

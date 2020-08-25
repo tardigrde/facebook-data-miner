@@ -58,7 +58,7 @@ class Conversations:
             while json := next(jsons):
                 convo += Conversation(path=json)
         except StopIteration:
-            print("WARNING! Convo map is empty!")
+            # print("WARNING! Convo map is empty!")
             pass
         finally:
             convo_map[convo.metadata.title] = convo
