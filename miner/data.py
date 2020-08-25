@@ -8,7 +8,7 @@ DATA_PATH = f"{os.getcwd()}/data"
 
 class FacebookData:
     def __init__(
-            self, path: str, reader: Callable = None, processors: List[Callable] = None
+        self, path: str, reader: Callable = None, processors: List[Callable] = None
     ) -> None:
         self.path: str = path
         self._reader: Callable = reader
@@ -40,7 +40,7 @@ class FacebookData:
     def register_processors(self, preprocessor):
         raise NotImplementedError()
 
-    def get_data(self ) -> Any:
+    def get_data(self) -> Any:
         raw_data = self.read_data(self.reader, self.path)
         return self.preprocessor(raw_data)
 
