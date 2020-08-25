@@ -29,6 +29,10 @@ class ConversationAnalyzer:
     def stats(self) -> ConversationStats:
         return self._stats
 
+    @property
+    def stat_sum(self) -> pd.Series:
+        return self.stats.stat_sum
+
     def get_stats(
         self,
         names: str = None,

@@ -47,6 +47,14 @@ class ConversationStats:
         return len(self.df)
 
     @property
+    def text_msg_count(self) -> int:
+        return len(self.df)
+
+    @property
+    def media_msg_count(self) -> int:
+        return len(self.df)
+
+    @property
     def unique_msg_count(self) -> int:
         return len(self.messages.unique())
 
@@ -116,6 +124,8 @@ class ConversationStats:
         for name in self.names:
             df = self.df[self.df.partner == name]
             stats = self.get_filtered_stats(df=df, **kwargs)
+            # TODO why not use dataframe for this?
+
             count_dict = utils.fill_dict(count_dict, name, getattr(stats, statistic))
             count_dict = utils.sort_dict(
                 count_dict, func=lambda item: item[1], reverse=True
@@ -168,8 +178,7 @@ class StatsDataframe:
         self.df["media_count"] = df.content.map(self.calculate_media_count)
         # word count
         self.df["word_count"] = df.content.map(self.calculate_word_count)
-        # unique word count
-        self.df["unique_word_count"] = df.content.map(self.calculate_unique_word_count)
+
         # char_count
         self.df["char_count"] = df.content.map(self.calculate_char_count)
         return self.df
@@ -191,12 +200,6 @@ class StatsDataframe:
         if utils.check_if_value_is_nan(content):
             return 0
         return len(content.split())
-
-    @staticmethod
-    def calculate_unique_word_count(content: Union[str, math.nan]) -> int:
-        if utils.check_if_value_is_nan(content):
-            return 0
-        return len(set(content.split()))
 
     @staticmethod
     def calculate_char_count(content: Union[str, math.nan]) -> int:

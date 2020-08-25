@@ -42,10 +42,10 @@ WEEKDAYS = [
     "sunday",
 ]
 PERIOD_MAP = {
-    "y": list(range(JOIN_DATE.year, datetime.now().year + 1)),
+    "y": None,
     "m": MONTHS,
     "d": WEEKDAYS,
-    "h": list(range(24)),
+    "h": None,
 }
 DELTA_MAP = {
     "y": relativedelta(years=+1),
@@ -66,12 +66,16 @@ ACCENTS_MAP = {
 }
 
 MESSAGE_TYPE_MAP = {"private": "Regular", "group": "RegularGroup"}
-
-
-# def get_years_from_join_date():
-#     start = JOIN_DATE
-#     end = datetime.now()
-#     return list(range(start.year+1, end.year+1))
+STAT_MAP = {
+    "msg_count": "Message",
+    "text_msg_count": "Text message",
+    "media_count": "Media message",
+    "word_count": "Word",
+    "char_count": "Character",
+}
+# TODO: get this from somewhere
+ME = "Levente Csőke"
+JOIN_DATE = datetime(year=2009, month=10, day=2)
 
 
 class CommandChainCreator:
@@ -445,7 +449,7 @@ class PeriodManager:
         if period == "d":
             return WEEKDAYS[date.weekday()]
         if period == "h":
-            return date.day
+            return date.hour
 
     @staticmethod
     def sorting_method(period):
