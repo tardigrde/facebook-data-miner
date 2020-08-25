@@ -5,12 +5,14 @@ import os
 from miner.message.conversation import Conversation
 from miner import utils
 
-TEST_DATA_PATH = f'{os.getcwd()}/test_data'
+TEST_DATA_PATH = f"{os.getcwd()}/test_data"
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def convo():
-    return Conversation(path=f'{TEST_DATA_PATH}/messages/inbox/tokehal_sdf7fs9d876/message_1.json')
+    return Conversation(
+        path=f"{TEST_DATA_PATH}/messages/inbox/tokehal_sdf7fs9d876/message_1.json"
+    )
 
 
 def test_data_is_df(convo):
@@ -26,21 +28,28 @@ def test_data_has_right_length(convo):
 
 
 def test_metadata_has_fields(convo):
-    expected_fields = ['is_still_participant', 'media_dir', 'participants', 'thread_path', 'thread_type', 'title']
+    expected_fields = [
+        "is_still_participant",
+        "media_dir",
+        "participants",
+        "thread_path",
+        "thread_type",
+        "title",
+    ]
     for field in expected_fields:
         assert hasattr(convo.metadata, field)
 
 
 def test_title(convo):
-    assert convo.metadata.title == 'Tőke Hal'
+    assert convo.metadata.title == "Tőke Hal"
 
 
 def test_participants(convo):
-    assert convo.metadata.participants == ['Tőke Hal', utils.ME]
+    assert convo.metadata.participants == ["Tőke Hal", utils.ME]
 
 
 def test_thread_path(convo):
-    assert convo.metadata.thread_path == 'tokehal_sdf7fs9d876'
+    assert convo.metadata.thread_path == "tokehal_sdf7fs9d876"
 
 
 def test_media_dir(convo):

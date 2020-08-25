@@ -4,21 +4,23 @@ import pandas as pd
 
 from miner import utils
 
-TEST_DATA_PATH = f'{os.getcwd()}/test_data'
+TEST_DATA_PATH = f"{os.getcwd()}/test_data"
 
 
 # TODO what happens when two friends have same name??
 @pytest.fixture()
 def expected_friends():
-    return {'John Doe': {'compact_name': 'johndoe'},
-            'Donald Duck': {'compact_name': 'donaldduck'},
-            'Szett Droxler': {'compact_name': 'szettdroxler'},
-            'Foo Bar': {'compact_name': 'foobar'},
-            'Tőke Hal': {'compact_name': 'tokehal'},
-            'Dér Dénes': {'compact_name': 'derdenes'},
-            'Teflon Musk': {'compact_name': 'teflonmusk'},
-            'Daisy Duck': {'compact_name': 'daisyduck'},
-            'Guy Fawkes': {'compact_name': 'guyfawkes'}}
+    return {
+        "John Doe": {"compact_name": "johndoe"},
+        "Donald Duck": {"compact_name": "donaldduck"},
+        "Szett Droxler": {"compact_name": "szettdroxler"},
+        "Foo Bar": {"compact_name": "foobar"},
+        "Tőke Hal": {"compact_name": "tokehal"},
+        "Dér Dénes": {"compact_name": "derdenes"},
+        "Teflon Musk": {"compact_name": "teflonmusk"},
+        "Daisy Duck": {"compact_name": "daisyduck"},
+        "Guy Fawkes": {"compact_name": "guyfawkes"},
+    }
 
 
 def test_data_is_df(friends):
@@ -30,7 +32,7 @@ def test_data_is_right_length(friends):
 
 
 def test_has_expected_columns(friends):
-    assert list(friends.data.columns) == ['name']
+    assert list(friends.data.columns) == ["name"]
 
 
 def test_has_expected_names(friends, expected_friends):
@@ -46,7 +48,7 @@ def test_metadata_len(friends):
 
 
 def test_metadata_path(friends):
-    assert 'friends/friends.json' in friends.metadata.path
+    assert "friends/friends.json" in friends.metadata.path
 
 
 def test_has_preprocessors(friends):

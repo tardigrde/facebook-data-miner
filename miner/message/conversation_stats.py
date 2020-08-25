@@ -20,7 +20,7 @@ class ConversationStats:
         self.names = self.df.partner.unique().tolist()
 
     def __repr__(self) -> str:
-        return f'Msg count is {self.msg_count}'
+        return f"Msg count is {self.msg_count}"
 
     @property
     def messages(self) -> pd.Series:
@@ -79,7 +79,9 @@ class ConversationStats:
         summa = self.stat_sum
         return summa.media_count * 100 / summa.msg_count
 
-    def get_filtered_stats(self, df: pd.DataFrame = None, **kwargs) -> ConversationStats:
+    def get_filtered_stats(
+        self, df: pd.DataFrame = None, **kwargs
+    ) -> ConversationStats:
         if df is None:
             df = self.df
         df = self.filter(df, **kwargs)
@@ -93,16 +95,20 @@ class ConversationStats:
     def get_grouped_time_series_data(self, period: str) -> pd.DataFrame:
         grouping_rule = utils.PERIOD_MANAGER.get_grouping_rules(period, self.stats_df)
         groups_df = self.stats_df.groupby(grouping_rule).sum()
-        return utils.PERIOD_MANAGER.set_df_grouping_indices_to_datetime(groups_df, period=period)
+        return utils.PERIOD_MANAGER.set_df_grouping_indices_to_datetime(
+            groups_df, period=period
+        )
 
     # 6. Number of messages sent/got on busiest period (by year/month/day/hour)
-    def stat_per_period(self, period: str, statistic: str = 'msg_count') -> Dict:
+    def stat_per_period(self, period: str, statistic: str = "msg_count") -> Dict:
         interval_stats = self.get_grouped_time_series_data(period=period)
         # NOTE this could be in the class
         return utils.count_stat_for_period(interval_stats, period, statistic=statistic)
 
     # 7. Ranking of partners by messages by y/m/d/h, by different stats, by sent/got
-    def get_ranking_of_partners_by_messages(self, statistic: str = 'msg_count', **kwargs) -> Dict:
+    def get_ranking_of_partners_by_messages(
+        self, statistic: str = "msg_count", **kwargs
+    ) -> Dict:
         count_dict = {}
         if len(self.names) == 1:
             raise utils.TooFewPeopleError("Can't rank one person.")
@@ -111,7 +117,9 @@ class ConversationStats:
             df = self.df[self.df.partner == name]
             stats = self.get_filtered_stats(df=df, **kwargs)
             count_dict = utils.fill_dict(count_dict, name, getattr(stats, statistic))
-            count_dict = utils.sort_dict(count_dict, func=lambda item: item[1], reverse=True)
+            count_dict = utils.sort_dict(
+                count_dict, func=lambda item: item[1], reverse=True
+            )
         return count_dict
 
     def get_words(self) -> List[str]:
@@ -119,17 +127,26 @@ class ConversationStats:
         words = []
         for tokens in token_list:
             if not isinstance(tokens, list):
-                print('WARNING! Not a list!')
+                print("WARNING! Not a list!")
                 continue
             for token in tokens:
                 words.append(token)
         return words
 
-    def filter(self, df: pd.DataFrame, names: Union[str, List[str]] = None, subject: str = 'all',
-               **kwargs) -> pd.DataFrame:
+    def filter(
+        self,
+        df: pd.DataFrame,
+        names: Union[str, List[str]] = None,
+        subject: str = "all",
+        **kwargs,
+    ) -> pd.DataFrame:
         filter_messages = utils.CommandChainCreator()
-        filter_messages.register_command(utils.filter_by_names, column='partner', names=names)
-        filter_messages.register_command(utils.filter_for_subject, column='sender_name', subject=subject)
+        filter_messages.register_command(
+            utils.filter_by_names, column="partner", names=names
+        )
+        filter_messages.register_command(
+            utils.filter_for_subject, column="sender_name", subject=subject
+        )
         filter_messages.register_command(utils.filter_by_date, **kwargs)
         return filter_messages(df)
 
@@ -139,22 +156,22 @@ class ConversationStats:
 
 
 class StatsDataframe:
-    def __init__(self, ) -> None:
+    def __init__(self,) -> None:
         self.df = pd.DataFrame()
 
     def __call__(self, df) -> pd.DataFrame:
         # all message count
-        self.df['msg_count'] = df.content.map(lambda x: 1)
+        self.df["msg_count"] = df.content.map(lambda x: 1)
         # text message count
-        self.df['text_msg_count'] = df.content.map(self.calculate_text_msg_count)
+        self.df["text_msg_count"] = df.content.map(self.calculate_text_msg_count)
         # media message count
-        self.df['media_count'] = df.content.map(self.calculate_media_count)
+        self.df["media_count"] = df.content.map(self.calculate_media_count)
         # word count
-        self.df['word_count'] = df.content.map(self.calculate_word_count)
+        self.df["word_count"] = df.content.map(self.calculate_word_count)
         # unique word count
-        self.df['unique_word_count'] = df.content.map(self.calculate_unique_word_count)
+        self.df["unique_word_count"] = df.content.map(self.calculate_unique_word_count)
         # char_count
-        self.df['char_count'] = df.content.map(self.calculate_char_count)
+        self.df["char_count"] = df.content.map(self.calculate_char_count)
         return self.df
 
     @staticmethod

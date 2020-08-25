@@ -8,4 +8,4 @@ class Me:
 
     @property
     def name(self):
-        return ''
+        return ""

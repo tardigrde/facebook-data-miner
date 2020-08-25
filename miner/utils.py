@@ -10,26 +10,46 @@ import time
 import pandas as pd
 
 # https://en.wikipedia.org/wiki/ISO_8601
-DATE_FORMAT = '%Y-%m-%d'
+DATE_FORMAT = "%Y-%m-%d"
 HUNDRED_YEARS_IN_SECONDS = 100 * 365 * 24 * 60 * 60
 FACEBOOK_FOUNDATION_DATE = datetime(year=2004, month=2, day=4)
 
-MESSAGE_SUBPATH = 'messages/inbox'
-MEDIA_DIRS = ['photos', 'gifs', 'files', 'videos', 'audio']
-MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october',
-          'november', 'december']
-WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+MESSAGE_SUBPATH = "messages/inbox"
+MEDIA_DIRS = ["photos", "gifs", "files", "videos", "audio"]
+MONTHS = [
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+]
+WEEKDAYS = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+]
 PERIOD_MAP = {
-    'y': None,
-    'm': MONTHS,
-    'd': WEEKDAYS,
-    'h': None,
+    "y": None,
+    "m": MONTHS,
+    "d": WEEKDAYS,
+    "h": None,
 }
 DELTA_MAP = {
-    'y': relativedelta(years=+1),
-    'm': relativedelta(months=+1),
-    'd': timedelta(days=1),
-    'h': timedelta(hours=1)
+    "y": relativedelta(years=+1),
+    "m": relativedelta(months=+1),
+    "d": timedelta(days=1),
+    "h": timedelta(hours=1),
 }
 ACCENTS_MAP = {
     "á": "a",
@@ -43,12 +63,9 @@ ACCENTS_MAP = {
     "ű": "u",
 }
 
-MESSAGE_TYPE_MAP = {
-    'private': 'Regular',
-    'group': 'RegularGroup'
-}
+MESSAGE_TYPE_MAP = {"private": "Regular", "group": "RegularGroup"}
 # TODO: get this from somewhere
-ME = 'Levente Csőke'
+ME = "Levente Csőke"
 JOIN_DATE = datetime(year=2009, month=10, day=2)
 
 
@@ -78,8 +95,12 @@ class Command:
 
 def subject_checker(func):
     def wrapper(*args, **kwargs):
-        if not kwargs.get('subject') or kwargs.get('subject') not in ('all', 'me', 'partner'):
-            raise ValueError('Parameter `subject` should be one of {all, me, partner}')
+        if not kwargs.get("subject") or kwargs.get("subject") not in (
+            "all",
+            "me",
+            "partner",
+        ):
+            raise ValueError("Parameter `subject` should be one of {all, me, partner}")
         return func(*args, **kwargs)
 
     return wrapper
@@ -87,8 +108,10 @@ def subject_checker(func):
 
 def column_checker(func):
     def wrapper(*args, **kwargs):
-        if not kwargs.get('column') or not isinstance(kwargs.get('column'), str):
-            raise ValueError(f'Parameter `column` should be type of pd.Series, got: {type(kwargs["column"])}')
+        if not kwargs.get("column") or not isinstance(kwargs.get("column"), str):
+            raise ValueError(
+                f'Parameter `column` should be type of pd.Series, got: {type(kwargs["column"])}'
+            )
         return func(*args, **kwargs)
 
     return wrapper
@@ -96,13 +119,15 @@ def column_checker(func):
 
 def names_checker(func):
     def wrapper(*args, **kwargs):
-        names = kwargs.get('names')
+        names = kwargs.get("names")
         if not names:
             return func(*args, **kwargs)
         if isinstance(names, str):
-            kwargs['names'] = [names]
-        if not isinstance(kwargs['names'], list):
-            raise ValueError(f'Parameter `names` should be type of Union[str, List[str]], got: {type(kwargs["names"])}')
+            kwargs["names"] = [names]
+        if not isinstance(kwargs["names"], list):
+            raise ValueError(
+                f'Parameter `names` should be type of Union[str, List[str]], got: {type(kwargs["names"])}'
+            )
         return func(*args, **kwargs)
 
     return wrapper
@@ -110,8 +135,8 @@ def names_checker(func):
 
 def period_checker(func):
     def wrapper(*args, **kwargs):
-        if not kwargs.get('period') or DELTA_MAP[kwargs.get('period')] is None:
-            raise ValueError('Parameter `period` should be one of {y, m, d, h}')
+        if not kwargs.get("period") or DELTA_MAP[kwargs.get("period")] is None:
+            raise ValueError("Parameter `period` should be one of {y, m, d, h}")
         return func(*args, **kwargs)
 
     return wrapper
@@ -119,9 +144,11 @@ def period_checker(func):
 
 def attribute_checker(func):
     def wrapper(*args, **kwargs):
-        statistic = kwargs.get('statistic')
-        if not statistic or statistic not in ('msg_count', 'word_count', 'char_count'):
-            raise ValueError('Parameter `statistic` should be one of {msg_count, word_count, char_count}')
+        statistic = kwargs.get("statistic")
+        if not statistic or statistic not in ("msg_count", "word_count", "char_count"):
+            raise ValueError(
+                "Parameter `statistic` should be one of {msg_count, word_count, char_count}"
+            )
         return func(*args, **kwargs)
 
     return wrapper
@@ -129,17 +156,17 @@ def attribute_checker(func):
 
 def start_end_period_checker(func):
     def wrapper(*args, **kwargs):
-        if kwargs.get('start') is not None and kwargs.get('end') is not None:
+        if kwargs.get("start") is not None and kwargs.get("end") is not None:
             return func(*args, **kwargs)
 
-        if kwargs.get('start') is None and kwargs.get('end') is None:
-            kwargs['start'] = FACEBOOK_FOUNDATION_DATE
-            kwargs['end'] = datetime.now()
+        if kwargs.get("start") is None and kwargs.get("end") is None:
+            kwargs["start"] = FACEBOOK_FOUNDATION_DATE
+            kwargs["end"] = datetime.now()
             return func(*args, **kwargs)
 
-        if not kwargs.get('period') or DELTA_MAP[kwargs.get('period')] is None:
-            raise ValueError('Parameter `period` should be one of {y|m|d|h}')
-        kwargs['period'] = DELTA_MAP[kwargs.get('period')]
+        if not kwargs.get("period") or DELTA_MAP[kwargs.get("period")] is None:
+            raise ValueError("Parameter `period` should be one of {y|m|d|h}")
+        kwargs["period"] = DELTA_MAP[kwargs.get("period")]
         return func(*args, **kwargs)
 
     return wrapper
@@ -151,7 +178,7 @@ def read_json(file) -> Union[Dict, List]:
 
 
 def dump_to_json(data=None, file=None):
-    with open(file, 'w', encoding='utf8') as f:
+    with open(file, "w", encoding="utf8") as f:
         json.dump(data, f, ensure_ascii=False)
 
 
@@ -167,15 +194,15 @@ def dt(year: int = 2004, month: int = 1, day: int = 1, hour: int = 0, **kwargs):
 
 
 def get_start_based_on_period(join_date, period):
-    if period == 'y':
+    if period == "y":
         return datetime(join_date.year, 1, 1)
-    elif period == 'm':
+    elif period == "m":
         return datetime(join_date.year, join_date.month, 1)
     return join_date
 
 
 @period_checker
-def generate_date_series(period='y', start=None, end=None):
+def generate_date_series(period="y", start=None, end=None):
     dates = []
     join_date = JOIN_DATE
     start = start or get_start_based_on_period(join_date, period)
@@ -188,7 +215,7 @@ def generate_date_series(period='y', start=None, end=None):
     return dates
 
 
-def get_stats_for_time_intervals(stat_getter, time_series, period, subject='all'):
+def get_stats_for_time_intervals(stat_getter, time_series, period, subject="all"):
     data = {}
     for i in range(len(time_series)):
         start = time_series[i]
@@ -196,7 +223,9 @@ def get_stats_for_time_intervals(stat_getter, time_series, period, subject='all'
             end = time_series[i + 1]
         except IndexError:
             end = None
-        data[start] = stat_getter.get_filtered_stats(subject=subject, start=start, end=end, period=period)
+        data[start] = stat_getter.get_filtered_stats(
+            subject=subject, start=start, end=end, period=period
+        )
     return data
 
 
@@ -222,7 +251,10 @@ def fill_dict(dictionary, key, value):
 
 
 def sort_dict(dictionary, func=lambda x: x, reverse=False):
-    return {key: value for key, value in sorted(dictionary.items(), key=func, reverse=reverse)}
+    return {
+        key: value
+        for key, value in sorted(dictionary.items(), key=func, reverse=reverse)
+    }
 
 
 def remove_items_where_value_is_falsible(dictionary):
@@ -245,21 +277,27 @@ def unify_dict_keys(first, second):
 
 def get_parent_directory_of_file(root, files, extension, contains_string) -> str:
     for file_name in files:
-        if file_name.endswith(extension) and \
-                contains_string is not None and contains_string in file_name:
+        if (
+            file_name.endswith(extension)
+            and contains_string is not None
+            and contains_string in file_name
+        ):
             return root
 
 
 def get_all_jsons(root, files, extension, contains_string) -> List[str]:
     paths = []
     for file_name in files:
-        if file_name.endswith(extension) and \
-                contains_string is not None and contains_string in file_name:
+        if (
+            file_name.endswith(extension)
+            and contains_string is not None
+            and contains_string in file_name
+        ):
             paths.append(os.path.join(root, file_name))
     return paths
 
 
-def walk_directory_and_search(path, func, extension, contains_string=''):
+def walk_directory_and_search(path, func, extension, contains_string=""):
     paths = []
     for root, _, files in os.walk(path):
         res = func(root, files, extension, contains_string)
@@ -283,10 +321,12 @@ def replace_accents(string):
 
 
 def utf8_decoder(string):
-    return string.encode('latin_1').decode('utf-8')
+    return string.encode("latin_1").decode("utf-8")
 
 
-def decode_data(obj: Union[str, List, Dict], decoder: Callable, ):
+def decode_data(
+    obj: Union[str, List, Dict], decoder: Callable,
+):
     if isinstance(obj, str):
         return decoder(obj)
 
@@ -318,14 +358,16 @@ def filter_by_date(df: pd.DataFrame, start=None, end=None, period=None):
     if start and end:
         return df.loc[start:end]
     elif start and not end:
-        return df.loc[start:start + period]
+        return df.loc[start : start + period]
     elif not start and end:
-        return df.loc[end - period:end]
+        return df.loc[end - period : end]
 
 
 @column_checker
 @names_checker
-def filter_by_names(df: pd.DataFrame, column: str = '', names: Union[str, List[str]] = None):
+def filter_by_names(
+    df: pd.DataFrame, column: str = "", names: Union[str, List[str]] = None
+):
     if not names:
         return df
     partner_matched = df[df[column].isin(names)]
@@ -334,10 +376,10 @@ def filter_by_names(df: pd.DataFrame, column: str = '', names: Union[str, List[s
 
 @column_checker
 @subject_checker
-def filter_for_subject(df: pd.DataFrame, column: str = '', subject: str = 'all'):
-    if subject == 'me':
+def filter_for_subject(df: pd.DataFrame, column: str = "", subject: str = "all"):
+    if subject == "me":
         return df[df[column] == ME]
-    elif subject == 'partner':
+    elif subject == "partner":
         return df[df[column] != ME]
     return df
 
@@ -356,62 +398,64 @@ class PeriodManager:
             key = PERIOD_MANAGER.ordinal_to_datetime(period, index)
             datetimes.append(key)
 
-        df['timestamp'] = datetimes
-        return df.set_index('timestamp', drop=True)
+        df["timestamp"] = datetimes
+        return df.set_index("timestamp", drop=True)
 
     @staticmethod
     def get_grouping_rules(period, df):
-        if period == 'y':
-            return [df.index.year, ]
-        if period == 'm':
+        if period == "y":
+            return [
+                df.index.year,
+            ]
+        if period == "m":
             return [df.index.year, df.index.month]
-        if period == 'd':
+        if period == "d":
             return [df.index.year, df.index.month, df.index.day]
-        if period == 'h':
+        if period == "h":
             return [df.index.year, df.index.month, df.index.day, df.index.hour]
 
     @staticmethod
     def ordinal_to_datetime(period, index):
-        if period == 'y':
+        if period == "y":
             return datetime(year=index, month=1, day=1)
-        if period == 'm':
+        if period == "m":
             return datetime(year=index[0], month=index[1], day=1)
-        if period == 'd':
+        if period == "d":
             return datetime(*index)
-        if period == 'h':
+        if period == "h":
             return datetime(*index)
 
     @staticmethod
     def date_to_period(date, period):
-        if period == 'y':
+        if period == "y":
             return date.year
-        if period == 'm':
+        if period == "m":
             return MONTHS[date.month - 1]
-        if period == 'd':
+        if period == "d":
             return WEEKDAYS[date.weekday()]
-        if period == 'h':
+        if period == "h":
             return date.day
 
     @staticmethod
     def sorting_method(period):
-        if period == 'y':
+        if period == "y":
             return lambda x: x
-        if period == 'm':
+        if period == "m":
             return lambda x: MONTHS.index(x[0])
-        if period == 'd':
+        if period == "d":
             return lambda x: WEEKDAYS.index(x[0])
-        if period == 'h':
+        if period == "h":
             return lambda x: x
 
     @staticmethod
     def delta(period):
-        if period == 'y':
+        if period == "y":
             return relativedelta(years=+1)
-        if period == 'm':
+        if period == "m":
             return relativedelta(months=+1)
-        if period == 'd':
+        if period == "d":
             return timedelta(days=1)
-        if period == 'h':
+        if period == "h":
             return timedelta(hours=1)
 
 

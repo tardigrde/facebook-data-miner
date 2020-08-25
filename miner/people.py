@@ -6,7 +6,7 @@ from miner.message.conversations import Conversations
 from miner.friends import Friends
 from miner.person import Person
 
-DATA_PATH = f'{os.getcwd()}/data'
+DATA_PATH = f"{os.getcwd()}/data"
 
 
 class People:
@@ -32,8 +32,8 @@ class People:
 
     def get_source_map(self) -> Dict[str, Callable]:
         return {
-            'friends': self.convert_friends_to_persons,
-            'conversations': self.convert_conversation_partners_to_persons,
+            "friends": self.convert_friends_to_persons,
+            "conversations": self.convert_conversation_partners_to_persons,
         }
 
     def get_data_from_source(self, **kwargs) -> Dict[str, Person]:
@@ -58,26 +58,28 @@ class People:
         start = time.time()
         persons = {}
         for i, friend in friends.data.iterrows():
-            persons[friend['name']] = Person(name=friend['name'], friend=True)
-        print('friends: ', time.time() - start)
+            persons[friend["name"]] = Person(name=friend["name"], friend=True)
+        print("friends: ", time.time() - start)
         return persons
 
     @staticmethod
-    def convert_conversation_partners_to_persons(conversations: Conversations) -> Dict[str, Person]:
+    def convert_conversation_partners_to_persons(
+        conversations: Conversations,
+    ) -> Dict[str, Person]:
         start = time.time()
         persons = {}
         for name, convo in conversations.private.items():
             persons[name] = Person(
-                name=name, messages=convo.data,
+                name=name,
+                messages=convo.data,
                 thread_path=convo.metadata.thread_path,
-                media_dir=convo.metadata.media_dir
+                media_dir=convo.metadata.media_dir,
             )
-        print('convos: ', time.time() - start)
+        print("convos: ", time.time() - start)
         return persons
 
 
 class PeopleIterator:
-
     def __init__(self, container):
         self.container = container
         self.n = -1

@@ -3,12 +3,13 @@ import pandas as pd
 import os
 from typing import Union, List, Dict, Callable, Any, NamedTuple
 
-DATA_PATH = f'{os.getcwd()}/data'
+DATA_PATH = f"{os.getcwd()}/data"
 
 
 class FacebookData:
-
-    def __init__(self, path: str, reader: Callable = None, processors: List[Callable] = None) -> None:
+    def __init__(
+            self, path: str, reader: Callable = None, processors: List[Callable] = None
+    ) -> None:
         self.path: str = path
         self._reader: Callable = reader
         self._preprocessor: Callable = self.get_preprocessor(processors)
@@ -39,7 +40,7 @@ class FacebookData:
     def register_processors(self, preprocessor):
         raise NotImplementedError()
 
-    def get_data(self, ) -> Any:
+    def get_data(self ) -> Any:
         raw_data = self.read_data(self.reader, self.path)
         return self.preprocessor(raw_data)
 
