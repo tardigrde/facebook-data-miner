@@ -4,138 +4,117 @@ import numpy as np
 import argparse
 import os
 
+from typing import Union, List, Dict, Callable, Any, NamedTuple
+
 from miner.visualizer.data_adapter import DataAdapter
 
-from miner.message.conversation_analyzer import ConversationAnalyzer
-from miner.message.conversations import Conversations
-from miner.people import People
-from miner import utils
-
-TEST_DATA_PATH = f"{os.getcwd()}/tests/test_data"
+# TEST_DATA_PATH = f"{os.getcwd()}/tests/test_data"
 
 
-# TEST_DATA_PATH = f'{os.getcwd()}/data'
+TEST_DATA_PATH = f"{os.getcwd()}/data"
 
 
 class Visualizer:
     def __init__(self, path):
-        self.path = path
-        self.analyzer = self.get_analyzer()
-        self.stats = self.get_stats()
-        pass
+        self.adapter = DataAdapter(path)
 
-    def get_analyzer(self):
-        convos = Conversations(path=self.path)
-        return ConversationAnalyzer(convos)
+    def plot_stat_count_over_time_series(self, stat: str, **kwargs) -> None:
+        # NOTE this only plots time series/year not else.
+        index, me, partner = self.adapter.get_stat_per_time_data("y", stat, **kwargs)
+        df = pd.DataFrame({"date": index, "me": me, "partner": partner,})
+        df = df.set_index("date")
 
-    def get_stats(self, **kwargs):
-        analyzer = self.get_analyzer()
-        return analyzer.get_stats(**kwargs)
-
-    def set_up_time_series_data(self, period, stat="msg_count", **kwargs):
-        stats = self.get_stats(**kwargs)
-        return stats.get_conversation_statistics(period)[stat]
-
-    def setup_data_for_all_subjects(self, period, stat=None, **kwargs):
-        all_data = self.set_up_time_series_data(
-            period, stat=stat, subject="all", **kwargs
+        self.plot_time_series_data(
+            df,
+            xlabel="Date",
+            ylabel=f"Stat count for {stat}",
+            title="Stats over time series",
         )
-        me_data = self.set_up_time_series_data(
-            period, stat=stat, subject="me", **kwargs
-        )
-        partner_data = self.set_up_time_series_data(
-            period, stat=stat, subject="partner", **kwargs
-        )
-        df = pd.concat([all_data, me_data, partner_data], axis=1).fillna(0)
-        df.columns = ["all", "me", "partner"]
-        return df
-
-    def plot_time_series_data_of_messages(self, period, **kwargs):
-        df = self.setup_data_for_all_subjects(period, **kwargs)
-        self.plot_time_series(df, title=name, stat=stat)
 
     @staticmethod
-    def plot_time_series(
-        df, title="Time series analysis", xlabel="Date", stat="msg_count"
-    ):
-        ylabel = f"Stat for {stat}"
+    def plot_time_series_data(df: pd.DataFrame, **kwargs) -> None:
         df.plot(kind="line", linestyle="dashdot", figsize=(16, 5))
-        plt.gca().set(xlabel=xlabel, ylabel=ylabel)
-        plt.title(title)  # does not work
+        plt.gca().set(**kwargs)
         plt.legend()
         plt.show()
 
-    def bar_plot_stat_per_time_period(self, period, stat="msg_count", **kwargs):
-        me_stat = self.get_stats(subject="me", **kwargs).stat_per_period(
-            period, statistic=stat
+    def plot_stat_count_per_time_period(self, period, stat: str, names: []):
+        index, me, partner = self.adapter.get_stat_per_time_data(
+            period, stat, names=names
         )
-        partner_stat = self.get_stats(subject="partner", **kwargs).stat_per_period(
-            period, statistic=stat
+        self.plot_stat_per_time(
+            index,
+            me,
+            partner,
+            xlabel="Timeperiod",
+            ylabel=f"{stat}",
+            title="Stats per timeperiod",
         )
-        me_stat, partner_stat = utils.unify_dict_keys(me_stat, partner_stat)
-        df = pd.DataFrame(
-            {
-                "date": list(me_stat.keys()),
-                "me": list(me_stat.values()),
-                "partner": list(partner_stat.values()),
-            }
-        )
-        df = df.set_index("date")
-        self.plot_stat_per_time(df, stat=stat)
 
     @staticmethod
-    def plot_stat_per_time(
-        df, stat="msg_count", title="Stat per timeperiod", xlabel="Timeperiod", dpi=100
-    ):
+    def plot_stat_per_time(index, me, partner, **kwargs):
         # Stacked bar chart
         width = 0.35
-        ylabel = f"Stat for {stat}"
-        plt.figure(figsize=(12, 12), dpi=dpi)
-        plt.bar(list(df.index), list(df.me), width, label="me", color="r")
-        plt.bar(
-            list(df.index),
-            list(df.partner),
-            width,
-            label="partner",
-            bottom=list(df.me),
-            color="g",
-        )
-        plt.gca().set(xlabel=xlabel, ylabel=ylabel)
-        plt.title(title)  # does not work
+        plt.figure(figsize=(12, 12), dpi=100)
+        plt.bar(index, me, width, label="me", color="r")
+        plt.bar(index, partner, width, label="partner", bottom=me, color="g")
+        plt.gca().set(**kwargs)
         plt.legend()
         plt.show()
 
-    def plot_ranking_of_friends_by_message_stats(self, stat="msg_count"):
-        analyzer = self.get_analyzer()
-        ranks_dict = analyzer.get_ranking_of_partners_by_messages(statistic=stat)
-        sorted_dict = utils.sort_dict(
-            ranks_dict, func=lambda item: item[1], reverse=True
+    def plot_ranking_of_friends_by_stats(self, stat: str):
+        # TODO add filtering possibilities
+        y, x = self.adapter.get_ranking_of_friends_by_message_stats(stat=stat)
+        self.plot_horizontal_bar_chart(
+            y,
+            x,
+            xlabel="Stat count",
+            ylabel="People",
+            title=f"Ranking of people by {stat}",
         )
-        sliced_dict = (
-            utils.slice_dict(sorted_dict, 20) if len(sorted_dict) > 20 else sorted_dict
-        )
-        cleared_dict = utils.remove_items_where_value_is_falsible(sliced_dict)
-
-        df = pd.DataFrame(cleared_dict, index=[0])
-        self.horizontal_bar_chart(df, stat=stat)
 
     @staticmethod
-    def horizontal_bar_chart(
-        df, stat="msg_count", title="Ranking of friends {}", dpi=100
-    ):
-        people = list(df.columns)
-        y_pos = np.arange(len(people))
-        performance = df.iloc[0]
+    def plot_horizontal_bar_chart(y, x, **kwargs):
+        y_pos = np.arange(len(y))
 
-        plt.figure(figsize=(12, 12), dpi=dpi)
-        plt.barh(y_pos, performance, align="center", tick_label=people)
-        plt.gca().invert_yaxis()  # labels read top-to-bottom
-        plt.title(title.format(stat))
+        plt.figure(figsize=(12, 12), dpi=100)
+        plt.barh(y_pos, x, align="center", tick_label=y)
+        plt.gca().invert_yaxis()
+        plt.gca().set(**kwargs)  # labels read top-to-bottom
+        plt.show()
+
+    def plot_msg_type_ratio(self):
+        percentage = self.adapter.analyzer.stats.percentage_of_media_messages
+        data = [100 - percentage, percentage]
+        labels = (
+            "Text",
+            "Media",
+        )
+        self.plot_pie_chart(
+            labels, data,
+        )
+
+    @staticmethod
+    def plot_pie_chart(
+        labels, data,
+    ):
+        fig1, ax1 = plt.subplots()
+        ax1.pie(data, labels=labels, autopct="%1.1f%%", shadow=True, startangle=90)
+        ax1.axis("equal")  # Equal aspect ratio ensures that pie is drawn as a circle.
+
         plt.show()
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Visualize chat statistics")
+    parser.add_argument(
+        "-k",
+        "--kind",
+        metavar="kind",
+        type=str,
+        default="ranking",
+        help="One of {series|stats|ranking|type}, standing for time series, stats per period, ranking of friends by messages and type of messages",
+    )
     parser.add_argument(
         "-p",
         "--period",
@@ -146,11 +125,11 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-n",
-        "--name",
-        metavar="name",
+        "--names",
+        metavar="names",
         type=str,
         default=None,
-        help="A person's name if you only want data filtered only for them.",
+        help="A person's name or people's name if you only want data filtered only for them.",
     )
     parser.add_argument(
         "-s",
@@ -164,11 +143,20 @@ if __name__ == "__main__":
     # TODO add possibility for adding dates from the command line
     # https://docs.python.org/3/library/argparse.html#the-add-argument-method
     args = parser.parse_args()
+    kind = args.kind
     period = args.period
-    name = args.name
+    names = args.names
     stat = args.stat
+
     v = Visualizer(path=TEST_DATA_PATH)
-    # TODO bad visualization!! maybe needs augmentation
-    # v.plot_time_series_data_of_messages(period, names=name, stat=f'{stat}_count')
-    # v.bar_plot_stat_per_time_period(period, names=name, stat=f'{stat}_count')
-    # v.plot_ranking_of_friends_by_message_stats()
+    if kind == "series":
+        # TODO bad visualization!! maybe needs augmentation
+        v.plot_stat_count_over_time_series(stat=f"{stat}_count", names=names)
+    elif kind == "stats":
+        v.plot_stat_count_per_time_period(period, stat=f"{stat}_count", names=names)
+    elif kind == "ranking":
+        v.plot_ranking_of_friends_by_stats(stat=f"{stat}_count")
+    elif kind == "msgtype":
+        v.plot_msg_type_ratio()
+    elif kind == "convotype":
+        pass

@@ -45,6 +45,7 @@ class TestUtils:
         assert expected_date == utils.ts_to_date(date)
 
     def test_walk_directory_and_search_dirs_that_contain_(self):
+        # TODO needs better testing
         parent = utils.walk_directory_and_search(
             "/tmp", utils.get_parent_directory_of_file, ".json", ""
         )
@@ -56,6 +57,22 @@ class TestUtils:
         )
         assert len(tempfiles) == 5
         assert len(list(set(tempfiles) & set(jsons_found))) == 5
+
+    def test_fill_dict_and_sort_dict(self):
+        unsorted = {}
+        unsorted = utils.fill_dict(unsorted, "b", 3)
+        unsorted = utils.fill_dict(unsorted, "a", 2)
+        unsorted = utils.fill_dict(unsorted, "c", 4)
+        unsorted = utils.fill_dict(unsorted, "a", 3)
+        assert unsorted == {"b": 3, "a": 5, "c": 4}
+        sorted_desc = utils.sort_dict(
+            unsorted, func=lambda item: item[1], reverse=False
+        )
+        assert sorted_desc == {"b": 3, "c": 4, "a": 5}
+        sorted_asc = utils.sort_dict(
+            sorted_desc, func=lambda item: item[1], reverse=True
+        )
+        assert sorted_asc == {"a": 5, "c": 4, "b": 3}
 
 
 class TestDataFrameUtils:

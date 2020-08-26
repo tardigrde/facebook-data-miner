@@ -13,7 +13,9 @@ import pandas as pd
 DATE_FORMAT = "%Y-%m-%d"
 HUNDRED_YEARS_IN_SECONDS = 100 * 365 * 24 * 60 * 60
 FACEBOOK_FOUNDATION_DATE = datetime(year=2004, month=2, day=4)
-
+# TODO: get this from somewhere
+ME = "Levente Csőke"
+JOIN_DATE = datetime(year=2009, month=10, day=2)
 MESSAGE_SUBPATH = "messages/inbox"
 MEDIA_DIRS = ["photos", "gifs", "files", "videos", "audio"]
 MONTHS = [
@@ -40,10 +42,10 @@ WEEKDAYS = [
     "sunday",
 ]
 PERIOD_MAP = {
-    "y": None,
+    "y": list(range(JOIN_DATE.year, datetime.now().year + 1)),
     "m": MONTHS,
     "d": WEEKDAYS,
-    "h": None,
+    "h": list(range(24)),
 }
 DELTA_MAP = {
     "y": relativedelta(years=+1),
@@ -64,9 +66,12 @@ ACCENTS_MAP = {
 }
 
 MESSAGE_TYPE_MAP = {"private": "Regular", "group": "RegularGroup"}
-# TODO: get this from somewhere
-ME = "Levente Csőke"
-JOIN_DATE = datetime(year=2009, month=10, day=2)
+
+
+# def get_years_from_join_date():
+#     start = JOIN_DATE
+#     end = datetime.now()
+#     return list(range(start.year+1, end.year+1))
 
 
 class CommandChainCreator:
@@ -201,20 +206,6 @@ def get_start_based_on_period(join_date, period):
     return join_date
 
 
-@period_checker
-def generate_date_series(period="y", start=None, end=None):
-    dates = []
-    join_date = JOIN_DATE
-    start = start or get_start_based_on_period(join_date, period)
-    end = end or datetime.now()
-
-    intermediate = start
-    while intermediate <= end:  # means that we want to have the end in it as well
-        dates.append(intermediate)
-        intermediate = intermediate + DELTA_MAP.get(period)
-    return dates
-
-
 def get_stats_for_time_intervals(stat_getter, time_series, period, subject="all"):
     data = {}
     for i in range(len(time_series)):
@@ -229,8 +220,16 @@ def get_stats_for_time_intervals(stat_getter, time_series, period, subject="all"
     return data
 
 
+def prefill_dict(dict, keys, value):
+    for k in keys:
+        dict[k] = value
+    return dict
+
+
 def count_stat_for_period(df, period, statistic):
     periods = {}
+    periods = prefill_dict(periods, PERIOD_MAP.get(period), 0)
+
     for date, row in df.iterrows():
         stat = row[statistic]
         if stat is None:
@@ -388,6 +387,20 @@ class TooFewPeopleError(Exception):
     pass
 
 
+@start_end_period_checker
+def generate_date_series(period="y", start=None, end=None):
+    dates = []
+    join_date = JOIN_DATE
+    start = start or get_start_based_on_period(join_date, period)
+    end = end or datetime.now()
+
+    intermediate = start
+    while intermediate <= end:  # means that we want to have the end in it as well
+        dates.append(intermediate)
+        intermediate = intermediate + DELTA_MAP.get(period)
+    return dates
+
+
 class PeriodManager:
     # TODO clear this class up
     #  maybe subclasses? do we need it?
@@ -404,9 +417,7 @@ class PeriodManager:
     @staticmethod
     def get_grouping_rules(period, df):
         if period == "y":
-            return [
-                df.index.year,
-            ]
+            return [df.index.year]
         if period == "m":
             return [df.index.year, df.index.month]
         if period == "d":
