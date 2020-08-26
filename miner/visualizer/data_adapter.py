@@ -25,20 +25,14 @@ class DataAdapter:
         analyzer = self.get_analyzer()
         return analyzer.get_stats(**kwargs)
 
-    def set_up_time_series_data(self, stat="text_msg_count", **kwargs):
+    def set_up_time_series_data(self, period, stat="text_msg_count", **kwargs):
         stats = self.get_stats(**kwargs)
-        return stats.get_conversation_statistics()[stat]
+        return stats.get_grouped_time_series_data(period)[stat]
 
-    def get_time_series_data(self, stat=None, subjects=[], **kwargs):
-        subject_data = []
-        for subject in subjects:
-            data = self.set_up_time_series_data(stat=stat, subject=subject, **kwargs)
-            subject_data.append(data)
-        # TODO DATA HAS TO BE AUGMENTED FOR THIS TO WORK. y/m/d
-        # df = pd.concat(subject_data, axis=1).fillna(0)
-        # df.columns = subjects
-        # return df
-        return subject_data
+    def get_time_series_data(self, period, stat=None, **kwargs):
+        index, me, partner = self.get_stat_per_time_data(period, stat)
+        utils.generate_date_series(period, start=index[0], end=index[-1])
+        print()
 
     def get_stat_per_time_data(self, period, stat="msg_count", **kwargs):
         me_stat = self.get_stats(subject="me", **kwargs).stat_per_period(
@@ -47,20 +41,7 @@ class DataAdapter:
         partner_stat = self.get_stats(subject="partner", **kwargs).stat_per_period(
             period, statistic=stat
         )
-        me_stat, partner_stat = utils.unify_dict_keys(me_stat, partner_stat)
-        # TODO what is this??
-        # sorting adds to otherwise empty keys...
-        # me_stat = utils.sort_dict(me_stat, utils.PERIOD_MANAGER.sorting_method(period))
-        # partner_stat = utils.sort_dict(partner_stat, utils.PERIOD_MANAGER.sorting_method(period))
-        df = pd.DataFrame(
-            {
-                "date": list(me_stat.keys()),
-                "me": list(me_stat.values()),
-                "partner": list(partner_stat.values()),
-            }
-        )
-        df = df.set_index("date")
-        return df.index, df.me, df.partner
+        return list(me_stat.keys()), list(me_stat.values()), list(partner_stat.values())
 
     def get_ranking_of_friends_by_message_stats(self, stat="msg_count"):
         analyzer = self.get_analyzer()

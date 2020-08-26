@@ -8,43 +8,35 @@ from typing import Union, List, Dict, Callable, Any, NamedTuple
 
 from miner.visualizer.data_adapter import DataAdapter
 
-TEST_DATA_PATH = f"{os.getcwd()}/tests/test_data"
+# TEST_DATA_PATH = f"{os.getcwd()}/tests/test_data"
 
 
-# TEST_DATA_PATH = f'{os.getcwd()}/data'
+TEST_DATA_PATH = f"{os.getcwd()}/data"
 
 
 class Visualizer:
-    dpi: int = 100
-    square_shape: tuple = (
-        12,
-        12,
-    )
-    rectangular_shape: tuple = (16, 5)
-
     def __init__(self, path):
         self.adapter = DataAdapter(path)
 
-    def plot_stat_count_over_time_series(self, stat: str, names: []) -> None:
-        plottables = self.adapter.get_time_series_data(
-            stat=stat, subjects=["all", "me", "partner"], names=names
-        )
+    def plot_stat_count_over_time_series(self, stat: str, **kwargs) -> None:
+        # NOTE this only plots time series/year not else.
+        index, me, partner = self.adapter.get_stat_per_time_data("y", stat, **kwargs)
+        df = pd.DataFrame({"date": index, "me": me, "partner": partner,})
+        df = df.set_index("date")
+
         self.plot_time_series_data(
-            plottables,
+            df,
             xlabel="Date",
             ylabel=f"Stat count for {stat}",
             title="Stats over time series",
         )
 
     @staticmethod
-    def plot_time_series_data(plottables: List, **kwargs) -> None:
-        # df.plot(kind="line", linestyle="dashdot", figsize=(16, 5))
-        # for plottable in plottables:
-        #    plt.plot(plottable)
-        # plt.gca().set(**kwargs)
-        # plt.legend()
-        # plt.show()
-        pass
+    def plot_time_series_data(df: pd.DataFrame, **kwargs) -> None:
+        df.plot(kind="line", linestyle="dashdot", figsize=(16, 5))
+        plt.gca().set(**kwargs)
+        plt.legend()
+        plt.show()
 
     def plot_stat_count_per_time_period(self, period, stat: str, names: []):
         index, me, partner = self.adapter.get_stat_per_time_data(
@@ -78,7 +70,7 @@ class Visualizer:
             x,
             xlabel="Stat count",
             ylabel="People",
-            title="Ranking of people my stats",
+            title=f"Ranking of people by {stat}",
         )
 
     @staticmethod
@@ -91,9 +83,38 @@ class Visualizer:
         plt.gca().set(**kwargs)  # labels read top-to-bottom
         plt.show()
 
+    def plot_msg_type_ratio(self):
+        percentage = self.adapter.analyzer.stats.percentage_of_media_messages
+        data = [100 - percentage, percentage]
+        labels = (
+            "Text",
+            "Media",
+        )
+        self.plot_pie_chart(
+            labels, data,
+        )
+
+    @staticmethod
+    def plot_pie_chart(
+        labels, data,
+    ):
+        fig1, ax1 = plt.subplots()
+        ax1.pie(data, labels=labels, autopct="%1.1f%%", shadow=True, startangle=90)
+        ax1.axis("equal")  # Equal aspect ratio ensures that pie is drawn as a circle.
+
+        plt.show()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Visualize chat statistics")
+    parser.add_argument(
+        "-k",
+        "--kind",
+        metavar="kind",
+        type=str,
+        default="ranking",
+        help="One of {series|stats|ranking|type}, standing for time series, stats per period, ranking of friends by messages and type of messages",
+    )
     parser.add_argument(
         "-p",
         "--period",
@@ -122,14 +143,20 @@ if __name__ == "__main__":
     # TODO add possibility for adding dates from the command line
     # https://docs.python.org/3/library/argparse.html#the-add-argument-method
     args = parser.parse_args()
+    kind = args.kind
     period = args.period
     names = args.names
     stat = args.stat
-    v = Visualizer(path=TEST_DATA_PATH)
 
-    # TODO bad visualization!! maybe needs augmentation
-    # v.plot_stat_count_over_time_series(stat=f'{stat}_count', names=names)
-    # TODO broken
-    # v.plot_stat_count_per_time_period(period, stat=f'{stat}_count', names=names)
-    #
-    v.plot_ranking_of_friends_by_stats(stat=f"{stat}_count")
+    v = Visualizer(path=TEST_DATA_PATH)
+    if kind == "series":
+        # TODO bad visualization!! maybe needs augmentation
+        v.plot_stat_count_over_time_series(stat=f"{stat}_count", names=names)
+    elif kind == "stats":
+        v.plot_stat_count_per_time_period(period, stat=f"{stat}_count", names=names)
+    elif kind == "ranking":
+        v.plot_ranking_of_friends_by_stats(stat=f"{stat}_count")
+    elif kind == "msgtype":
+        v.plot_msg_type_ratio()
+    elif kind == "convotype":
+        pass
