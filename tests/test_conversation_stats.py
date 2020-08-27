@@ -8,7 +8,6 @@ def test_stats_are_in_df(analyzer):
     assert "text_msg_count" in stats_df
     assert "media_count" in stats_df
     assert "word_count" in stats_df
-    assert "unique_word_count" in stats_df
     assert "char_count" in stats_df
 
 
@@ -28,7 +27,6 @@ def test_get_time_series_data(analyzer):
     assert first_row.msg_count == 15
     assert first_row.media_count == 7
     assert first_row.word_count == 34
-    assert first_row.unique_word_count == 34
     assert first_row.char_count == 140
 
     grouped = stats.get_grouped_time_series_data("m")
@@ -44,10 +42,36 @@ def test_get_time_series_data(analyzer):
 def test_stats_per_period(analyzer):
     stats = analyzer.get_stats(names="Foo Bar")
     yearly = stats.stat_per_period("y", "msg_count")
-    assert yearly == {2020: 15}
+    assert yearly == {
+        2009: 0,
+        2010: 0,
+        2011: 0,
+        2012: 0,
+        2013: 0,
+        2014: 0,
+        2015: 0,
+        2016: 0,
+        2017: 0,
+        2018: 0,
+        2019: 0,
+        2020: 15,
+    }
 
     monthly = stats.stat_per_period("m", "msg_count")
-    assert monthly == {"april": 2, "august": 1, "february": 10, "march": 1, "may": 1}
+    assert monthly == {
+        "january": 0,
+        "february": 10,
+        "march": 1,
+        "april": 2,
+        "may": 1,
+        "june": 0,
+        "july": 0,
+        "august": 1,
+        "september": 0,
+        "october": 0,
+        "november": 0,
+        "december": 0,
+    }
 
     daily = stats.stat_per_period("d", "msg_count")
     assert daily == {
@@ -60,7 +84,32 @@ def test_stats_per_period(analyzer):
         "sunday": 1,
     }
     hourly = stats.stat_per_period("h", "msg_count")
-    assert hourly == {2: 1, 3: 1, 8: 1, 9: 1, 13: 2, 14: 5, 18: 2, 25: 1, 26: 1}
+    assert hourly == {
+        0: 1,
+        1: 1,
+        2: 0,
+        3: 0,
+        4: 1,
+        5: 0,
+        6: 2,
+        7: 0,
+        8: 1,
+        9: 0,
+        10: 0,
+        11: 1,
+        12: 2,
+        13: 1,
+        14: 0,
+        15: 1,
+        16: 0,
+        17: 0,
+        18: 1,
+        19: 0,
+        20: 2,
+        21: 0,
+        22: 0,
+        23: 1,
+    }
 
 
 def test_ranking(analyzer):

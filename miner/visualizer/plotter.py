@@ -6,17 +6,18 @@ import os
 
 from typing import Union, List, Dict, Callable, Any, NamedTuple
 
-from miner.visualizer.data_adapter import DataAdapter
+# from miner.visualizer.adapters import DataAdapter
+from miner.visualizer.adapters import PlotDataAdapter
 
-# TEST_DATA_PATH = f"{os.getcwd()}/tests/test_data"
-
-
-TEST_DATA_PATH = f"{os.getcwd()}/data"
+TEST_DATA_PATH = f"{os.getcwd()}/tests/test_data"
 
 
-class Visualizer:
-    def __init__(self, path):
-        self.adapter = DataAdapter(path)
+# TEST_DATA_PATH = f"{os.getcwd()}/data"
+
+
+class Plotter:
+    def __init__(self, analyzer):
+        self.adapter = PlotDataAdapter(analyzer)
 
     def plot_stat_count_over_time_series(self, stat: str, **kwargs) -> None:
         # NOTE this only plots time series/year not else.
@@ -147,8 +148,10 @@ if __name__ == "__main__":
     period = args.period
     names = args.names
     stat = args.stat
+    from miner.app import App
 
-    v = Visualizer(path=TEST_DATA_PATH)
+    app = App(TEST_DATA_PATH)
+    v = app.get_plotter()
     if kind == "series":
         # TODO bad visualization!! maybe needs augmentation
         v.plot_stat_count_over_time_series(stat=f"{stat}_count", names=names)

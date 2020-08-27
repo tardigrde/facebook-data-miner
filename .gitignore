@@ -231,18 +231,23 @@ dmypy.json
 # ignoring data folder
 data
 
-# ignoring jupyter notebook
-tests/playground.py
-
 # ignoring various files created during development
 plots
 *.png
+
+# ignoring local quick to do notes files
 todo.md
+
+# ignoring local trial-error files
 trash.py
+tests/playground.py
+
+# ignoring jupyter notebook
 explore.ipynb
+
+# on the fly generated cache files
 tests/test_data/messages/inbox/private_messages.json
-miner/visualizer/visualizer_utils.py
-miner/composite.py
+tests/test_data/messages/inbox/group_messages.json
 
 tests/.pytest_cache
 .pytest_cache

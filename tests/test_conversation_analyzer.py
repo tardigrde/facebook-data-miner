@@ -21,7 +21,6 @@ def test_get_grouped_time_series_data(analyzer):
     assert third_row.msg_count == 15
     assert third_row.media_count == 7
     assert third_row.word_count == 34
-    assert third_row.unique_word_count == 34
     assert third_row.char_count == 140
 
     grouped = analyzer.get_grouped_time_series_data(period="m")
@@ -36,19 +35,35 @@ def test_get_grouped_time_series_data(analyzer):
 
 def test_stats_per_period(analyzer):
     yearly = analyzer.stat_per_period("y", "msg_count")
-    assert yearly == {2014: 13, 2018: 3, 2020: 15}
+    assert yearly == {
+        2009: 0,
+        2010: 0,
+        2011: 0,
+        2012: 0,
+        2013: 0,
+        2014: 13,
+        2015: 0,
+        2016: 0,
+        2017: 0,
+        2018: 3,
+        2019: 0,
+        2020: 15,
+    }
 
     monthly = analyzer.stat_per_period("m", "msg_count")
     assert monthly == {
-        "april": 2,
-        "august": 1,
-        "december": 2,
-        "february": 10,
         "january": 3,
+        "february": 10,
         "march": 1,
+        "april": 2,
         "may": 1,
-        "november": 10,
+        "june": 0,
+        "july": 0,
+        "august": 1,
         "september": 1,
+        "october": 0,
+        "november": 10,
+        "december": 2,
     }
 
     daily = analyzer.stat_per_period("d", "msg_count")
@@ -64,18 +79,30 @@ def test_stats_per_period(analyzer):
 
     hourly = analyzer.stat_per_period("h", "msg_count")
     assert hourly == {
+        0: 1,
+        1: 1,
         2: 1,
-        3: 2,
+        3: 0,
+        4: 1,
+        5: 0,
+        6: 2,
+        7: 0,
         8: 1,
-        9: 5,
-        10: 8,
-        13: 2,
-        14: 5,
-        18: 2,
-        22: 1,
-        24: 1,
-        25: 1,
-        26: 2,
+        9: 1,
+        10: 0,
+        11: 1,
+        12: 7,
+        13: 1,
+        14: 0,
+        15: 1,
+        16: 1,
+        17: 1,
+        18: 1,
+        19: 1,
+        20: 4,
+        21: 0,
+        22: 2,
+        23: 3,
     }
 
 

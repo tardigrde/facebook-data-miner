@@ -42,10 +42,10 @@ WEEKDAYS = [
     "sunday",
 ]
 PERIOD_MAP = {
-    "y": None,
+    "y": list(range(JOIN_DATE.year, datetime.now().year + 1)),
     "m": MONTHS,
     "d": WEEKDAYS,
-    "h": None,
+    "h": list(range(24)),
 }
 DELTA_MAP = {
     "y": relativedelta(years=+1),
