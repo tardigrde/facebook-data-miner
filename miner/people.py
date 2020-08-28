@@ -55,27 +55,31 @@ class People:
 
     @staticmethod
     def convert_friends_to_persons(friends: Friends) -> Dict[str, Person]:
-        start = time.time()
         persons = {}
         for i, friend in friends.data.iterrows():
             persons[friend["name"]] = Person(name=friend["name"], friend=True)
-        print("friends: ", time.time() - start)
         return persons
 
     @staticmethod
     def convert_conversation_partners_to_persons(
         conversations: Conversations,
     ) -> Dict[str, Person]:
-        start = time.time()
         persons = {}
+        # looping over private message participants
         for name, convo in conversations.private.items():
             persons[name] = Person(
                 name=name,
                 messages=convo.data,
                 thread_path=convo.metadata.thread_path,
                 media_dir=convo.metadata.media_dir,
+                member_of=conversations.group_convo_map.get(name) or [],
             )
-        print("convos: ", time.time() - start)
+        # looping over group message participants
+        for name, convos in conversations.group_convo_map.items():
+            if not persons.get(name):
+                persons[name] = Person(
+                    name=name, member_of=conversations.group_convo_map[name]
+                )
         return persons
 
 

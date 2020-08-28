@@ -28,7 +28,9 @@ class App:
         return Conversations(self.path)
 
     def get_people(self):
-        return People(friends=self.get_friends, conversations=self.get_conversations())
+        return People(
+            friends=self.get_friends(), conversations=self.get_conversations()
+        )
 
     def get_analyzer(self):
         return ConversationAnalyzer(self.get_conversations())
@@ -42,7 +44,7 @@ class App:
 
     def create_plots(self):
         period = "y"
-        stat = "msg_count"
+        stat = "mc"
         names = None
         plotter = self.get_plotter()
         plotter.plot_stat_count_over_time_series(stat=f"{stat}_count", names=names)
@@ -54,7 +56,7 @@ class App:
 
     def get_messages_ranking(self):
         analyzer = self.get_analyzer()
-        ranking = analyzer.get_ranking_of_partners_by_messages(statistic="msg_count")
+        ranking = analyzer.get_ranking_of_partners_by_messages(statistic="mc")
         return ranking
 
 

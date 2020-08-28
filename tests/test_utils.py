@@ -39,9 +39,7 @@ class TestCommandChainCreator:
 class TestUtils:
     def test_ts_to_date_and_dt(self):
         date = 1598046630000
-        expected_date = utils.dt(
-            year=2020, month=8, day=21, hour=23, minute=50, second=30
-        )
+        expected_date = utils.dt(y=2020, m=8, d=21, h=23, minute=50, second=30)
         assert expected_date == utils.ts_to_date(date)
 
     def test_walk_directory_and_search_dirs_that_contain_(self):
@@ -83,9 +81,7 @@ class TestDataFrameUtils:
         df = friends.data
 
         filtered = utils.filter_by_date(
-            df,
-            start=utils.dt(year=2020, month=3, day=1),
-            end=utils.dt(year=2020, month=4, day=30),
+            df, start=utils.dt(y=2020, m=3, d=1), end=utils.dt(y=2020, m=4, d=30),
         )
         assert len(filtered) == 3
 

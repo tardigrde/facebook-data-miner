@@ -4,11 +4,11 @@ import pytest
 def test_stats_are_in_df(analyzer):
     stats_df = analyzer.get_stats(names="Teflon Musk").get_conversation_statistics()
 
-    assert "msg_count" in stats_df
-    assert "text_msg_count" in stats_df
-    assert "media_count" in stats_df
-    assert "word_count" in stats_df
-    assert "char_count" in stats_df
+    assert "mc" in stats_df
+    assert "text_mc" in stats_df
+    assert "media_mc" in stats_df
+    assert "wc" in stats_df
+    assert "cc" in stats_df
 
 
 def test_stats_index_can_be_grouped(analyzer):
@@ -24,10 +24,10 @@ def test_get_time_series_data(analyzer):
     grouped = stats.get_grouped_time_series_data("y")
     assert len(grouped) == 1
     first_row = grouped.iloc[0]
-    assert first_row.msg_count == 15
-    assert first_row.media_count == 7
-    assert first_row.word_count == 34
-    assert first_row.char_count == 140
+    assert first_row.mc == 15
+    assert first_row.media_mc == 7
+    assert first_row.wc == 34
+    assert first_row.cc == 140
 
     grouped = stats.get_grouped_time_series_data("m")
     assert len(grouped) == 5
@@ -41,7 +41,7 @@ def test_get_time_series_data(analyzer):
 
 def test_stats_per_period(analyzer):
     stats = analyzer.get_stats(names="Foo Bar")
-    yearly = stats.stat_per_period("y", "msg_count")
+    yearly = stats.stat_per_period("y", "mc")
     assert yearly == {
         2009: 0,
         2010: 0,
@@ -57,7 +57,7 @@ def test_stats_per_period(analyzer):
         2020: 15,
     }
 
-    monthly = stats.stat_per_period("m", "msg_count")
+    monthly = stats.stat_per_period("m", "mc")
     assert monthly == {
         "january": 0,
         "february": 10,
@@ -73,7 +73,7 @@ def test_stats_per_period(analyzer):
         "december": 0,
     }
 
-    daily = stats.stat_per_period("d", "msg_count")
+    daily = stats.stat_per_period("d", "mc")
     assert daily == {
         "monday": 1,
         "tuesday": 2,
@@ -83,7 +83,7 @@ def test_stats_per_period(analyzer):
         "saturday": 2,
         "sunday": 1,
     }
-    hourly = stats.stat_per_period("h", "msg_count")
+    hourly = stats.stat_per_period("h", "mc")
     assert hourly == {
         0: 1,
         1: 1,
@@ -113,7 +113,7 @@ def test_stats_per_period(analyzer):
 
 
 def test_ranking(analyzer):
-    ranking = analyzer.stats.get_ranking_of_partners_by_messages()
+    ranking = analyzer.priv_stats.get_ranking_of_partners_by_messages()
     assert ranking == {
         "Foo Bar": 15,
         "Tőke Hal": 7,
@@ -123,7 +123,7 @@ def test_ranking(analyzer):
 
 
 def test_properties(analyzer):
-    stats = analyzer.stats
+    stats = analyzer.priv_stats
     percentage_of_media_msgs = stats.percentage_of_media_messages
     print()
     assert percentage_of_media_msgs == pytest.approx(29.03, 0.1)

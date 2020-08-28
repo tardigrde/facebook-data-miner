@@ -85,7 +85,7 @@ class Plotter:
         plt.show()
 
     def plot_msg_type_ratio(self):
-        percentage = self.adapter.analyzer.stats.percentage_of_media_messages
+        percentage = self.adapter.analyzer.priv_stats.percentage_of_media_messages
         data = [100 - percentage, percentage]
         labels = (
             "Text",

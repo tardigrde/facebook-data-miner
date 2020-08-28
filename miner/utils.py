@@ -67,11 +67,11 @@ ACCENTS_MAP = {
 
 MESSAGE_TYPE_MAP = {"private": "Regular", "group": "RegularGroup"}
 STAT_MAP = {
-    "msg_count": "Message",
-    "text_msg_count": "Text message",
-    "media_count": "Media message",
-    "word_count": "Word",
-    "char_count": "Character",
+    "mc": "Message",
+    "text_mc": "Text message",
+    "media_mc": "Media message",
+    "wc": "Word",
+    "cc": "Character",
 }
 # TODO: get this from somewhere
 ME = "Levente Csőke"
@@ -100,6 +100,10 @@ class Command:
 
     def __call__(self, *args):
         return self._cmd(*(args + self._args), **self._kwargs)
+
+
+class TooFewPeopleError(Exception):
+    pass
 
 
 def subject_checker(func):
@@ -154,10 +158,8 @@ def period_checker(func):
 def attribute_checker(func):
     def wrapper(*args, **kwargs):
         statistic = kwargs.get("statistic")
-        if not statistic or statistic not in ("msg_count", "word_count", "char_count"):
-            raise ValueError(
-                "Parameter `statistic` should be one of {msg_count, word_count, char_count}"
-            )
+        if not statistic or statistic not in ("mc", "wc", "cc"):
+            raise ValueError("Parameter `statistic` should be one of {mc, wc, cc}")
         return func(*args, **kwargs)
 
     return wrapper
@@ -198,8 +200,8 @@ def ts_to_date(date):
     return datetime.fromtimestamp(date)
 
 
-def dt(year: int = 2004, month: int = 1, day: int = 1, hour: int = 0, **kwargs):
-    return datetime(year=year, month=month, day=day, hour=hour, **kwargs)
+def dt(y: int = 2004, m: int = 1, d: int = 1, h: int = 0, **kwargs):
+    return datetime(year=y, month=m, day=d, hour=h, **kwargs)
 
 
 def get_start_based_on_period(join_date, period):
@@ -218,7 +220,7 @@ def get_stats_for_time_intervals(stat_getter, time_series, period, subject="all"
             end = time_series[i + 1]
         except IndexError:
             end = None
-        data[start] = stat_getter.get_filtered_stats(
+        data[start] = stat_getter.filter(
             subject=subject, start=start, end=end, period=period
         )
     return data
@@ -385,10 +387,6 @@ def filter_for_subject(df: pd.DataFrame, column: str = "", subject: str = "all")
     elif subject == "partner":
         return df[df[column] != ME]
     return df
-
-
-class TooFewPeopleError(Exception):
-    pass
 
 
 @start_end_period_checker
