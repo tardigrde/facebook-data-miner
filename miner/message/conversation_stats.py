@@ -19,8 +19,8 @@ class ConversationStats:
 
         self.names = self.df.partner.unique().tolist()
 
-    def __repr__(self) -> str:
-        return f"Msg count is {self.mc}"
+    # def __repr__(self) -> str:
+    #     return f"Msg count is {self.mc}"
 
     def get_conversation_statistics(self) -> pd.DataFrame:
         stats = StatsDataframe()
@@ -194,6 +194,9 @@ class PrivateConversationStats(ConversationStats):
         return filter_messages(df)
 
 
+# TODO
+#  is ot okay to have all the groups in same place?
+#  not only that, but you can only postfilter for groups
 class GroupConversationStats(ConversationStats):
     """
     Statistics of conversation with one person.
@@ -201,6 +204,35 @@ class GroupConversationStats(ConversationStats):
 
     def __init__(self, df: pd.DataFrame) -> None:
         super().__init__(df)
+        self.multi = self.number_of_groups > 1
+        print(self.df)
+
+    @property
+    def groups(self):
+        return self.df.partner.unique()
+
+    @property
+    def number_of_groups(self):
+        return len(self.groups)
+
+    @property
+    def contributors(self):
+        return self.df.sender_name.unique()
+
+    @property
+    def number_of_contributors(self):
+        return len(self.contributors)
+
+    @property
+    def creator(self):
+        return self.df.iloc[0].sender_name
+
+    @property
+    def portion_of_contribution(self):  # TODO my specific stat
+
+        return self.df.sender_name.value_counts(normalize=True) * 100
+
+    # * sign to methods that need other then messages_df
 
     """
     So this class has 2 use cases based on what df comes in:

@@ -19,6 +19,25 @@ def stat_count(analyzer):
     return analyzer.get_stat_count
 
 
+class TestGroupRelatedAnalyzerMethods:
+    def test_get_all_groups_for_one_person(self, analyzer):
+        list_of_groups = analyzer.get_all_groups_for_one_person("Teflon Musk")
+        assert len(list_of_groups) == 2
+
+    # def test_group_mean_size(self, analyzer):
+    #     mean = analyzer.group_mean_size
+    #     assert mean == 4
+    #
+    # def test_group_max_size(self, analyzer):
+    #     max = analyzer.group_max_size
+    #     assert max == 5
+
+
+def test_analyzer_groups(analyzer):
+    groups = analyzer.groups
+    assert len(groups) == 3
+
+
 def test_get_grouped_time_series_data(analyzer):
     grouped = analyzer.get_grouped_time_series_data(period="y")
     assert len(grouped) == 3

@@ -1,4 +1,66 @@
 import pytest
+from datetime import datetime
+import numpy as np
+import pandas as pd
+
+from miner.message.conversation_analyzer import ConversationAnalyzer
+from miner.message.conversations import Conversations
+from miner.message.conversation_stats import (
+    ConversationStats,
+    PrivateConversationStats,
+    GroupConversationStats,
+)
+
+
+class TestGroupConversationStats:
+    def test_general_stats(self, analyzer):
+        stats = analyzer.get_stats(kind="group")
+        assert isinstance(stats, ConversationStats)  # TODO
+
+        assert stats.mc == 18
+        assert stats.media_mc == 2
+        assert stats.wc == 40
+        assert len(stats.names) == 3
+        assert "marathon" in list(stats.names)
+        assert isinstance(stats.start, datetime)
+
+    def test_general_stats_again(self, analyzer):
+        stats = analyzer.group_stats
+        assert isinstance(stats, GroupConversationStats)  # TODO
+
+        assert stats.mc == 18
+        assert stats.media_mc == 2
+        assert stats.wc == 40
+        assert len(stats.names) == 3
+        assert "marathon" in list(stats.names)
+        assert isinstance(stats.start, datetime)
+
+    def test_stat_sum(self, analyzer):
+        stats = analyzer.group_stats
+        stat_sum = stats.stat_sum
+        assert isinstance(stat_sum, pd.Series)
+        assert stat_sum.cc == 166
+
+    def test_number_of_groups_in_stats(self, analyzer):
+        assert analyzer.group_stats.number_of_groups == 3
+
+    def test_contributors(self, analyzer):
+        contributors = analyzer.group_stats.contributors
+        assert "Foo Bar" in contributors
+        assert "Facebook User" in contributors  # TODO??
+
+    def test_number_of_contributors(self, analyzer):
+        assert analyzer.group_stats.number_of_contributors == 8
+
+    def test_portion_of_contribution(self, analyzer):
+        contrib = analyzer.group_stats.portion_of_contribution
+        assert isinstance(contrib, pd.Series)
+        assert len(contrib)
+        assert contrib["Donald Duck"] == pytest.approx(33.33, 0.1)
+        assert contrib["Teflon Musk"] == pytest.approx(5.55, 0.1)
+
+    def test_max_group_size(self, analyzer):
+        pass
 
 
 def test_stats_are_in_df(analyzer):
