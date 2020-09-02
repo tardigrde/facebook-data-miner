@@ -3,7 +3,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-from miner.message.conversation_analyzer import ConversationAnalyzer
+from miner.message.conversation_analyzer import MessagingAnalyzerManager
 from miner.message.conversations import Conversations
 from miner.message.conversation_stats import (
     ConversationStats,
@@ -13,8 +13,8 @@ from miner.message.conversation_stats import (
 
 
 class TestGroupConversationStats:
-    def test_general_stats(self, analyzer):
-        stats = analyzer.get_stats(kind="group")
+    def test_general_stats(self, group_msg_analyzer):
+        stats = group_msg_analyzer.get_stats()
         assert isinstance(stats, ConversationStats)  # TODO
 
         assert stats.mc == 18
@@ -24,8 +24,8 @@ class TestGroupConversationStats:
         assert "marathon" in list(stats.names)
         assert isinstance(stats.start, datetime)
 
-    def test_general_stats_again(self, analyzer):
-        stats = analyzer.group_stats
+    def test_general_stats_again(self, group_msg_analyzer):
+        stats = group_msg_analyzer.stats
         assert isinstance(stats, GroupConversationStats)  # TODO
 
         assert stats.mc == 18
@@ -35,36 +35,38 @@ class TestGroupConversationStats:
         assert "marathon" in list(stats.names)
         assert isinstance(stats.start, datetime)
 
-    def test_stat_sum(self, analyzer):
-        stats = analyzer.group_stats
+    def test_stat_sum(self, group_msg_analyzer):
+        stats = group_msg_analyzer.stats
         stat_sum = stats.stat_sum
         assert isinstance(stat_sum, pd.Series)
         assert stat_sum.cc == 166
 
-    def test_number_of_groups_in_stats(self, analyzer):
-        assert analyzer.group_stats.number_of_groups == 3
+    def test_number_of_groups_in_stats(self, group_msg_analyzer):
+        assert group_msg_analyzer.stats.number_of_groups == 3
 
-    def test_contributors(self, analyzer):
-        contributors = analyzer.group_stats.contributors
+    def test_contributors(self, group_msg_analyzer):
+        contributors = group_msg_analyzer.stats.contributors
         assert "Foo Bar" in contributors
         assert "Facebook User" in contributors  # TODO??
 
-    def test_number_of_contributors(self, analyzer):
-        assert analyzer.group_stats.number_of_contributors == 8
+    def test_number_of_contributors(self, group_msg_analyzer):
+        assert group_msg_analyzer.stats.number_of_contributors == 8
 
-    def test_portion_of_contribution(self, analyzer):
-        contrib = analyzer.group_stats.portion_of_contribution
+    def test_portion_of_contribution(self, group_msg_analyzer):
+        contrib = group_msg_analyzer.stats.portion_of_contribution
         assert isinstance(contrib, pd.Series)
         assert len(contrib)
         assert contrib["Donald Duck"] == pytest.approx(33.33, 0.1)
         assert contrib["Teflon Musk"] == pytest.approx(5.55, 0.1)
 
-    def test_max_group_size(self, analyzer):
+    def test_max_group_size(self, group_msg_analyzer):
         pass
 
 
-def test_stats_are_in_df(analyzer):
-    stats_df = analyzer.get_stats(names="Teflon Musk").get_conversation_statistics()
+def test_stats_are_in_df(priv_msg_analyzer):
+    stats_df = priv_msg_analyzer.get_stats(
+        names="Teflon Musk"
+    ).get_conversation_statistics()
 
     assert "mc" in stats_df
     assert "text_mc" in stats_df
@@ -73,16 +75,16 @@ def test_stats_are_in_df(analyzer):
     assert "cc" in stats_df
 
 
-def test_stats_index_can_be_grouped(analyzer):
-    stats = analyzer.get_stats(names="Teflon Musk")
+def test_stats_index_can_be_grouped(priv_msg_analyzer):
+    stats = priv_msg_analyzer.get_stats(names="Teflon Musk")
     assert stats.df.index[0].year == 2014
     assert stats.df.index[0].month == 9
     assert stats.df.index[0].day == 24
     assert stats.df.index[0].hour == 17
 
 
-def test_get_time_series_data(analyzer):
-    stats = analyzer.get_stats(names="Foo Bar")
+def test_get_time_series_data(priv_msg_analyzer):
+    stats = priv_msg_analyzer.get_stats(names="Foo Bar")
     grouped = stats.get_grouped_time_series_data("y")
     assert len(grouped) == 1
     first_row = grouped.iloc[0]
@@ -101,8 +103,8 @@ def test_get_time_series_data(analyzer):
     assert len(grouped) == 14
 
 
-def test_stats_per_period(analyzer):
-    stats = analyzer.get_stats(names="Foo Bar")
+def test_stats_per_period(priv_msg_analyzer):
+    stats = priv_msg_analyzer.get_stats(names="Foo Bar")
     yearly = stats.stat_per_period("y", "mc")
     assert yearly == {
         2009: 0,
@@ -174,8 +176,8 @@ def test_stats_per_period(analyzer):
     }
 
 
-def test_ranking(analyzer):
-    ranking = analyzer.priv_stats.get_ranking_of_partners_by_messages()
+def test_ranking(priv_msg_analyzer):
+    ranking = priv_msg_analyzer.stats.get_ranking_of_partners_by_messages()
     assert ranking == {
         "Foo Bar": 15,
         "Tőke Hal": 7,
@@ -184,8 +186,8 @@ def test_ranking(analyzer):
     }
 
 
-def test_properties(analyzer):
-    stats = analyzer.priv_stats
+def test_properties(priv_msg_analyzer):
+    stats = priv_msg_analyzer.stats
     percentage_of_media_msgs = stats.percentage_of_media_messages
     print()
     assert percentage_of_media_msgs == pytest.approx(29.03, 0.1)

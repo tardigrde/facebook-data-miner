@@ -4,42 +4,42 @@ from miner.utils import dt
 
 
 @pytest.fixture(scope="session")
-def statistics(analyzer):
+def statistics(priv_msg_analyzer):
     def _stats(**kwargs):
         if any([kw in kwargs for kw in ("names", "subject", "start", "end")]):
-            return analyzer.get_stats(**kwargs)
+            return priv_msg_analyzer.get_stats(**kwargs)
         else:
-            return analyzer.priv_stats
+            return priv_msg_analyzer.priv_stats
 
     return _stats
 
 
 @pytest.fixture(scope="session")
-def stat_count(analyzer):
-    return analyzer.get_stat_count
+def stat_count(priv_msg_analyzer):
+    return priv_msg_analyzer.get_stat_count
 
 
 class TestGroupRelatedAnalyzerMethods:
-    def test_get_all_groups_for_one_person(self, analyzer):
-        list_of_groups = analyzer.get_all_groups_for_one_person("Teflon Musk")
+    def test_get_all_groups_for_one_person(self, group_msg_analyzer):
+        list_of_groups = group_msg_analyzer.get_all_groups_for_one_person("Teflon Musk")
         assert len(list_of_groups) == 2
 
-    # def test_group_mean_size(self, analyzer):
-    #     mean = analyzer.group_mean_size
+    # def test_group_mean_size(self, priv_msg_analyzer):
+    #     mean = priv_msg_analyzer.group_mean_size
     #     assert mean == 4
     #
-    # def test_group_max_size(self, analyzer):
-    #     max = analyzer.group_max_size
+    # def test_group_max_size(self, priv_msg_analyzer):
+    #     max = priv_msg_analyzer.group_max_size
     #     assert max == 5
 
 
-def test_analyzer_groups(analyzer):
-    groups = analyzer.groups
+def test_analyzer_groups(group_msg_analyzer):
+    groups = group_msg_analyzer.data
     assert len(groups) == 3
 
 
-def test_get_grouped_time_series_data(analyzer):
-    grouped = analyzer.get_grouped_time_series_data(period="y")
+def test_get_grouped_time_series_data(priv_msg_analyzer):
+    grouped = priv_msg_analyzer.get_grouped_time_series_data(period="y")
     assert len(grouped) == 3
     third_row = grouped.iloc[2]
     assert third_row.mc == 15
@@ -47,18 +47,18 @@ def test_get_grouped_time_series_data(analyzer):
     assert third_row.wc == 34
     assert third_row.cc == 140
 
-    grouped = analyzer.get_grouped_time_series_data(period="m")
+    grouped = priv_msg_analyzer.get_grouped_time_series_data(period="m")
     assert len(grouped) == 9
 
-    grouped = analyzer.get_grouped_time_series_data(period="d")
+    grouped = priv_msg_analyzer.get_grouped_time_series_data(period="d")
     assert len(grouped) == 16
 
-    grouped = analyzer.get_grouped_time_series_data(period="h")
+    grouped = priv_msg_analyzer.get_grouped_time_series_data(period="h")
     assert len(grouped) == 24
 
 
-def test_stats_per_period(analyzer):
-    yearly = analyzer.stat_per_period("y", "mc")
+def test_stats_per_period(priv_msg_analyzer):
+    yearly = priv_msg_analyzer.stat_per_period("y", "mc")
     assert yearly == {
         2009: 0,
         2010: 0,
@@ -74,7 +74,7 @@ def test_stats_per_period(analyzer):
         2020: 15,
     }
 
-    monthly = analyzer.stat_per_period("m", "mc")
+    monthly = priv_msg_analyzer.stat_per_period("m", "mc")
     assert monthly == {
         "january": 3,
         "february": 10,
@@ -90,7 +90,7 @@ def test_stats_per_period(analyzer):
         "december": 2,
     }
 
-    daily = analyzer.stat_per_period("d", "mc")
+    daily = priv_msg_analyzer.stat_per_period("d", "mc")
     assert daily == {
         "monday": 6,
         "tuesday": 2,
@@ -101,7 +101,7 @@ def test_stats_per_period(analyzer):
         "sunday": 5,
     }
 
-    hourly = analyzer.stat_per_period("h", "mc")
+    hourly = priv_msg_analyzer.stat_per_period("h", "mc")
     assert hourly == {
         0: 1,
         1: 1,
@@ -130,8 +130,8 @@ def test_stats_per_period(analyzer):
     }
 
 
-def test_ranking(analyzer):
-    ranking = analyzer.get_ranking_of_partners_by_messages()
+def test_ranking(priv_msg_analyzer):
+    ranking = priv_msg_analyzer.get_ranking_of_partners_by_messages()
     assert ranking == {
         "Foo Bar": 15,
         "Tőke Hal": 7,
