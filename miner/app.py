@@ -3,13 +3,19 @@ import argparse
 import time
 from typing import Union, List, Dict, Callable, Any, NamedTuple
 from miner.message.conversations import Conversations
-from miner.message.conversation_analyzer import ConversationAnalyzer
 from miner.people import People
 from miner.friends import Friends
 from miner.visualizer.table_creator import TableCreator
 from miner.visualizer.plotter import Plotter
 
 DATA_PATH = f"{os.getcwd()}/data"
+
+
+def get_how_many_friends_in_group_message():  # * needs people
+    # TODO stat does not belong here
+    # OR
+    # maybe inject people here but not so straightforward
+    pass
 
 
 class App:
@@ -56,7 +62,7 @@ class App:
 
     def get_messages_ranking(self):
         analyzer = self.get_analyzer()
-        ranking = analyzer.get_ranking_of_partners_by_messages(statistic="mc")
+        ranking = analyzer.get_ranking_of_partners_by_convo_stats(statistic="mc")
         return ranking
 
 

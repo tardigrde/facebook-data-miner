@@ -30,7 +30,7 @@ def people(get_people):
 
 
 def test_people_name(people, people_names):
-    people_without_groups = [p for p in people.data.keys() if not p.startswith("group")]
+    people = [p for p in people.data.keys()]
     assert sorted(people_names) == sorted(people_without_groups)
 
 

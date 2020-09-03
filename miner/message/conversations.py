@@ -36,7 +36,7 @@ class Conversations:
         )
         for key, convo in self.group.items():
             for participant in convo.metadata.participants:
-                utils.fill_dict(group_convo_map, participant, [key])
+                group_convo_map = utils.fill_dict(group_convo_map, participant, [key])
                 group_convo_map[participant] = list(
                     set(group_convo_map.get(participant))
                 )

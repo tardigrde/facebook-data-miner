@@ -1,17 +1,17 @@
 import pytest
-
+import pandas as pd
 from miner.utils import dt
 
-
-@pytest.fixture(scope="session")
-def statistics(priv_msg_analyzer):
-    def _stats(**kwargs):
-        if any([kw in kwargs for kw in ("names", "subject", "start", "end")]):
-            return priv_msg_analyzer.get_stats(**kwargs)
-        else:
-            return priv_msg_analyzer.priv_stats
-
-    return _stats
+from miner.message.conversation_analyzer import (
+    MessagingAnalyzerManager,
+    GroupMessagingAnalyzer,
+)
+from miner.message.conversations import Conversations
+from miner.message.conversation_stats import (
+    ConversationStats,
+    PrivateConversationStats,
+    GroupConversationStats,
+)
 
 
 @pytest.fixture(scope="session")
@@ -19,294 +19,106 @@ def stat_count(priv_msg_analyzer):
     return priv_msg_analyzer.get_stat_count
 
 
-class TestGroupRelatedAnalyzerMethods:
+class TestGroupMessagingAnalyzerMethods:
+    def test_analyzer_groups(self, group_msg_analyzer):
+        groups = group_msg_analyzer.data
+        assert len(groups) == 3
+
+    def test_filter(self, group_msg_analyzer):
+        filtered = group_msg_analyzer.filter(names=["Teflon Musk"])
+        assert isinstance(filtered, GroupMessagingAnalyzer)
+        assert len(filtered.data) == 2
+        assert len(filtered.group_convo_map.get("Teflon Musk")) == 2
+
+        filtered = group_msg_analyzer.filter(names="Teflon Musk")
+        assert len(filtered.data) == 2
+
+    def test_filter_by_groups(self, group_msg_analyzer):
+        filtered = group_msg_analyzer.filter(groups=["marathon"])
+        assert filtered.data.get("marathon")
+        assert len(filtered.data) == 1
+        assert len(filtered.group_convo_map) == 4
+
+        filtered = group_msg_analyzer.filter(groups="marathon")
+        assert len(filtered.data) == 1
+
+    def test_get_stats_per_conversation(self, group_msg_analyzer):
+        stats_per_conversation = group_msg_analyzer.get_stats_per_conversation()
+
+        assert len(stats_per_conversation) == 3
+        assert list(group_msg_analyzer.data.keys()) == list(
+            stats_per_conversation.keys()
+        )
+        assert all(
+            [
+                isinstance(stats, GroupConversationStats)
+                for stats in stats_per_conversation.values()
+            ]
+        )
+
+    def test_get_stats_per_partner(self, group_msg_analyzer):
+        stats_per_partner = group_msg_analyzer.get_stats_per_partner()
+
+        assert len(stats_per_partner) == 8
+        assert list(group_msg_analyzer.participants) == sorted(
+            list(stats_per_partner.keys())
+        )
+        assert all(
+            [
+                isinstance(stats, GroupConversationStats)
+                for stats in stats_per_partner.values()
+            ]
+        )
+
     def test_get_all_groups_for_one_person(self, group_msg_analyzer):
         list_of_groups = group_msg_analyzer.get_all_groups_for_one_person("Teflon Musk")
         assert len(list_of_groups) == 2
 
-    # def test_group_mean_size(self, priv_msg_analyzer):
-    #     mean = priv_msg_analyzer.group_mean_size
-    #     assert mean == 4
-    #
-    # def test_group_max_size(self, priv_msg_analyzer):
-    #     max = priv_msg_analyzer.group_max_size
-    #     assert max == 5
+    def test_min_group_size(self, group_msg_analyzer):
+        minimum = group_msg_analyzer.min_group_size
+        assert minimum == 4
 
+    def test_mean_group_size(self, group_msg_analyzer):
+        mean = group_msg_analyzer.mean_group_size
+        assert mean == pytest.approx(4.66, 0.1)
 
-def test_analyzer_groups(group_msg_analyzer):
-    groups = group_msg_analyzer.data
-    assert len(groups) == 3
+    def test_max_group_size(self, group_msg_analyzer):
+        maximum = group_msg_analyzer.max_group_size
+        assert maximum == 6
 
+    def test_number_of_convos_created_by_me(self, group_msg_analyzer):
+        created_by_me = group_msg_analyzer.number_of_convos_created_by_me
+        assert created_by_me == 2
 
-def test_get_grouped_time_series_data(priv_msg_analyzer):
-    grouped = priv_msg_analyzer.get_grouped_time_series_data(period="y")
-    assert len(grouped) == 3
-    third_row = grouped.iloc[2]
-    assert third_row.mc == 15
-    assert third_row.media_mc == 7
-    assert third_row.wc == 34
-    assert third_row.cc == 140
+    def test_get_ranking_of_partners_by_convo_stats(self):
+        pass  # TODO
 
-    grouped = priv_msg_analyzer.get_grouped_time_series_data(period="m")
-    assert len(grouped) == 9
+    def test_portion_of_contribution(self, group_msg_analyzer):
+        contrib = group_msg_analyzer.portion_of_contribution
+        assert isinstance(contrib, dict)
+        assert len(contrib)
+        assert contrib["Foo Bar"] == pytest.approx(16.66, 0.1)
+        assert contrib["Teflon Musk"] == pytest.approx(5.55, 0.1)
 
-    grouped = priv_msg_analyzer.get_grouped_time_series_data(period="d")
-    assert len(grouped) == 16
-
-    grouped = priv_msg_analyzer.get_grouped_time_series_data(period="h")
-    assert len(grouped) == 24
-
-
-def test_stats_per_period(priv_msg_analyzer):
-    yearly = priv_msg_analyzer.stat_per_period("y", "mc")
-    assert yearly == {
-        2009: 0,
-        2010: 0,
-        2011: 0,
-        2012: 0,
-        2013: 0,
-        2014: 13,
-        2015: 0,
-        2016: 0,
-        2017: 0,
-        2018: 3,
-        2019: 0,
-        2020: 15,
-    }
-
-    monthly = priv_msg_analyzer.stat_per_period("m", "mc")
-    assert monthly == {
-        "january": 3,
-        "february": 10,
-        "march": 1,
-        "april": 2,
-        "may": 1,
-        "june": 0,
-        "july": 0,
-        "august": 1,
-        "september": 1,
-        "october": 0,
-        "november": 10,
-        "december": 2,
-    }
-
-    daily = priv_msg_analyzer.stat_per_period("d", "mc")
-    assert daily == {
-        "monday": 6,
-        "tuesday": 2,
-        "wednesday": 6,
-        "thursday": 3,
-        "friday": 6,
-        "saturday": 3,
-        "sunday": 5,
-    }
-
-    hourly = priv_msg_analyzer.stat_per_period("h", "mc")
-    assert hourly == {
-        0: 1,
-        1: 1,
-        2: 1,
-        3: 0,
-        4: 1,
-        5: 0,
-        6: 2,
-        7: 0,
-        8: 1,
-        9: 1,
-        10: 0,
-        11: 1,
-        12: 7,
-        13: 1,
-        14: 0,
-        15: 1,
-        16: 1,
-        17: 1,
-        18: 1,
-        19: 1,
-        20: 4,
-        21: 0,
-        22: 2,
-        23: 3,
-    }
-
-
-def test_ranking(priv_msg_analyzer):
-    ranking = priv_msg_analyzer.get_ranking_of_partners_by_messages()
-    assert ranking == {
-        "Foo Bar": 15,
-        "Tőke Hal": 7,
-        "Teflon Musk": 6,
-        "Benedek Elek": 3,
-    }
-
-
-def test_stats_toke_hal_all(statistics):
-    stats = statistics(names="Tőke Hal")
-
-    assert stats.mc == 7
-    assert stats.unique_mc == 6
-    # assert stats.most_used_msgs == 0
-    assert stats.wc == 11
-    assert stats.unique_wc == 9
-    assert stats.cc == 47
-    # assert stats.most_used_chars == 0
-
-
-def test_stats_toke_hal_me(statistics):
-    stats = statistics(names="Tőke Hal", subject="me")
-
-    assert stats.mc == 4
-    assert stats.unique_mc == 4
-    # assert stats.most_used_msgs == 0
-    assert stats.wc == 6
-    assert stats.unique_wc == 5
-    assert stats.cc == 22
-    # assert stats.most_used_chars == 0
-
-
-def test_stats_toke_hal_partner(statistics):
-    stats = statistics(names="Tőke Hal", subject="partner")
-
-    assert stats.mc == 3
-    assert stats.unique_mc == 3
-    # assert stats.most_used_msgs == 0
-    assert stats.wc == 5
-    assert stats.unique_wc == 5
-    assert stats.cc == 25
-    # assert stats.most_used_chars == 0
-
-
-def test_stats_toke_hal_all_2014_11(statistics):
-    stats = statistics(names="Tőke Hal", subject="all", start=dt(2014, 11), period="m")
-
-    assert stats.mc == 6
-    assert stats.unique_mc == 5
-    # assert stats.most_used_msgs == 0
-    # assert stats.most_used_chars == 0
-
-
-def test_stats_toke_hal_partner_2014_11(statistics):
-    stats = statistics(
-        names="Tőke Hal", subject="partner", start=dt(2014, 11), period="m"
-    )
-    assert stats.cc == 25
-    assert stats.wc == 5
-
-
-def test_stats_toke_hal_me_2014_11(statistics):
-    stats = statistics(names="Tőke Hal", subject="me", start=dt(2014, 11), period="m")
-    assert stats.unique_wc == 5
-
-
-#
-def test_stats_toke_hal_all_2014_12(statistics):
-    stats = statistics(names="Tőke Hal", subject="all", start=dt(2014, 12), period="m")
-    assert stats.mc == 1
-    # assert stats.most_used_msgs == 0
-    assert stats.unique_wc == 1
-    assert stats.cc == 3
-    # assert stats.most_used_chars == 0
-
-
-def test_stats_toke_hal_partner_2014_12(statistics):
-    stats = statistics(
-        names="Tőke Hal", subject="partner", start=dt(2014, 12), period="m"
-    )
-    assert stats.wc == 0
-
-
-def test_stats_toke_hal_me_2014_12(statistics):
-    stats = statistics(names="Tőke Hal", subject="me", start=dt(2014, 12), period="m")
-    assert stats.unique_mc == 1
-
-
-class TestGetStats:
-    def test_stats_teflon_musk(self, statistics):
-        stats = statistics(names="Teflon Musk")
-        assert stats.mc == 6
-        assert stats.unique_mc == 2
-        # assert stats.most_used_msgs == 0 # TODO LATER should only return the most used or e.g. top10 most used
-        assert stats.wc == 14
-        assert stats.unique_wc == 7
-        assert stats.cc == 52  # 23
-        # assert stats.most_used_chars == 0
-
-    def test_stats_teflon_musk_me(self, statistics):
-        stats = statistics(names="Teflon Musk", subject="me")
-        assert stats.mc == 3
-        assert stats.unique_mc == 1
-        # assert stats.most_used_msgs == 0
-        assert stats.wc == 12
-        assert stats.unique_wc == 6
-        assert stats.cc == 48
-        # assert stats.most_used_chars == 0
-
-    def test_stats_teflon_musk_partner(self, statistics):
-        stats = statistics(names="Teflon Musk", subject="partner")
-        assert stats.mc == 3
-        assert stats.unique_mc == 1
-        # assert stats.most_used_msgs == 0
-        assert stats.wc == 2
-        assert stats.unique_wc == 1
-        assert stats.cc == 4
-        # assert stats.most_used_chars == 0
-
-    def test_stats_teflon_musk_all_2014_9(self, statistics):
-        stats = statistics(
-            names="Teflon Musk", subject="all", start=dt(2014, 9), period="m"
-        )
-        assert stats.mc == 1
-        # assert stats.most_used_msgs == 0
-        assert stats.wc == 6
-        # assert stats.most_used_chars == 0
-
-    def test_stats_teflon_musk_me_2014_9(self, statistics):
-        stats = statistics(
-            names="Teflon Musk", subject="me", start=dt(2014, 9), period="m"
-        )
-        assert stats.unique_wc == 6
-
-    def test_stats_teflon_musk_partner_2014_9(self, statistics):
-        stats = statistics(
-            names="Teflon Musk", subject="partner", start=dt(2014, 9), period="m"
-        )
-        assert stats.unique_mc == 0
-        assert stats.cc == 0
-
-    def test_stats_teflon_musk_all_2014_11(self, statistics):
-        stats = statistics(
-            names="Teflon Musk", subject="all", start=dt(2014, 11), period="m"
-        )
-        assert stats.mc == 4
-        # assert stats.most_used_msgs == 0
-        # assert stats.most_used_chars == 0
-
-    def test_stats_teflon_musk_me_2014_11(self, statistics):
-        stats = statistics(
-            names="Teflon Musk", subject="me", start=dt(2014, 11), period="m"
-        )
-        assert stats.wc == 6
-
-    def test_stats_teflon_musk_partner_2014_11(self, statistics):
-        stats = statistics(
-            names="Teflon Musk", subject="partner", start=dt(2014, 11), period="m"
-        )
-        assert stats.unique_mc == 1
-        assert stats.unique_wc == 1
-        assert stats.cc == 4
-
-    def test_stats_teflon_musk_all_2014_12(self, statistics):
-        stats = statistics(
-            names="Teflon Musk", subject="all", start=dt(2014, 12), period="m"
+        assert group_msg_analyzer.most_contributed == (
+            "Donald Duck",
+            pytest.approx(33.33, 0.1),
         )
 
-        assert stats.mc == 1
-        assert stats.unique_mc == 0
-        # assert stats.most_used_msgs == 0
-        assert stats.wc == 0
-        assert stats.unique_wc == 0
-        assert stats.cc == 0
-        # assert stats.most_used_chars == 0
+        least_contrib = group_msg_analyzer.least_contributed
+        assert least_contrib[0] in (
+            "Tőke Hal",
+            "John Doe",
+            "Teflon Musk",
+            "Facebook User",
+            "Dér Dénes",
+        )
+        assert least_contrib[1] == pytest.approx(5.55, 0.1)
+
+
+class TestPrivateMessagingAnalyzerMethods:
+    def test_stats_per_partner(self):
+        pass  # TODO
 
 
 class TestGetCount:

@@ -10,7 +10,7 @@ class DataAdapter:
 
     def get_stats(self, **kwargs):
         analyzer = self.analyzer
-        return analyzer.get_stats(**kwargs)
+        return analyzer.stats.filter(**kwargs)
 
 
 class PlotDataAdapter(DataAdapter):
@@ -39,7 +39,9 @@ class PlotDataAdapter(DataAdapter):
         return list(me_stat.keys()), list(me_stat.values()), list(partner_stat.values())
 
     def get_ranking_of_friends_by_message_stats(self, stat="mc"):
-        ranks_dict = self.analyzer.get_ranking_of_partners_by_messages(statistic=stat)
+        ranks_dict = self.analyzer.get_ranking_of_partners_by_convo_stats(
+            statistic=stat
+        )
         # TODO watch out; might be not working correctly; check upper function
         sorted_dict = utils.sort_dict(
             ranks_dict, func=lambda item: item[1], reverse=True,
@@ -69,7 +71,7 @@ class TableDataAdapter(DataAdapter):
         stats = []
         for name in stat_names:
             readable = utils.STAT_MAP.get(name)
-            stat = self.analyzer.stat_sum[name]
+            stat = getattr(self.analyzer.stats, name)
             # yield readable, stat
 
             readables.append(readable)
@@ -86,7 +88,7 @@ class TableDataAdapter(DataAdapter):
 
     def get_stat_per_period_data(self, period, stat="mc"):
         dates, counts = [], []
-        data = self.analyzer.stat_per_period(period, statistic=stat)
+        data = self.analyzer.stats.stat_per_period(period, statistic=stat)
         for date, count in data.items():
             dates.append(date)
             counts.append(count)

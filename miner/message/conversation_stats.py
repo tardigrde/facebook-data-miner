@@ -15,20 +15,26 @@ class ConversationStats:
 
     def __init__(self, df: pd.DataFrame) -> None:
         self.df: pd.DataFrame = df
-        self.stats_df: pd.DataFrame = self.get_conversation_statistics()
-
-        self.names = self.df.partner.unique().tolist()
+        self._stats_df: pd.DataFrame = self.get_conversation_statistics()
+        self._stat_sum = self._stats_df.sum()
 
     # def __repr__(self) -> str:
     #     return f"Msg count is {self.mc}"
+
+    @property
+    def names(self):
+        # NOTE this will only list people who has
+        # once contributed to the group message(s)
+        mask = self.df.sender_name != utils.ME
+        return self.df.sender_name[mask].unique().tolist()
 
     def get_conversation_statistics(self) -> pd.DataFrame:
         stats = StatsDataframe()
         return stats(self.df)
 
     @property
-    def stat_sum(self) -> pd.Series:
-        return self.stats_df.sum()
+    def created_by_me(self):
+        return self.df.iloc[0].sender_name == utils.ME
 
     @property
     def start(self) -> np.datetime64:
@@ -43,28 +49,36 @@ class ConversationStats:
         return self.df.content.dropna()
 
     @property
+    def text(self) -> pd.Series:
+        return self.df[self.df.content != math.nan]
+
+    @property
+    def media(self) -> pd.Series:
+        return self.df[self.df.content == math.nan]
+
+    @property
     def words(self) -> pd.Series:
         return self.get_words(self.messages)
 
     @property
     def mc(self) -> int:
-        return self.stat_sum.mc
+        return self._stat_sum.mc
 
     @property
     def wc(self) -> int:
-        return self.stat_sum.wc
+        return self._stat_sum.wc
 
     @property
     def cc(self) -> int:
-        return self.stat_sum.cc
+        return self._stat_sum.cc
 
     @property
     def text_mc(self) -> int:
-        return self.stat_sum.text_mc
+        return self._stat_sum.text_mc
 
     @property
     def media_mc(self) -> int:
-        return self.stat_sum.media_mc
+        return self._stat_sum.media_mc
 
     @property
     def unique_mc(self) -> int:
@@ -75,6 +89,14 @@ class ConversationStats:
         return len(set(self.words))
 
     @property
+    def percentage_of_text_messages(self) -> float:
+        return self.text_mc * 100 / self.mc
+
+    @property
+    def percentage_of_media_messages(self) -> float:
+        return 100 - self.percentage_of_text_messages
+
+    @property
     def most_used_msgs(self) -> pd.Series:
         return self.messages.value_counts()
 
@@ -82,48 +104,45 @@ class ConversationStats:
     def most_used_words(self) -> pd.Series:
         return self.words.value_counts()
 
-    @property
-    def percentage_of_media_messages(self) -> float:
-        return self.stat_sum.media_mc * 100 / self.stat_sum.mc
-
-    @property
-    def media(self) -> pd.Series:
-        return self.df[self.df.content == math.nan]
-
+    # TODO  I dont like these too much
     @property
     def photos(self) -> pd.Series:
+        if "photos" not in self.df:
+            return 0
         return self.df.photos.dropna()
 
     @property
     def files(self) -> pd.Series:
+        if "files" not in self.df:
+            return 0
         return self.df.files.dropna()
 
     @property
     def videos(self) -> pd.Series:
+        if "videos" not in self.df:
+            return 0
         return self.df.videos.dropna()
 
     @property
     def audios(self) -> pd.Series:
+        if "audios" not in self.df:
+            return 0
         return self.df.audios.dropna()
 
     @property
     def gifs(self) -> pd.Series:
+        if "gifs" not in self.df:
+            return 0
         return self.df.gifs.dropna()
-
-    def filter(self, df: pd.DataFrame = None, **kwargs) -> ConversationStats:
-        if df is None:
-            df = self.df
-        df = self.get_filtered_df(df, **kwargs)
-        return ConversationStats(df)
 
     # 4.  Most used messages/words in convos by me/partner (also by year/month/day/hour)
     def get_most_used_messages(self, top: int) -> pd.Series:
         return self.most_used_msgs[top:]
 
     # 5. Time series: dict of 'y/m/d/h : number of messages/words/characters (also sent/got) for user/all convos'
-    def get_grouped_time_series_data(self, period: str) -> pd.DataFrame:
-        grouping_rule = utils.PERIOD_MANAGER.get_grouping_rules(period, self.stats_df)
-        groups_df = self.stats_df.groupby(grouping_rule).sum()
+    def get_grouped_time_series_data(self, period: str = "y") -> pd.DataFrame:
+        grouping_rule = utils.PERIOD_MANAGER.get_grouping_rules(period, self._stats_df)
+        groups_df = self._stats_df.groupby(grouping_rule).sum()
         return utils.PERIOD_MANAGER.set_df_grouping_indices_to_datetime(
             groups_df, period=period
         )
@@ -134,12 +153,6 @@ class ConversationStats:
         # NOTE this could be in the class
         return utils.count_stat_for_period(interval_stats, period, statistic=statistic)
 
-    # 7. Ranking of partners by messages by y/m/d/h, by different stats, by sent/got
-    def get_ranking_of_partners_by_messages(
-        self, statistic: str = "mc", **kwargs
-    ) -> Dict:
-        raise NotImplementedError()
-
     @staticmethod
     def get_words(messages) -> pd.Series:
         token_list = messages.str.lower().str.split()
@@ -149,43 +162,28 @@ class ConversationStats:
                 words.append(token)
         return pd.Series(words)
 
-
-class PrivateConversationStats(ConversationStats):
-    """
-    Statistics of conversation with one person.
-    """
-
-    def __init__(self, df: pd.DataFrame) -> None:
-        super().__init__(df)
-
-    # 7. Ranking of partners by messages by y/m/d/h, by different stats, by sent/got
-    def get_ranking_of_partners_by_messages(
-        self, statistic: str = "mc", **kwargs
-    ) -> Dict:
-        count_dict = {}
-        if len(self.names) == 1:  # DIFFERENT
-            raise utils.TooFewPeopleError("Can't rank one person.")
-
-        for name in self.names:
-            df = self.df[self.df.partner == name]
-            stats = self.filter(df=df, **kwargs)
-
-            count_dict = utils.fill_dict(count_dict, name, getattr(stats, statistic))
-            count_dict = utils.sort_dict(
-                count_dict, func=lambda item: item[1], reverse=True
-            )
-        return count_dict
-
     @staticmethod
     def get_filtered_df(
         df: pd.DataFrame,
-        names: Union[str, List[str]] = None,
+        channel: Union[str, List[str]] = None,
+        sender: Union[str, List[str]] = None,
         subject: str = "all",
         **kwargs,
     ) -> pd.DataFrame:
+        """
+        @param df:
+        @param channel: Union[str, List[str]] = None,
+        @param sender: Union[str, List[str]] = None,
+        @param subject: str = "all",
+        @param kwargs: {start,end,period} : Union[str, datetime] = None
+        @return:
+        """
         filter_messages = utils.CommandChainCreator()
         filter_messages.register_command(
-            utils.filter_by_names, column="partner", names=names
+            utils.filter_by_channel, column="partner", channel=channel
+        )
+        filter_messages.register_command(
+            utils.filter_by_sender, column="sender_name", sender=sender
         )
         filter_messages.register_command(
             utils.filter_for_subject, column="sender_name", subject=subject
@@ -194,18 +192,35 @@ class PrivateConversationStats(ConversationStats):
         return filter_messages(df)
 
 
-# TODO
-#  is ot okay to have all the groups in same place?
-#  not only that, but you can only postfilter for groups
+class PrivateConversationStats(ConversationStats):
+    """
+    Statistics of conversation with one or more persons.
+    """
+
+    def __init__(self, df: pd.DataFrame) -> None:
+        super().__init__(df)
+
+    def filter(self, df: pd.DataFrame = None, **kwargs) -> ConversationStats:
+        if df is None:
+            df = self.df
+        df = self.get_filtered_df(df, **kwargs)
+        return PrivateConversationStats(df)
+
+
 class GroupConversationStats(ConversationStats):
     """
-    Statistics of conversation with one person.
+    Statistics of conversation with one or more groups.
     """
 
     def __init__(self, df: pd.DataFrame) -> None:
         super().__init__(df)
         self.multi = self.number_of_groups > 1
-        print(self.df)
+
+    def filter(self, df: pd.DataFrame = None, **kwargs) -> ConversationStats:
+        if df is None:
+            df = self.df
+        df = self.get_filtered_df(df, **kwargs)
+        return GroupConversationStats(df)
 
     @property
     def groups(self):
@@ -226,92 +241,6 @@ class GroupConversationStats(ConversationStats):
     @property
     def creator(self):
         return self.df.iloc[0].sender_name
-
-    @property
-    def portion_of_contribution(self):  # TODO my specific stat
-
-        return self.df.sender_name.value_counts(normalize=True) * 100
-
-    # * sign to methods that need other then messages_df
-
-    """
-    So this class has 2 use cases based on what df comes in:
-    - one group df,
-    - more group df stacked.
-    
-    features/stats for one group:
-    - participants,
-    - ratio of participation (text, word, char, media, ... join date?),
-    - participant messages only,
-    
-    features/stats for more group:
-    - participants,
-    - ratio of participation,
-    - participant messages only, 
-    
-    they are actually the same. no difference between one group and more groups.
-    it has to be managed by analyzer
-    
-    Use case:
-      private:
-        - stats = analyzer.get_stats(filter kwargs)
-        - stats.messages
-        - stats.wc
-        - stats.stats_per_period
-      group:
-        - 1:
-          - stats = analyzer.get_group_stats(filter kwargs)
-          - stats.messages
-          - stats.number_of_participants
-          - stats.get_contribution
-        - 2:        
-          - gstats = analyzer.group_stats
-          - gstats.get_contribution_per_person() # all time
-          - gstats.get_person_participant_in_N_grops
-          - gstats.messages
-    
-    
-    """
-
-    # filter_by_conversation
-    # filter_by_person
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-
-    # 7. Ranking of partners by messages by y/m/d/h, by different stats, by sent/got
-    def get_ranking_of_partners_by_messages(
-        self, statistic: str = "mc", **kwargs
-    ) -> Dict:
-        pass
-
-    @staticmethod
-    def get_filtered_df(
-        df: pd.DataFrame,
-        names: Union[str, List[str]] = None,
-        subject: str = "all",
-        **kwargs,
-    ) -> pd.DataFrame:
-        filter_messages = utils.CommandChainCreator()
-        filter_messages.register_command(
-            utils.filter_by_names, column="partner", names=names
-        )
-        filter_messages.register_command(
-            utils.filter_for_subject, column="sender_name", subject=subject
-        )
-        filter_messages.register_command(utils.filter_by_date, **kwargs)
-        return filter_messages(df)
 
 
 class StatsDataframe:
@@ -359,3 +288,21 @@ class StatsDataframe:
         for word in words:
             cc += len(word)
         return cc
+
+
+# @staticmethod
+# def get_filtered_df(
+#         df: pd.DataFrame,
+#         channel: Union[str, List[str]] = None,  # could be useful when filtering big dfs
+#         subject: str = "all",
+#         **kwargs,
+# ) -> pd.DataFrame:
+#     filter_messages = utils.CommandChainCreator()
+#     filter_messages.register_command(
+#         utils.filter_by_channel, column="partner", channel=channel
+#     )
+#     filter_messages.register_command(
+#         utils.filter_for_subject, column="sender_name", subject=subject
+#     )
+#     filter_messages.register_command(utils.filter_by_date, **kwargs)
+#     return filter_messages(df)
