@@ -1,134 +1,184 @@
 from __future__ import annotations
 
-from typing import Union, List, Dict, Callable, Any, NamedTuple
+from typing import Union, List, Dict, Callable, Any, NamedTuple, Tuple
 from datetime import datetime
 import pandas as pd
 
+import copy
 import numpy as np
-from miner.message.conversation_stats import (
-    ConversationStats,
-    PrivateConversationStats,
-    GroupConversationStats,
-)
+from miner.message.conversation_stats import ConversationStats
 from miner.message.conversations import Conversations
 from miner.message.conversation import Conversation
 from miner import utils
 
 
-# TODO
-# maybeeeee the private and group stuff can be merged in one
-# actually makes only a little sense to subclass it
-# just so you dont use conditionals in convo_stats that says if self.groups or smthg like that
-
-
 class MessagingAnalyzerManager:
     def __init__(self, conversations: Conversations) -> None:
         self.conversations = conversations
-        self.private_messaging_analyzer = PrivateMessagingAnalyzer(
-            conversations.private
+        self.private_messaging_analyzer = MessagingAnalyzer(
+            conversations.private, "private"
         )
         # maybe move group_convo_map creation to here, not conversations
-        self.group_messaging_analyzer = GroupMessagingAnalyzer(
-            conversations.group, conversations.group_convo_map
-        )
+        self.group_messaging_analyzer = MessagingAnalyzer(conversations.group, "group")
 
     @property
-    def private(self):
+    def private(self) -> MessagingAnalyzer:
         return self.private_messaging_analyzer
 
     @property
-    def group(self):
+    def group(self) -> MessagingAnalyzer:
         return self.group_messaging_analyzer
 
-    def people_i_have_private_convo_with(self):
-        return self.private_messaging_analyzer.data.keys()
+    def people_i_have_private_convo_with(self) -> List[str]:
+        return list(self.private_messaging_analyzer.data.keys())
 
-    def people_i_have_group_convo_with(self):
-        return self.group_messaging_analyzer.group_convo_map.keys()
+    def people_i_have_group_convo_with(self) -> List[str]:
+        return list(self.group_messaging_analyzer.group_convo_map.keys())
 
-    def get_who_i_have_private_convo_with_from_a_group(self, group_name):
-        if not group_name:
-            return
-
+    def get_who_i_have_private_convo_with_from_a_group(
+        self, group_name: str
+    ) -> List[str]:
         have = []
         participants = self.group_messaging_analyzer.filter(
-            names=group_name
+            senders=group_name
         ).participants
         for p in participants:
             if p in self.private_messaging_analyzer.data is not None:
                 have.append(p)
         return have
 
-    def how_much_i_speak_in_private_with_group_members(self, group_name):
+    def how_much_i_speak_in_private_with_group_members(
+        self, group_name: str
+    ) -> Dict[str, int]:
         person_private_stats_map = {}
-        participants = self.group_messaging_analyzer.filter(
-            names=group_name
-        ).participants
+        # participants = self.group_messaging_analyzer.filter(
+        #     senders=group_name
+        # ).participants
         for p in self.get_who_i_have_private_convo_with_from_a_group(group_name):
             person_private_stats_map[p] = self.private_messaging_analyzer.filter(
-                names=p
+                channels=p
             ).stats.mc
         return person_private_stats_map
 
-    def all_interactions(self, name):
+    def all_interactions(
+        self, name: str
+    ) -> Tuple[ConversationStats, ConversationStats]:
         # means private and all the group chats?
         # needs: private, and all the groups partner is in
-        private = self.private_messaging_analyzer.filter(names=name)
-        group = self.group_messaging_analyzer.filter(names=name)
+        private = self.private_messaging_analyzer.filter(channels=name)
+        group = self.group_messaging_analyzer.filter(senders=name)
         return private, group
 
-    def is_priv_msg_first_then_group(self, name):
+    def is_priv_msg_first_then_group(self, name: str) -> bool:
         # *needs private.start, all the group.start that the partner is in
-        private = self.private_messaging_analyzer.filter(names=name)
-        group = self.group_messaging_analyzer.filter(names=name)
+        private = self.private_messaging_analyzer.filter(channels=name)
+        group = self.group_messaging_analyzer.filter(senders=name)
         g_start_times = []
         for g in group:
-            start_time = self.group_messaging_analyzer.filter(groups=g).stats.start
+            start_time = self.group_messaging_analyzer.filter(channels=g).stats.start
             g_start_times.append(start_time)
 
         return any([private.start > group_start for group_start in g_start_times])
 
-    def get_stats_together(self, name):
+    def get_stats_together(self, name: str) -> ConversationStats:
         # needs all the messages from private and all groups; create a new  DF from that
-        private = self.private_messaging_analyzer.filter(names=name).stats.df
-        group = self.group_messaging_analyzer.filter(names=name)
+        private = self.private_messaging_analyzer.filter(channels=name).stats.df
+        group = self.group_messaging_analyzer.filter(senders=name)
         groups = [
-            self.group_messaging_analyzer.filter(groups=g).stats.df for g in group
+            self.group_messaging_analyzer.filter(channels=g).stats.df for g in group
         ]
         df = utils.stack_dfs(private, *groups)
-        return PrivateConversationStats(
-            df
-        )  # TODO violation!!!!! this is why we need to remove difference
+        return ConversationStats(df)
 
 
 class MessagingAnalyzer:
-    def __init__(self, data: Dict[str, Conversation]) -> None:
-        self.data = data
+    def __init__(self, data: Dict[str, Conversation], kind) -> None:
+        self.data = data  # channel to convo map
+        self.kind = kind
         self.df: pd.DataFrame = self.get_df(self.data)
 
+        self._stats = ConversationStats(self.df)
+        # TODO maybe rename
+        self.group_convo_map = utils.get_group_convo_map(data)  # name to convo map
+
+        self._stats_per_channel = self.get_stats_per_channel()
+        self._stats_per_sender = self.get_stats_per_sender()
+
     @property
-    def stats(self):
+    def is_group(self) -> bool:
+        return self.kind == "group"
+
+    @property
+    def stats(self) -> ConversationStats:
         return self._stats
 
     @property
-    def portion_of_contribution(self):
+    def stats_per_channel(self) -> Dict[str, ConversationStats]:
+        return self.get_stats_per_channel()
+
+    @property
+    def stats_per_sender(self) -> Dict[str, ConversationStats]:
+        return self.get_stats_per_sender()
+
+    @property
+    def participants(self) -> List[str]:
+        # super set of self.stats.contributors
+        participants = []
+        for _, convo in self.data.items():
+            participants += convo.metadata.participants
+        return sorted(list(set(participants)))
+
+    @property
+    def portion_of_contribution(self) -> Dict[str, float]:
         ranking_dict = self.get_ranking_of_partners_by_convo_stats()
         hundred = sum(list(ranking_dict.values()))
         return {name: value * 100 / hundred for name, value in ranking_dict.items()}
 
     @property
-    def most_contributed(self):
+    def most_contributed(self) -> str:
         return list(self.portion_of_contribution.items())[0]
 
     @property
-    def least_contributed(self):
+    def least_contributed(self) -> str:
         return list(self.portion_of_contribution.items())[-1]
 
-    def filter(self):
-        raise NotImplementedError()
+    @property
+    def min_group_size(self) -> int:
+        sizes = self.get_convos_size(self.data)
+        return min(sizes.values())
 
-    def get_stats_per_partner(self):
-        raise NotImplementedError()
+    @property
+    def max_group_size(self) -> int:
+        sizes = self.get_convos_size(self.data)
+        return max(sizes.values())
+
+    @property
+    def mean_group_size(self) -> float:
+        sizes = self.get_convos_size(self.data)
+        return sum(sizes.values()) / len(sizes.values())
+
+    @property
+    def number_of_convos_created_by_me(self) -> int:
+        return sum([stat.created_by_me for stat in self.stats_per_channel.values()])
+
+    def get_stats_per_channel(self) -> Dict[str, ConversationStats]:
+        return {
+            channel: ConversationStats(convo.data)
+            for channel, convo in self.data.items()
+        }
+
+    def get_stats_per_sender(self) -> Dict[str, ConversationStats]:
+        stat_per_participant = {}
+        for name in self.participants:
+            stat_per_participant[name] = self.stats.filter(sender=name)
+        return stat_per_participant
+
+    def get_all_groups_for_one_person(self, name) -> List[str]:
+        groups = []
+        for k, g in self.data.items():
+            if name in g.metadata.participants:
+                groups.append(k)
+        return list(set(groups))
 
     def get_stat_count(self, attribute: str = "mc", **kwargs) -> int:
         stats = self.stats.filter(**kwargs)
@@ -136,243 +186,67 @@ class MessagingAnalyzer:
 
     def get_ranking_of_partners_by_convo_stats(self, statistic: str = "mc") -> Dict:
         count_dict = {}
-        if len(self.stats_per_partner) == 1:
+        stats_per_people = (
+            self.stats_per_sender if self.is_group else self.stats_per_channel
+        )
+
+        if len(stats_per_people) == 1:
             raise utils.TooFewPeopleError("Can't rank one person.")
-        for name, stats in self.stats_per_partner.items():
+
+        for name, stats in stats_per_people.items():
             count_dict = utils.fill_dict(count_dict, name, getattr(stats, statistic))
             count_dict = utils.sort_dict(
                 count_dict, func=lambda item: item[1], reverse=True
             )
+
         return count_dict
 
     @staticmethod
     def get_df(convos) -> pd.DataFrame:
         return utils.stack_dfs(*[convo.data for convo in convos.values()])
 
-
-class PrivateMessagingAnalyzer(MessagingAnalyzer):
-    # private convo data
-    def __init__(self, data: Dict[str, Conversation]) -> None:
-        super().__init__(data)
-        self._stats = PrivateConversationStats(self.df)
-        self._stats_per_partner = self.get_stats_per_partner()
-
-    @property
-    def stats_per_partner(self):
-        return self._stats_per_partner
-
-    @property
-    def number_of_convos_created_by_me(self):
-        return sum([stat.created_by_me for stat in self.stats_per_partner.values()])
-
-    @utils.string_kwarg_to_list_converter("names")
-    def filter(self, names=None):
-        if not names:
-            return self
-        data = {name: self.data[name] for name in names}
-        return PrivateMessagingAnalyzer(data)
-
-    def get_stats_per_partner(self):
-        return {
-            name: PrivateConversationStats(convo.data)
-            for name, convo in self.data.items()
-        }
-
-
-class GroupMessagingAnalyzer(MessagingAnalyzer):
-    # group convo data
-    def __init__(
-        self, data: Dict[str, Conversation], group_convo_map: Dict[str, List]
-    ) -> None:
-        super().__init__(data)
-        self._stats = GroupConversationStats(self.df)
-        self.group_convo_map = group_convo_map  # TODO
-
-        self._stats_per_conversation = self.get_stats_per_conversation()
-        self._stats_per_partner = self.get_stats_per_partner()
-
-    @property
-    def participants(self):
-        # super set of self.stats.names
-        participants = []
-        for k, g in self.data.items():
-            participants += g.metadata.participants
-        return sorted(list(set(participants)))
-
-    @property
-    def number_of_convos_created_by_me(self):
-        return sum(
-            [stat.created_by_me for stat in self.stats_per_conversation.values()]
-        )
-
-    @property
-    def stats_per_conversation(self):
-        return self._stats_per_conversation
-
-    @property
-    def stats_per_partner(self):
-        return self._stats_per_partner
-
-    @property
-    def min_group_size(self):
-        sizes = self.get_group_sizes(self.data)
-        return min(sizes.values())
-
-    @property
-    def mean_group_size(self):
-        sizes = self.get_group_sizes(self.data)
-        return sum(sizes.values()) / len(sizes.values())
-
-    @property
-    def max_group_size(self):
-        sizes = self.get_group_sizes(self.data)
-        return max(sizes.values())
-
-    def get_all_groups_for_one_person(self, name):
-        groups = []
-        for k, g in self.data.items():
-            if name in g.metadata.participants:
-                groups.append(k)
-        return list(set(groups))
-
-    def get_stats_per_conversation(self):
-        return {
-            name: GroupConversationStats(convo.data)
-            for name, convo in self.data.items()
-        }
-
-    def get_stats_per_partner(self) -> Dict[str, GroupConversationStats]:
-        stat_per_participant = {}
-        for name in self.participants:
-            stat_per_participant[name] = self.stats.filter(sender=name)
-        # looks like the following:
-        # self => whatever names where filtered (either 1 or more groups)
-        # self.stats => all time stats for the filtered names
-        # self.stats.names => should be all the real names, that are part of the/these group message(s)
-        # self.stats.filter(names=name) we only create stats for one member of the group messages(s)
-        return stat_per_participant
-
     # TODO myabe move this to a filterer class?!?!?!
-    @utils.string_kwarg_to_list_converter("names")
-    @utils.string_kwarg_to_list_converter("groups")
-    def filter(self, names=None, groups=None):  # NOTE filtering by name, not group name
-        if names is None and groups is None:
+    @utils.string_kwarg_to_list_converter("senders")
+    @utils.string_kwarg_to_list_converter("channels")
+    def filter(self, channels=None, senders=None):
+        # TODO test if can pipe filters like this or not by filtering for both channels and senders
+        # see how it behaves with private as well
+        if senders is None and channels is None:
             return self
-        if names is not None:
-            data, group_convo_map = self.filter_by_name(
-                self.data, self.group_convo_map, names
-            )
-        if groups is not None:
-            data, group_convo_map = self.filter_by_group_name(
-                self.data, self.group_convo_map, groups
-            )
-        return GroupMessagingAnalyzer(data, group_convo_map)
+        data = copy.copy(self.data)
+        if senders is not None:
+            data = self.filter_by_sender(data, senders)
+        if channels is not None:
+            # todo rename filter_by_channel
+            data = self.filter_by_channel(data, channels)
+        if not data:
+            return None
+        return MessagingAnalyzer(data, self.is_group)
 
     @staticmethod
-    def filter_by_name(data, group_convo_map, names):
+    def filter_by_sender(
+        data: Dict[str, Conversation], names: List[str]
+    ) -> Dict[str, Conversation]:
         new_data = {}
         for key, g in data.items():
             if list(set(g.metadata.participants) & set(names)):
                 new_data[key] = g
-        new_group_convo_map = {name: group_convo_map[name] for name in names}
-        return new_data, new_group_convo_map
+        return new_data
 
     @staticmethod
-    def filter_by_group_name(data, group_convo_map, groups):
-        new_group_convo_map = {}
-        new_data = {name: data[name] for name in groups}
-        for key, group_list in group_convo_map.items():
-            if list(set(group_list) & set(groups)):
-                new_group_convo_map[key] = group_list
-        return new_data, new_group_convo_map
+    def filter_by_channel(
+        data: Dict[str, Conversation], groups: List[str]
+    ) -> Dict[str, Conversation]:
+        try:
+            new_data = {name: data[name] for name in groups}
+            return new_data
+        except KeyError:
+            return {}
 
     @staticmethod
-    def get_group_sizes(data):
+    def get_convos_size(data) -> Dict[str, int]:
         sizes = {}
         for k, g in data.items():
             size = len(g.metadata.participants)
             sizes[k] = size
         return sizes
-
-
-# class ConversationAnalyzer:
-#     """
-#     Analyzer for analyzing specific and/or all conversations
-#
-#     """
-#
-#     def __init__(self, conversations: Conversations) -> None:
-#         self.conversations = conversations
-#
-#         # self.private = PrivateMessagingAnalyzer#conversations.private
-#         self.private = conversations.private
-#         self.groups = conversations.group
-#         self.names: List[str] = list(self.private.keys())
-#
-#         # self.df: pd.DataFrame = self.get_df(self.private, self.group)
-#         # self._stats = ConversationStats(self.df)
-#
-#         self.priv_df: pd.DataFrame = self.get_df(self.private)
-#         self._priv_stats = PrivateConversationStats(self.priv_df)
-#
-#         self.group_df: pd.DataFrame = self.get_df(self.groups)
-#         self._group_stats = GroupConversationStats(self.group_df)
-#
-#     def __str__(self) -> str:
-#         return f"Analyzing {len(self.priv_df)} messages..."
-#
-#     @property
-#     def priv_stats(self) -> PrivateConversationStats:
-#         return self._priv_stats
-#
-#     @property
-#     def stat_sum(self) -> pd.Series:
-#         return self.priv_stats.stat_sum
-#
-#     @property
-#     def group_stats(self) -> GroupConversationStats:
-#         return self._group_stats
-#
-#     def get_stats(
-#             self,
-#             kind: str = "private",
-#             names: str = None,
-#             subject: str = "all",
-#             start: Union[str, datetime] = None,
-#             end: Union[str, datetime] = None,
-#             period: Union[str, datetime] = None,
-#     ) -> ConversationStats:
-#         if kind == "private":
-#             return self.priv_stats.filter(
-#                 names=names, subject=subject, start=start, end=end, period=period
-#             )
-#         elif kind == "group":
-#             return self.group_stats.filter(
-#                 names=names, subject=subject, start=start, end=end, period=period
-#             )
-#
-#     def get_stat_count(
-#             self, kind: str = "private", attribute: str = "mc", **kwargs
-#     ) -> int:
-#         stats = self.get_stats(kind=kind, **kwargs)
-#         return getattr(stats, attribute)
-#
-#     # 4. Most used messages/words in convos by me/partner (also by year/month/day/hour)
-#     def most_used_messages(self, top=20) -> pd.Series:
-#         return self.priv_stats.get_most_used_messages(top)
-#
-#     # 5. All time: time series: dict of 'y/m/d/h : number of msgs/words/chars (also sent/got) for user/all convos'
-#     def get_grouped_time_series_data(self, period="y") -> pd.DataFrame:
-#         return self.priv_stats.get_grouped_time_series_data(period=period)
-#
-#     # 6. All time: number of messages sent/got on busiest period (by year/month/day/hour)
-#     def stat_per_period(self, period: str, statistic: str = "mc") -> Dict:
-#         return self.priv_stats.stat_per_period(period, statistic=statistic)
-#
-#     # 7. All time: Ranking of partners by messages by y/m/d/h, by different stats, by sent/got
-#     def get_ranking_of_partners_by_messages(self, statistic: str = "mc") -> Dict:
-#         return self.priv_stats.get_ranking_of_partners_by_messages(statistic=statistic)
-#
-#     @staticmethod
-#     def get_df(convos) -> pd.DataFrame:
-#         return utils.stack_dfs(*[convo.data for convo in convos.values()])

@@ -1,18 +1,14 @@
 import pytest
 
 from miner.utils import dt
-from miner.message.conversation_stats import (
-    ConversationStats,
-    PrivateConversationStats,
-    GroupConversationStats,
-)
+from miner.message.conversation_stats import ConversationStats
 
 
 @pytest.fixture(scope="session")
 def group_stats(group_msg_analyzer):
     def _stats(**kwargs):
         if "names" in kwargs:
-            analyzer = group_msg_analyzer.filter(names=kwargs.get("names"))
+            analyzer = group_msg_analyzer.filter(senders=kwargs.get("names"))
         else:
             analyzer = group_msg_analyzer
         if any([kw in kwargs for kw in ("channel", "subject", "start", "end")]):
@@ -27,36 +23,38 @@ class TestGroupStatisticsWithFiltering:
     def test_stats_group_stats_props(self, group_msg_analyzer):
         stats = group_msg_analyzer.stats
         for prop in [
+            "_stats_df",
             "audios",
             "cc",
+            "channels",
             "contributors",
+            "count_stat_for_period",
             "created_by_me",
             "creator",
             "df",
             "end",
             "files",
             "filter",
-            "get_conversation_statistics",
+            "get_convos_in_numbers",
             "get_filtered_df",
             "get_grouped_time_series_data",
-            "get_most_used_messages",
             "get_words",
             "gifs",
-            "groups",
             "mc",
             "media",
             "media_mc",
+            "media_message_extractor",
             "messages",
             "most_used_msgs",
             "most_used_words",
-            "multi",
-            "names",
+            "number_of_channels",
             "number_of_contributors",
-            "number_of_groups",
             "percentage_of_media_messages",
+            "percentage_of_text_messages",
             "photos",
             "start",
             "stat_per_period",
+            "text",
             "text_mc",
             "unique_mc",
             "unique_wc",
@@ -67,9 +65,9 @@ class TestGroupStatisticsWithFiltering:
             assert getattr(stats, prop) is not None
 
     def test_stats_marathon(self, group_msg_analyzer):
-        stats = group_msg_analyzer.filter(groups="marathon").stats
+        stats = group_msg_analyzer.filter(channels="marathon").stats
 
-        assert isinstance(stats, GroupConversationStats)
+        assert isinstance(stats, ConversationStats)
 
         assert stats.mc == 9
         assert stats.text_mc == 7
@@ -82,7 +80,7 @@ class TestGroupStatisticsWithFiltering:
 
     def test_stats_biggest_group_filtered(self, group_msg_analyzer):
         group_stats = group_msg_analyzer.filter(
-            groups="Tőke Hal, Foo Bar, Donald Duck and 2 others"
+            channels="Tőke Hal, Foo Bar, Donald Duck and 2 others"
         ).stats
 
         filtered_stats_me = group_stats.filter(subject="me")

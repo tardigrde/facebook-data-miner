@@ -27,20 +27,7 @@ class Conversations:
             directories=paths_factory.get_dirs(ctype="group"),
             dir_lister=self.get_json_paths,
         )
-        self.group_convo_map = self.add_group_convo_participation()
-
-    def add_group_convo_participation(self):
-        group_convo_map = {}
-        group_convo_map = utils.prefill_dict(
-            group_convo_map, list(self._private.keys()), []
-        )
-        for key, convo in self.group.items():
-            for participant in convo.metadata.participants:
-                group_convo_map = utils.fill_dict(group_convo_map, participant, [key])
-                group_convo_map[participant] = list(
-                    set(group_convo_map.get(participant))
-                )
-        return group_convo_map
+        # self.group_convo_map = self.add_group_convo_participation()
 
     @property
     def private(self) -> Dict[str, Conversation]:

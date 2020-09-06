@@ -107,6 +107,23 @@ class TooFewPeopleError(Exception):
     pass
 
 
+def get_group_convo_map(data):
+    group_convo_map = {}
+    # no need for prefill
+    # group_convo_map = utils.prefill_dict(
+    #     group_convo_map, list(self._private.keys()), []
+    # )
+    for channel, convo in data.items():
+        for participant in convo.metadata.participants:
+            # p: 2 participants
+            # g: 2+ participants
+            group_convo_map = fill_dict(group_convo_map, participant, [channel])
+            group_convo_map[participant] = list(
+                set(group_convo_map.get(participant))
+            )  # just making sure there is no duplicate, so I don't have to go over it again later
+    return group_convo_map
+
+
 class string_kwarg_to_list_converter:
     def __init__(self, kw_arg):
         self.kw_arg = kw_arg
@@ -271,21 +288,6 @@ def unify_dict_keys(first, second):
     return first, second
 
 
-def count_stat_for_period(df, period, statistic):
-    periods = {}
-    periods = prefill_dict(periods, PERIOD_MAP.get(period), 0)
-
-    for date, row in df.iterrows():
-        stat = row[statistic]
-        if stat is None:
-            continue
-        key = PERIOD_MANAGER.date_to_period(date, period)
-        periods = fill_dict(periods, key, stat)
-    sorting_func = PERIOD_MANAGER.sorting_method(period)
-    periods = sort_dict(periods, sorting_func)
-    return periods
-
-
 def get_parent_directory_of_file(root, files, extension, contains_string) -> str:
     for file_name in files:
         if (
@@ -320,7 +322,7 @@ def walk_directory_and_search(path, func, extension, contains_string=""):
         yield path
 
 
-def check_if_value_is_nan(value):
+def is_nan(value) -> bool:
     return not isinstance(value, str) and math.isnan(value)
 
 

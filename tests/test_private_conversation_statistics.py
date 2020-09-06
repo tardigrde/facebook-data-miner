@@ -7,7 +7,7 @@ from miner.utils import dt
 def priv_stats(priv_msg_analyzer):
     def _stats(**kwargs):
         if "names" in kwargs:
-            analyzer = priv_msg_analyzer.filter(names=kwargs.get("names"))
+            analyzer = priv_msg_analyzer.filter(senders=kwargs.get("names"))
         else:
             analyzer = priv_msg_analyzer
         if any([kw in kwargs for kw in ("channel", "subject", "start", "end")]):

@@ -15,26 +15,49 @@ class ConversationStats:
 
     def __init__(self, df: pd.DataFrame) -> None:
         self.df: pd.DataFrame = df
-        self._stats_df: pd.DataFrame = self.get_conversation_statistics()
+        self._stats_df: pd.DataFrame = self.get_convos_in_numbers()
         self._stat_sum = self._stats_df.sum()
 
-    # def __repr__(self) -> str:
-    #     return f"Msg count is {self.mc}"
+    def __repr__(self) -> str:
+        return f"Stats for: {self.number_of_channels} channels"
 
-    @property
-    def names(self):
-        # NOTE this will only list people who has
-        # once contributed to the group message(s)
-        mask = self.df.sender_name != utils.ME
-        return self.df.sender_name[mask].unique().tolist()
+    def filter(self, df: pd.DataFrame = None, **kwargs) -> ConversationStats:
+        if df is None:
+            df = self.df
+        df = self.get_filtered_df(df, **kwargs)
+        return ConversationStats(df)
 
-    def get_conversation_statistics(self) -> pd.DataFrame:
+    def get_convos_in_numbers(self) -> pd.DataFrame:
         stats = StatsDataframe()
         return stats(self.df)
 
     @property
-    def created_by_me(self):
-        return self.df.iloc[0].sender_name == utils.ME
+    def channels(self) -> List[str]:
+        # todo name it channels: either of Union[private convo partner, group,List[private convo partner], List[group]]
+        return list(self.df.partner.unique())
+
+    @property
+    def number_of_channels(self) -> int:
+        return len(self.channels)
+
+    @property
+    def contributors(self) -> List[str]:
+        # TODO whay about this?
+        #     mask = self.df.sender_name != utils.ME
+        #     return self.df.sender_name[mask].unique().tolist()
+        return list(self.df.sender_name.unique())
+
+    @property
+    def number_of_contributors(self) -> int:
+        return len(self.contributors)
+
+    @property
+    def creator(self) -> str:
+        return self.df.iloc[0].sender_name
+
+    @property
+    def created_by_me(self) -> bool:
+        return self.creator == utils.ME
 
     @property
     def start(self) -> np.datetime64:
@@ -104,42 +127,31 @@ class ConversationStats:
     def most_used_words(self) -> pd.Series:
         return self.words.value_counts()
 
-    # TODO  I dont like these too much
-    @property
-    def photos(self) -> pd.Series:
-        if "photos" not in self.df:
-            return 0
-        return self.df.photos.dropna()
-
     @property
     def files(self) -> pd.Series:
-        if "files" not in self.df:
-            return 0
-        return self.df.files.dropna()
+        return self.media_message_extractor("files")
+
+    @property
+    def photos(self) -> pd.Series:
+        return self.media_message_extractor("photos")
 
     @property
     def videos(self) -> pd.Series:
-        if "videos" not in self.df:
-            return 0
-        return self.df.videos.dropna()
+        return self.media_message_extractor("videos")
 
     @property
     def audios(self) -> pd.Series:
-        if "audios" not in self.df:
-            return 0
-        return self.df.audios.dropna()
+        return self.media_message_extractor("audios")
 
     @property
     def gifs(self) -> pd.Series:
-        if "gifs" not in self.df:
-            return 0
-        return self.df.gifs.dropna()
+        return self.media_message_extractor("gifs")
 
-    # 4.  Most used messages/words in convos by me/partner (also by year/month/day/hour)
-    def get_most_used_messages(self, top: int) -> pd.Series:
-        return self.most_used_msgs[top:]
+    def media_message_extractor(self, kind: str) -> pd.Series:
+        if kind not in self.df:
+            return pd.Series([])
+        return self.df[kind].dropna()
 
-    # 5. Time series: dict of 'y/m/d/h : number of messages/words/characters (also sent/got) for user/all convos'
     def get_grouped_time_series_data(self, period: str = "y") -> pd.DataFrame:
         grouping_rule = utils.PERIOD_MANAGER.get_grouping_rules(period, self._stats_df)
         groups_df = self._stats_df.groupby(grouping_rule).sum()
@@ -147,11 +159,9 @@ class ConversationStats:
             groups_df, period=period
         )
 
-    # 6. Number of messages sent/got on busiest period (by year/month/day/hour)
     def stat_per_period(self, period: str, statistic: str = "mc") -> Dict:
         interval_stats = self.get_grouped_time_series_data(period=period)
-        # NOTE this could be in the class
-        return utils.count_stat_for_period(interval_stats, period, statistic=statistic)
+        return self.count_stat_for_period(interval_stats, period, statistic=statistic)
 
     @staticmethod
     def get_words(messages) -> pd.Series:
@@ -161,6 +171,22 @@ class ConversationStats:
             for token in tokens:
                 words.append(token)
         return pd.Series(words)
+
+    @staticmethod
+    def count_stat_for_period(df, period, statistic):
+        # DOES too much
+        periods = {}
+        periods = utils.prefill_dict(periods, utils.PERIOD_MAP.get(period), 0)
+
+        for date, row in df.iterrows():
+            stat = row[statistic]
+            if stat is None:
+                continue
+            key = utils.PERIOD_MANAGER.date_to_period(date, period)
+            periods = utils.fill_dict(periods, key, stat)
+        sorting_func = utils.PERIOD_MANAGER.sorting_method(period)
+        periods = utils.sort_dict(periods, sorting_func)
+        return periods
 
     @staticmethod
     def get_filtered_df(
@@ -192,63 +218,11 @@ class ConversationStats:
         return filter_messages(df)
 
 
-class PrivateConversationStats(ConversationStats):
-    """
-    Statistics of conversation with one or more persons.
-    """
-
-    def __init__(self, df: pd.DataFrame) -> None:
-        super().__init__(df)
-
-    def filter(self, df: pd.DataFrame = None, **kwargs) -> ConversationStats:
-        if df is None:
-            df = self.df
-        df = self.get_filtered_df(df, **kwargs)
-        return PrivateConversationStats(df)
-
-
-class GroupConversationStats(ConversationStats):
-    """
-    Statistics of conversation with one or more groups.
-    """
-
-    def __init__(self, df: pd.DataFrame) -> None:
-        super().__init__(df)
-        self.multi = self.number_of_groups > 1
-
-    def filter(self, df: pd.DataFrame = None, **kwargs) -> ConversationStats:
-        if df is None:
-            df = self.df
-        df = self.get_filtered_df(df, **kwargs)
-        return GroupConversationStats(df)
-
-    @property
-    def groups(self):
-        return self.df.partner.unique()
-
-    @property
-    def number_of_groups(self):
-        return len(self.groups)
-
-    @property
-    def contributors(self):
-        return self.df.sender_name.unique()
-
-    @property
-    def number_of_contributors(self):
-        return len(self.contributors)
-
-    @property
-    def creator(self):
-        return self.df.iloc[0].sender_name
-
-
 class StatsDataframe:
     def __init__(self,) -> None:
         self.df = pd.DataFrame()
 
     def __call__(self, df) -> pd.DataFrame:
-        # TODO do we need this? I don't think so. use length
         # all message count
         self.df["mc"] = df.content.map(lambda x: 1)
         # text message count
@@ -263,46 +237,18 @@ class StatsDataframe:
 
     @staticmethod
     def calculate_text_mc(content: Union[str, math.nan]) -> int:
-        if utils.check_if_value_is_nan(content):
-            return 0
-        return 1
+        return 0 if utils.is_nan(content) else 1
 
     @staticmethod
     def calculate_media_mc(content: Union[str, math.nan]) -> int:
-        if utils.check_if_value_is_nan(content):
-            return 1
-        return 0
+        return 1 if utils.is_nan(content) else 0
 
     @staticmethod
     def calculate_wc(content: Union[str, math.nan]) -> int:
-        if utils.check_if_value_is_nan(content):
-            return 0
-        return len(content.split())
+        return 0 if utils.is_nan(content) else len(content.split())
 
     @staticmethod
     def calculate_cc(content: Union[str, math.nan]) -> int:
-        if utils.check_if_value_is_nan(content):
-            return 0
-        words = content.split()
-        cc = 0
-        for word in words:
-            cc += len(word)
-        return cc
-
-
-# @staticmethod
-# def get_filtered_df(
-#         df: pd.DataFrame,
-#         channel: Union[str, List[str]] = None,  # could be useful when filtering big dfs
-#         subject: str = "all",
-#         **kwargs,
-# ) -> pd.DataFrame:
-#     filter_messages = utils.CommandChainCreator()
-#     filter_messages.register_command(
-#         utils.filter_by_channel, column="partner", channel=channel
-#     )
-#     filter_messages.register_command(
-#         utils.filter_for_subject, column="sender_name", subject=subject
-#     )
-#     filter_messages.register_command(utils.filter_by_date, **kwargs)
-#     return filter_messages(df)
+        return (
+            0 if utils.is_nan(content) else sum([len(word) for word in content.split()])
+        )
