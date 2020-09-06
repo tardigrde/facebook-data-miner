@@ -25,7 +25,7 @@ class Report:
         self.content.append((text, stat,))
 
     def get_ranking_data(self):
-        ranking = self.data.get_ranking(stat="msg_count")
+        ranking = self.data.get_ranking(stat="mc")
         self.add_content("")
 
     def fill_content(self):
@@ -34,14 +34,14 @@ class Report:
         for name, stat in self.data.get_unique_stats():
             self.add_content(f"{name} count", f"{stat:,}")
         print(40 * "-")
-        self.fill_stat_per_period_data(stat="msg_count")
+        self.fill_stat_per_period_data(stat="mc")
         print(40 * "-")
-        self.fill_stat_per_period_data(stat="word_count")
+        self.fill_stat_per_period_data(stat="wc")
         print(40 * "-")
-        self.fill_stat_per_period_data(stat="char_count")
+        self.fill_stat_per_period_data(stat="cc")
         print(40 * "-")
 
-    def fill_stat_per_period_data(self, stat="msg_count"):
+    def fill_stat_per_period_data(self, stat="mc"):
         self.add_content("Time period statistic", utils.STAT_MAP.get(stat))
         for time, stat in self.data.get_stat_per_period_data(stat=stat):
             self.add_content(time, stat)
@@ -51,29 +51,29 @@ class ReportDataAdapter:
     def __init__(self, analyzer):
         self.analyzer = analyzer
 
-    def get_ranking(self, stat="msg_count"):
+    def get_ranking(self, stat="mc"):
         return self.analyzer.get_ranking_of_friends_by_message_stats(stat=stat)
 
     def get_basic_stats(self):
         stat_names = [
-            "msg_count",
-            "text_msg_count",
-            "media_count",
-            "word_count",
-            "char_count",
+            "mc",
+            "text_mc",
+            "media_mc",
+            "wc",
+            "cc",
         ]
         for name in stat_names:
             readable = utils.STAT_MAP.get(name)
-            stat = self.analyzer.stat_sum[name]
+            stat = getattr(self.analyzer.stats, name)
             yield readable, stat
 
     def get_unique_stats(self):
-        yield "Unique message", self.analyzer.stats.unique_msg_count
-        yield "Unique word", self.analyzer.stats.unique_word_count
+        yield "Unique message", self.analyzer.priv_stats.unique_mc
+        yield "Unique word", self.analyzer.priv_stats.unique_wc
 
-    def get_stat_per_period_data(self, stat="msg_count"):
+    def get_stat_per_period_data(self, stat="mc"):
         for period in ["y", "m", "d", "h"]:
             # for period in ['y',]:
-            data = self.analyzer.stat_per_period(period, statistic=stat)
+            data = self.analyzer.stats.stat_per_period(period, statistic=stat)
             for year, count in data.items():
                 yield year, f"{count:,}"

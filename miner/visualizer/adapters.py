@@ -10,7 +10,7 @@ class DataAdapter:
 
     def get_stats(self, **kwargs):
         analyzer = self.analyzer
-        return analyzer.get_stats(**kwargs)
+        return analyzer.stats.filter(**kwargs)
 
 
 class PlotDataAdapter(DataAdapter):
@@ -21,7 +21,7 @@ class PlotDataAdapter(DataAdapter):
     def __init__(self, analyzer):
         super().__init__(analyzer)
 
-    def set_up_time_series_data(self, period, stat="text_msg_count", **kwargs):
+    def set_up_time_series_data(self, period, stat="text_mc", **kwargs):
         stats = self.get_stats(**kwargs)
         return stats.get_grouped_time_series_data(period)[stat]
 
@@ -29,7 +29,7 @@ class PlotDataAdapter(DataAdapter):
         index, me, partner = self.get_stat_per_time_data(period, stat)
         utils.generate_date_series(period, start=index[0], end=index[-1])
 
-    def get_stat_per_time_data(self, period, stat="msg_count", **kwargs):
+    def get_stat_per_time_data(self, period, stat="mc", **kwargs):
         me_stat = self.get_stats(subject="me", **kwargs).stat_per_period(
             period, statistic=stat
         )
@@ -38,8 +38,10 @@ class PlotDataAdapter(DataAdapter):
         )
         return list(me_stat.keys()), list(me_stat.values()), list(partner_stat.values())
 
-    def get_ranking_of_friends_by_message_stats(self, stat="msg_count"):
-        ranks_dict = self.analyzer.get_ranking_of_partners_by_messages(statistic=stat)
+    def get_ranking_of_friends_by_message_stats(self, stat="mc"):
+        ranks_dict = self.analyzer.get_ranking_of_partners_by_convo_stats(
+            statistic=stat
+        )
         # TODO watch out; might be not working correctly; check upper function
         sorted_dict = utils.sort_dict(
             ranks_dict, func=lambda item: item[1], reverse=True,
@@ -59,17 +61,17 @@ class TableDataAdapter(DataAdapter):
 
     def get_basic_stats(self):
         stat_names = [
-            "msg_count",
-            "text_msg_count",
-            "media_count",
-            "word_count",
-            "char_count",
+            "mc",
+            "text_mc",
+            "media_mc",
+            "wc",
+            "cc",
         ]
         readables = []
         stats = []
         for name in stat_names:
             readable = utils.STAT_MAP.get(name)
-            stat = self.analyzer.stat_sum[name]
+            stat = getattr(self.analyzer.stats, name)
             # yield readable, stat
 
             readables.append(readable)
@@ -79,17 +81,14 @@ class TableDataAdapter(DataAdapter):
     def get_unique_stats(self):
         return (
             ["Unique message", "Unique word"],
-            [
-                self.analyzer.stats.unique_msg_count,
-                self.analyzer.stats.unique_word_count,
-            ],
+            [self.analyzer.priv_stats.unique_mc, self.analyzer.priv_stats.unique_wc,],
         )
-        # yield "Unique message", self.analyzer.stats.unique_msg_count
-        # yield "Unique word", self.analyzer.stats.unique_word_count
+        # yield "Unique message", self.analyzer.stats.unique_mc
+        # yield "Unique word", self.analyzer.stats.unique_wc
 
-    def get_stat_per_period_data(self, period, stat="msg_count"):
+    def get_stat_per_period_data(self, period, stat="mc"):
         dates, counts = [], []
-        data = self.analyzer.stat_per_period(period, statistic=stat)
+        data = self.analyzer.stats.stat_per_period(period, statistic=stat)
         for date, count in data.items():
             dates.append(date)
             counts.append(count)

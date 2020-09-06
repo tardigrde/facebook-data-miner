@@ -27,6 +27,7 @@ class Conversations:
             directories=paths_factory.get_dirs(ctype="group"),
             dir_lister=self.get_json_paths,
         )
+        # self.group_convo_map = self.add_group_convo_participation()
 
     @property
     def private(self) -> Dict[str, Conversation]:

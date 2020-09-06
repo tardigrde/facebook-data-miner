@@ -1,4 +1,5 @@
 import math
+import copy
 from typing import Union, List, Dict, Callable, Any, NamedTuple
 from dateutil.relativedelta import relativedelta
 from datetime import datetime, timedelta
@@ -67,11 +68,11 @@ ACCENTS_MAP = {
 
 MESSAGE_TYPE_MAP = {"private": "Regular", "group": "RegularGroup"}
 STAT_MAP = {
-    "msg_count": "Message",
-    "text_msg_count": "Text message",
-    "media_count": "Media message",
-    "word_count": "Word",
-    "char_count": "Character",
+    "mc": "Message",
+    "text_mc": "Text message",
+    "media_mc": "Media message",
+    "wc": "Word",
+    "cc": "Character",
 }
 # TODO: get this from somewhere
 ME = "Levente Csőke"
@@ -102,6 +103,47 @@ class Command:
         return self._cmd(*(args + self._args), **self._kwargs)
 
 
+class TooFewPeopleError(Exception):
+    pass
+
+
+def get_group_convo_map(data):
+    group_convo_map = {}
+    # no need for prefill
+    # group_convo_map = utils.prefill_dict(
+    #     group_convo_map, list(self._private.keys()), []
+    # )
+    for channel, convo in data.items():
+        for participant in convo.metadata.participants:
+            # p: 2 participants
+            # g: 2+ participants
+            group_convo_map = fill_dict(group_convo_map, participant, [channel])
+            group_convo_map[participant] = list(
+                set(group_convo_map.get(participant))
+            )  # just making sure there is no duplicate, so I don't have to go over it again later
+    return group_convo_map
+
+
+class string_kwarg_to_list_converter:
+    def __init__(self, kw_arg):
+        self.kw_arg = kw_arg
+
+    def __call__(self, func):
+        def wrapper(*args, **kwargs):
+            value = kwargs.get(self.kw_arg)
+            if not value:
+                return func(*args, **kwargs)
+            if isinstance(value, str):
+                kwargs[self.kw_arg] = [value]
+            if not isinstance(kwargs[self.kw_arg], list):
+                raise ValueError(
+                    f"Parameter `{self.kw_arg}` should be type of Union[str, List[str]], got: {type(kwargs[self.kw_arg])}"
+                )
+            return func(*args, **kwargs)
+
+        return wrapper
+
+
 def subject_checker(func):
     def wrapper(*args, **kwargs):
         if not kwargs.get("subject") or kwargs.get("subject") not in (
@@ -126,22 +168,6 @@ def column_checker(func):
     return wrapper
 
 
-def names_checker(func):
-    def wrapper(*args, **kwargs):
-        names = kwargs.get("names")
-        if not names:
-            return func(*args, **kwargs)
-        if isinstance(names, str):
-            kwargs["names"] = [names]
-        if not isinstance(kwargs["names"], list):
-            raise ValueError(
-                f'Parameter `names` should be type of Union[str, List[str]], got: {type(kwargs["names"])}'
-            )
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
 def period_checker(func):
     def wrapper(*args, **kwargs):
         if not kwargs.get("period") or DELTA_MAP[kwargs.get("period")] is None:
@@ -154,15 +180,14 @@ def period_checker(func):
 def attribute_checker(func):
     def wrapper(*args, **kwargs):
         statistic = kwargs.get("statistic")
-        if not statistic or statistic not in ("msg_count", "word_count", "char_count"):
-            raise ValueError(
-                "Parameter `statistic` should be one of {msg_count, word_count, char_count}"
-            )
+        if not statistic or statistic not in ("mc", "wc", "cc"):
+            raise ValueError("Parameter `statistic` should be one of {mc, wc, cc}")
         return func(*args, **kwargs)
 
     return wrapper
 
 
+# TODO support adding only start or end
 def start_end_period_checker(func):
     def wrapper(*args, **kwargs):
         if kwargs.get("start") is not None and kwargs.get("end") is not None:
@@ -198,8 +223,8 @@ def ts_to_date(date):
     return datetime.fromtimestamp(date)
 
 
-def dt(year: int = 2004, month: int = 1, day: int = 1, hour: int = 0, **kwargs):
-    return datetime(year=year, month=month, day=day, hour=hour, **kwargs)
+def dt(y: int = 2004, m: int = 1, d: int = 1, h: int = 0, **kwargs):
+    return datetime(year=y, month=m, day=d, hour=h, **kwargs)
 
 
 def get_start_based_on_period(join_date, period):
@@ -218,7 +243,7 @@ def get_stats_for_time_intervals(stat_getter, time_series, period, subject="all"
             end = time_series[i + 1]
         except IndexError:
             end = None
-        data[start] = stat_getter.get_filtered_stats(
+        data[start] = stat_getter.filter(
             subject=subject, start=start, end=end, period=period
         )
     return data
@@ -226,23 +251,8 @@ def get_stats_for_time_intervals(stat_getter, time_series, period, subject="all"
 
 def prefill_dict(dict, keys, value):
     for k in keys:
-        dict[k] = value
+        dict[k] = copy.copy(value)
     return dict
-
-
-def count_stat_for_period(df, period, statistic):
-    periods = {}
-    periods = prefill_dict(periods, PERIOD_MAP.get(period), 0)
-
-    for date, row in df.iterrows():
-        stat = row[statistic]
-        if stat is None:
-            continue
-        key = PERIOD_MANAGER.date_to_period(date, period)
-        periods = fill_dict(periods, key, stat)
-    sorting_func = PERIOD_MANAGER.sorting_method(period)
-    periods = sort_dict(periods, sorting_func)
-    return periods
 
 
 def fill_dict(dictionary, key, value):
@@ -312,7 +322,7 @@ def walk_directory_and_search(path, func, extension, contains_string=""):
         yield path
 
 
-def check_if_value_is_nan(value):
+def is_nan(value) -> bool:
     return not isinstance(value, str) and math.isnan(value)
 
 
@@ -367,13 +377,24 @@ def filter_by_date(df: pd.DataFrame, start=None, end=None, period=None):
 
 
 @column_checker
-@names_checker
-def filter_by_names(
-    df: pd.DataFrame, column: str = "", names: Union[str, List[str]] = None
+@string_kwarg_to_list_converter("channel")
+def filter_by_channel(
+    df: pd.DataFrame, column: str = "partner", channel: Union[str, List[str]] = None
 ):
-    if not names:
+    if not channel:
         return df
-    partner_matched = df[df[column].isin(names)]
+    partner_matched = df[df[column].isin(channel)]
+    return partner_matched
+
+
+@column_checker
+@string_kwarg_to_list_converter("sender")
+def filter_by_sender(
+    df: pd.DataFrame, column: str = "sender_name", sender: Union[str, List[str]] = None
+):
+    if not sender:
+        return df
+    partner_matched = df[df[column].isin(sender)]
     return partner_matched
 
 
@@ -385,10 +406,6 @@ def filter_for_subject(df: pd.DataFrame, column: str = "", subject: str = "all")
     elif subject == "partner":
         return df[df[column] != ME]
     return df
-
-
-class TooFewPeopleError(Exception):
-    pass
 
 
 @start_end_period_checker
@@ -477,3 +494,50 @@ class PeriodManager:
 PERIOD_MANAGER = PeriodManager()
 
 #################################################
+
+# def channel_checker(func):
+#     def wrapper(*args, **kwargs):
+#         channel = kwargs.get("channel")
+#         if not channel:
+#             return func(*args, **kwargs)
+#         if isinstance(channel, str):
+#             kwargs["channel"] = [channel]
+#         if not isinstance(kwargs["channel"], list):
+#             raise ValueError(
+#                 f'Parameter `channel` should be type of Union[str, List[str]], got: {type(kwargs["channel"])}'
+#             )
+#         return func(*args, **kwargs)
+#
+#     return wrapper
+#
+#
+# def names_checker(func):
+#     def wrapper(*args, **kwargs):
+#         names = kwargs.get("names")
+#         if not names:
+#             return func(*args, **kwargs)
+#         if isinstance(names, str):
+#             kwargs["names"] = [names]
+#         if not isinstance(kwargs["names"], list):
+#             raise ValueError(
+#                 f'Parameter `names` should be type of Union[str, List[str]], got: {type(kwargs["names"])}'
+#             )
+#         return func(*args, **kwargs)
+#
+#     return wrapper
+#
+#
+# def groups_checker(func):
+#     def wrapper(*args, **kwargs):
+#         groups = kwargs.get("groups")
+#         if not groups:
+#             return func(*args, **kwargs)
+#         if isinstance(groups, str):
+#             kwargs["groups"] = [groups]
+#         if not isinstance(kwargs["groups"], list):
+#             raise ValueError(
+#                 f'Parameter `groups` should be type of Union[str, List[str]], got: {type(kwargs["groups"])}'
+#             )
+#         return func(*args, **kwargs)
+#
+#     return wrapper

@@ -58,15 +58,11 @@ class TableCreator:
             ["y", "m", "d", "h"], ["Yearly", "Monthly", "Daily", "Hourly"]
         ):
             title = f"{title} statistics"
-            fields, stats = self.data.get_stat_per_period_data(period, stat="msg_count")
+            fields, stats = self.data.get_stat_per_period_data(period, stat="mc")
             self.table_creator((fields, stats), title)
-            fields, stats = self.data.get_stat_per_period_data(
-                period, stat="word_count"
-            )
+            fields, stats = self.data.get_stat_per_period_data(period, stat="wc")
             self.add_content(self.tables[title], stats)
-            fields, stats = self.data.get_stat_per_period_data(
-                period, stat="char_count"
-            )
+            fields, stats = self.data.get_stat_per_period_data(period, stat="cc")
             self.add_content(self.tables[title], stats)
 
         # for name, stat in self.data.get_basic_stats():
@@ -74,14 +70,14 @@ class TableCreator:
         # for name, stat in self.data.get_unique_stats():
         #     self.add_content(f"{name} count", f"{stat:,}")
         # print(40 * "-")
-        # self.fill_stat_per_period_data(stat="msg_count")
+        # self.fill_stat_per_period_data(stat="mc")
         # print(40 * "-")
-        # self.fill_stat_per_period_data(stat="word_count")
+        # self.fill_stat_per_period_data(stat="wc")
         # print(40 * "-")
-        # self.fill_stat_per_period_data(stat="char_count")
+        # self.fill_stat_per_period_data(stat="cc")
         # print(40 * "-")
 
-    def fill_stat_per_period_data(self, period, stat="msg_count"):
+    def fill_stat_per_period_data(self, period, stat="mc"):
         self.add_content("Time period statistic", utils.STAT_MAP.get(stat))
         for time, stat in self.data.get_stat_per_period_data(period, stat=stat):
             self.add_content(time, stat)

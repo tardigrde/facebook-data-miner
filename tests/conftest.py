@@ -1,7 +1,7 @@
 import pytest
 import os
 
-from miner.message.conversation_analyzer import ConversationAnalyzer
+from miner.message.conversation_analyzer import MessagingAnalyzerManager
 from miner.message.conversations import Conversations
 from miner.people import People
 from miner.data import FacebookData
@@ -40,4 +40,14 @@ def facebook_data():
 
 @pytest.fixture(scope="session")
 def analyzer(conversations):
-    return ConversationAnalyzer(conversations)
+    return MessagingAnalyzerManager(conversations)
+
+
+@pytest.fixture(scope="session")
+def priv_msg_analyzer(analyzer):
+    return analyzer.private
+
+
+@pytest.fixture(scope="session")
+def group_msg_analyzer(analyzer):
+    return analyzer.group
