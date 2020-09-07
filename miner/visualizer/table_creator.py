@@ -1,12 +1,6 @@
-from typing import Union, List, Dict, Callable, Any, NamedTuple
-from miner.message.conversations import Conversations
-from miner.message.conversation_analyzer import ConversationAnalyzer
-from miner.people import People
-from miner.friends import Friends
-from miner.visualizer.adapters import TableDataAdapter
-
 from prettytable import PrettyTable
 
+from miner.visualizer.adapters import TableDataAdapter
 from miner import utils
 
 
@@ -28,17 +22,13 @@ class TableCreator:
             print(key)
             print(value)
 
-    def get_table(self, fields):
-        x = PrettyTable()
-        x.field_names = fields
-        return x
-
     def add_content(self, table, row):
         # self.content.append((text, stat,)
         table.add_row(row)
         return table
 
     def table_creator(self, data_getter, title):
+        # TODO what is this
         if callable(data_getter):
             fields, stats = data_getter()
         else:
@@ -81,3 +71,9 @@ class TableCreator:
         self.add_content("Time period statistic", utils.STAT_MAP.get(stat))
         for time, stat in self.data.get_stat_per_period_data(period, stat=stat):
             self.add_content(time, stat)
+
+    @staticmethod
+    def get_table(fields):
+        table = PrettyTable()
+        table.field_names = fields
+        return table

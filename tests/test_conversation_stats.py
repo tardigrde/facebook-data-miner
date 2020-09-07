@@ -3,7 +3,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-from miner.message.conversation_analyzer import MessagingAnalyzerManager
+from miner.message.messaging_analyzer import MessagingAnalyzerManager
 from miner.message.conversations import Conversations
 from miner.message.conversation_stats import ConversationStats
 from miner import utils

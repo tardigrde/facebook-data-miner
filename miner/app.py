@@ -7,8 +7,10 @@ from miner.people import People
 from miner.friends import Friends
 from miner.visualizer.table_creator import TableCreator
 from miner.visualizer.plotter import Plotter
+from miner.message.messaging_analyzer import MessagingAnalyzerManager
 
-DATA_PATH = f"{os.getcwd()}/data"
+# DATA_PATH = f"{os.getcwd()}/data"
+DATA_PATH = f"{os.getcwd()}/tests/test_data"
 
 
 def get_how_many_friends_in_group_message():  # * needs people
@@ -39,7 +41,7 @@ class App:
         )
 
     def get_analyzer(self):
-        return ConversationAnalyzer(self.get_conversations())
+        return MessagingAnalyzerManager(self.get_conversations())
 
     def get_plotter(self):
         return Plotter(self.get_analyzer())

@@ -1,6 +1,6 @@
 from typing import Union, List, Dict, Callable, Any, NamedTuple
 from miner.message.conversations import Conversations
-from miner.message.conversation_analyzer import ConversationAnalyzer
+from miner.message.messaging_analyzer import ConversationAnalyzer
 from miner.people import People
 from miner.friends import Friends
 

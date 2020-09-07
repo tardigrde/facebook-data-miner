@@ -1,6 +1,6 @@
 import pytest
 
-from miner.message.conversation_analyzer import MessagingAnalyzer
+from miner.message.messaging_analyzer import MessagingAnalyzer
 from miner.message.conversation_stats import ConversationStats
 
 from miner.utils import dt

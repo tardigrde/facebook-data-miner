@@ -1,7 +1,7 @@
 import pytest
 import os
 
-from miner.message.conversation_analyzer import MessagingAnalyzerManager
+from miner.message.messaging_analyzer import MessagingAnalyzerManager
 from miner.message.conversations import Conversations
 from miner.people import People
 from miner.data import FacebookData

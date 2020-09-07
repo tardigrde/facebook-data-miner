@@ -6,7 +6,6 @@ import os
 
 from typing import Union, List, Dict, Callable, Any, NamedTuple
 
-# from miner.visualizer.adapters import DataAdapter
 from miner.visualizer.adapters import PlotDataAdapter
 
 TEST_DATA_PATH = f"{os.getcwd()}/tests/test_data"
