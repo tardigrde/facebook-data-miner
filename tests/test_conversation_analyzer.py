@@ -53,7 +53,7 @@ class TestMessagingAnalyzerMethodsForGroups:
         assert filtered is None
 
     def test_get_stats_per_channel(self, group_msg_analyzer):
-        stats_per_channel = group_msg_analyzer.get_stats_per_channel()
+        stats_per_channel = group_msg_analyzer._get_stats_per_channel()
 
         assert len(stats_per_channel) == 3
         assert list(group_msg_analyzer.data.keys()) == list(stats_per_channel.keys())
@@ -65,7 +65,7 @@ class TestMessagingAnalyzerMethodsForGroups:
         )
 
     def test_get_stats_per_sender(self, group_msg_analyzer):
-        stats_per_partner = group_msg_analyzer.get_stats_per_sender()
+        stats_per_partner = group_msg_analyzer._get_stats_per_sender()
 
         assert len(stats_per_partner) == 8
         assert list(group_msg_analyzer.participants) == sorted(
@@ -78,20 +78,22 @@ class TestMessagingAnalyzerMethodsForGroups:
             ]
         )
 
-    def test_get_all_groups_for_one_person(self, group_msg_analyzer):
-        list_of_groups = group_msg_analyzer.get_all_groups_for_one_person("Teflon Musk")
+    def test_get_all_channels_for_one_person(self, group_msg_analyzer):
+        list_of_groups = group_msg_analyzer.get_all_channels_for_one_person(
+            "Teflon Musk"
+        )
         assert len(list_of_groups) == 2
 
     def test_min_group_size(self, group_msg_analyzer):
-        minimum = group_msg_analyzer.min_group_size
+        minimum = group_msg_analyzer.min_channel_size
         assert minimum == 4
 
     def test_mean_group_size(self, group_msg_analyzer):
-        mean = group_msg_analyzer.mean_group_size
+        mean = group_msg_analyzer.mean_channel_size
         assert mean == pytest.approx(4.66, 0.1)
 
     def test_max_group_size(self, group_msg_analyzer):
-        maximum = group_msg_analyzer.max_group_size
+        maximum = group_msg_analyzer.max_channel_size
         assert maximum == 6
 
     def test_number_of_convos_created_by_me(self, group_msg_analyzer):
@@ -99,7 +101,7 @@ class TestMessagingAnalyzerMethodsForGroups:
         assert created_by_me == 2
 
     def test_get_ranking_of_partners_by_convo_stats(self, group_msg_analyzer):
-        ranking = group_msg_analyzer.get_ranking_of_partners_by_convo_stats()
+        ranking, _ = group_msg_analyzer.get_ranking_of_senders_by_convo_stats()
         assert ranking == {
             "Donald Duck": 6,
             "Levente Csőke": 4,
@@ -112,7 +114,7 @@ class TestMessagingAnalyzerMethodsForGroups:
         }
 
     def test_portion_of_contribution(self, group_msg_analyzer):
-        contrib = group_msg_analyzer.portion_of_contribution
+        contrib = group_msg_analyzer.get_portion_of_contribution()
         assert isinstance(contrib, dict)
         assert len(contrib)
         assert contrib["Foo Bar"] == pytest.approx(16.66, 0.1)
@@ -165,7 +167,7 @@ class TestMessagingAnalyzerMethodsForPrivates:
         assert filtered is None
 
     def test_get_stats_per_channel(self, priv_msg_analyzer):
-        stats_per_channel = priv_msg_analyzer.get_stats_per_channel()
+        stats_per_channel = priv_msg_analyzer._get_stats_per_channel()
 
         assert len(stats_per_channel) == 4
         assert list(priv_msg_analyzer.data.keys()) == list(stats_per_channel.keys())
@@ -177,7 +179,7 @@ class TestMessagingAnalyzerMethodsForPrivates:
         )
 
     def test_get_stats_per_sender(self, priv_msg_analyzer):
-        stats_per_sender = priv_msg_analyzer.get_stats_per_sender()
+        stats_per_sender = priv_msg_analyzer._get_stats_per_sender()
 
         assert len(stats_per_sender) == 5
         assert list(priv_msg_analyzer.participants) == sorted(
@@ -190,17 +192,19 @@ class TestMessagingAnalyzerMethodsForPrivates:
             ]
         )
 
-    def test_get_all_groups_for_one_person(self, priv_msg_analyzer):
-        list_of_groups = priv_msg_analyzer.get_all_groups_for_one_person("Teflon Musk")
+    def test_get_all_channels_for_one_person(self, priv_msg_analyzer):
+        list_of_groups = priv_msg_analyzer.get_all_channels_for_one_person(
+            "Teflon Musk"
+        )
         assert len(list_of_groups) == 1
 
     def test_group_size(self, priv_msg_analyzer):
-        minimum = priv_msg_analyzer.min_group_size
+        minimum = priv_msg_analyzer.min_channel_size
         assert minimum == 2
-        mean = priv_msg_analyzer.mean_group_size
+        mean = priv_msg_analyzer.mean_channel_size
         assert mean == 2
 
-        maximum = priv_msg_analyzer.max_group_size
+        maximum = priv_msg_analyzer.max_channel_size
         assert maximum == 2
 
     def test_number_of_convos_created_by_me(self, priv_msg_analyzer):
@@ -208,7 +212,7 @@ class TestMessagingAnalyzerMethodsForPrivates:
         assert created_by_me == 4
 
     def test_get_ranking_of_partners_by_convo_stats(self, priv_msg_analyzer):
-        ranking = priv_msg_analyzer.get_ranking_of_partners_by_convo_stats()
+        ranking, _ = priv_msg_analyzer.get_ranking_of_senders_by_convo_stats()
         assert ranking == {
             "Foo Bar": 15,
             "Tőke Hal": 7,
@@ -217,7 +221,7 @@ class TestMessagingAnalyzerMethodsForPrivates:
         }
 
     def test_portion_of_contribution(self, priv_msg_analyzer):
-        contrib = priv_msg_analyzer.portion_of_contribution
+        contrib = priv_msg_analyzer.get_portion_of_contribution()
         assert isinstance(contrib, dict)
         assert len(contrib)
         assert contrib["Foo Bar"] == pytest.approx(48.38, 0.1)
@@ -235,7 +239,7 @@ class TestMessagingAnalyzerMethodsForPrivates:
 
 class TestGetCount:
     def test_total_number_of_messages(self, stat_count):
-        assert stat_count(attribute="mc",) == 31
+        assert stat_count(attribute="mc") == 31
 
         assert stat_count(attribute="mc", start=dt(y=2000), period="y") == 0
         assert stat_count(attribute="mc", start=dt(y=2014), period="y") == 13

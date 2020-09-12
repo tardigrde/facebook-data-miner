@@ -322,6 +322,10 @@ def walk_directory_and_search(path, func, extension, contains_string=""):
         yield path
 
 
+def dir_stripped(obj):
+    return [x for x in dir(obj) if not x.startswith("_")]
+
+
 def is_nan(value) -> bool:
     return not isinstance(value, str) and math.isnan(value)
 

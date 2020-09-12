@@ -2,8 +2,9 @@ from __future__ import annotations
 import pandas as pd
 import os
 from typing import Union, List, Dict, Callable, Any, NamedTuple
-from miner.message.conversation import Conversation
 
+
+from miner.message.conversation import Conversation
 from miner import utils
 
 DATA_PATH = f"{os.getcwd()}/data"
@@ -19,13 +20,13 @@ class Conversations:
 
         paths_factory: ConversationPathFactory = ConversationPathFactory(self.path)
 
-        self._private: Dict[str, Conversation] = self.get_convos(
+        self._private: Dict[str, Conversation] = self._get_convos(
             directories=paths_factory.get_dirs(ctype="private"),
-            dir_lister=self.get_json_paths,
+            dir_lister=self._get_json_paths,
         )
-        self._group: Dict[str, Conversation] = self.get_convos(
+        self._group: Dict[str, Conversation] = self._get_convos(
             directories=paths_factory.get_dirs(ctype="group"),
-            dir_lister=self.get_json_paths,
+            dir_lister=self._get_json_paths,
         )
         # self.group_convo_map = self.add_group_convo_participation()
 
@@ -41,17 +42,17 @@ class Conversations:
     def group(self) -> Dict[str, Conversation]:
         return self._group
 
-    def get_convos(
+    def _get_convos(
         self, directories: List[str], dir_lister: Callable
     ) -> Dict[str, Conversation]:
         name_convo_map = {}
         for directory in directories:
             jsons = dir_lister(directory)
-            name_convo_map = self.merge_convo_files_if_needed(name_convo_map, jsons)
+            name_convo_map = self._merge_convo_files_if_needed(name_convo_map, jsons)
         return name_convo_map
 
     @staticmethod
-    def merge_convo_files_if_needed(
+    def _merge_convo_files_if_needed(
         convo_map: Dict[str, Conversation], jsons: List[str]
     ) -> Dict[str, Conversation]:
         try:
@@ -66,7 +67,7 @@ class Conversations:
             return convo_map
 
     @staticmethod
-    def get_json_paths(path: str) -> List[str]:
+    def _get_json_paths(path: str) -> List[str]:
 
         return utils.walk_directory_and_search(
             path, utils.get_all_jsons, extension=".json", contains_string="message_"

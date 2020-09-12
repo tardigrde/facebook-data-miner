@@ -68,4 +68,5 @@ class Conversation(FacebookData):
         elif "archived_threads/" in dirname:
             return dirname.split("archived_threads/")[1]
         else:
+            # TODO add logger
             print("WARNING! Missing thread_path for messages or media.")

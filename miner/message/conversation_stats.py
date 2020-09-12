@@ -15,7 +15,7 @@ class ConversationStats:
 
     def __init__(self, df: pd.DataFrame) -> None:
         self.df: pd.DataFrame = df
-        self._stats_df: pd.DataFrame = self.get_convos_in_numbers()
+        self._stats_df: pd.DataFrame = self._get_convos_in_numbers()
         self._stat_sum = self._stats_df.sum()
 
     def __repr__(self) -> str:
@@ -24,16 +24,15 @@ class ConversationStats:
     def filter(self, df: pd.DataFrame = None, **kwargs) -> ConversationStats:
         if df is None:
             df = self.df
-        df = self.get_filtered_df(df, **kwargs)
+        df = self._get_filtered_df(df, **kwargs)
         return ConversationStats(df)
 
-    def get_convos_in_numbers(self) -> pd.DataFrame:
+    def _get_convos_in_numbers(self) -> pd.DataFrame:
         stats = StatsDataframe()
         return stats(self.df)
 
     @property
     def channels(self) -> List[str]:
-        # todo name it channels: either of Union[private convo partner, group,List[private convo partner], List[group]]
         return list(self.df.partner.unique())
 
     @property
@@ -42,9 +41,6 @@ class ConversationStats:
 
     @property
     def contributors(self) -> List[str]:
-        # TODO whay about this?
-        #     mask = self.df.sender_name != utils.ME
-        #     return self.df.sender_name[mask].unique().tolist()
         return list(self.df.sender_name.unique())
 
     @property
@@ -53,10 +49,13 @@ class ConversationStats:
 
     @property
     def creator(self) -> str:
+        if self.number_of_channels > 1:
+            return None  # or raise some error?
         return self.df.iloc[0].sender_name
 
     @property
     def created_by_me(self) -> bool:
+        # raose error if number_of_channels > 1
         return self.creator == utils.ME
 
     @property
@@ -73,15 +72,17 @@ class ConversationStats:
 
     @property
     def text(self) -> pd.Series:
-        return self.df[self.df.content != math.nan]
+        return self.df[self.df.content.notna()].content.dropna()
 
     @property
     def media(self) -> pd.Series:
-        return self.df[self.df.content == math.nan]
+        return self.df[self.df.content.isna()][
+            ["photos", "videos", "audio_files", "gifs", "files"]
+        ]
 
     @property
     def words(self) -> pd.Series:
-        return self.get_words(self.messages)
+        return self._get_words(self.messages)
 
     @property
     def mc(self) -> int:
@@ -127,6 +128,8 @@ class ConversationStats:
     def most_used_words(self) -> pd.Series:
         return self.words.value_counts()
 
+    # TODO sticker,share,ip?
+
     @property
     def files(self) -> pd.Series:
         return self.media_message_extractor("files")
@@ -141,11 +144,16 @@ class ConversationStats:
 
     @property
     def audios(self) -> pd.Series:
-        return self.media_message_extractor("audios")
+        return self.media_message_extractor("audio_files")
 
     @property
     def gifs(self) -> pd.Series:
         return self.media_message_extractor("gifs")
+
+    @property
+    def average_word_length(self):
+        lengths = [len(i) for i in self.words]
+        return 0 if len(lengths) == 0 else (float(sum(lengths)) / len(lengths))
 
     def media_message_extractor(self, kind: str) -> pd.Series:
         if kind not in self.df:
@@ -161,10 +169,10 @@ class ConversationStats:
 
     def stat_per_period(self, period: str, statistic: str = "mc") -> Dict:
         interval_stats = self.get_grouped_time_series_data(period=period)
-        return self.count_stat_for_period(interval_stats, period, statistic=statistic)
+        return self._count_stat_for_period(interval_stats, period, statistic=statistic)
 
     @staticmethod
-    def get_words(messages) -> pd.Series:
+    def _get_words(messages) -> pd.Series:
         token_list = messages.str.lower().str.split()
         words = []
         for tokens in token_list:
@@ -173,7 +181,7 @@ class ConversationStats:
         return pd.Series(words)
 
     @staticmethod
-    def count_stat_for_period(df, period, statistic):
+    def _count_stat_for_period(df, period, statistic):
         # DOES too much
         periods = {}
         periods = utils.prefill_dict(periods, utils.PERIOD_MAP.get(period), 0)
@@ -188,8 +196,15 @@ class ConversationStats:
         periods = utils.sort_dict(periods, sorting_func)
         return periods
 
+    # todo why not channels and senders for symmetry
+    # what about filter for media?
+    # filter for emojis
+    # filtrer for long and short messages
+    # filter for english and non english messages
+    # filter for reacted messages
+    # etc
     @staticmethod
-    def get_filtered_df(
+    def _get_filtered_df(
         df: pd.DataFrame,
         channel: Union[str, List[str]] = None,
         sender: Union[str, List[str]] = None,

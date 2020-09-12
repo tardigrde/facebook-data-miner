@@ -93,7 +93,7 @@ class PlotDataAdapter(DataAdapter):
         return list(me_stat.keys()), list(me_stat.values()), list(partner_stat.values())
 
     def get_ranking_of_friends_by_message_stats(self, stat="mc"):
-        ranks_dict = self.analyzer.get_ranking_of_partners_by_convo_stats(
+        ranks_dict, _ = self.analyzer.get_ranking_of_senders_by_convo_stats(
             statistic=stat
         )
         # TODO watch out; might be not working correctly; check upper function

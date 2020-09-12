@@ -77,6 +77,10 @@ class TestConversationStatsForGroups:
 
         assert group_stats.number_of_contributors == 8
 
+    def test_average_word_length(self, group_stats):
+        avg = group_stats.average_word_length
+        assert avg == pytest.approx(4.15, 0.01)
+
     def test_get_grouped_time_series_data(self, group_stats):
         time_series = group_stats.get_grouped_time_series_data(period="y")
 
@@ -149,7 +153,7 @@ class TestConversationStatsForPrivate:
     def test_stats_are_in_df(self, priv_msg_analyzer):
         stats_df = priv_msg_analyzer.filter(
             senders="Teflon Musk"
-        ).stats.get_convos_in_numbers()
+        ).stats._get_convos_in_numbers()
 
         assert "mc" in stats_df
         assert "text_mc" in stats_df
@@ -167,6 +171,10 @@ class TestConversationStatsForPrivate:
     def test_properties(self, priv_stats):
         percentage_of_media_msgs = priv_stats.percentage_of_media_messages
         assert percentage_of_media_msgs == pytest.approx(29.03, 0.1)
+
+    def test_average_word_length(self, priv_stats):
+        avg = priv_stats.average_word_length
+        assert avg == pytest.approx(4.49, 0.01)
 
     def test_get_grouped_time_series_data(self, priv_msg_analyzer):
         grouped = priv_msg_analyzer.stats.get_grouped_time_series_data(period="y")
