@@ -233,7 +233,6 @@ class ConversationStats:
         df: pd.DataFrame,
         channels: Union[str, List[str]] = None,
         senders: Union[str, List[str]] = None,
-        subject: str = "all",
         **kwargs,
     ) -> pd.DataFrame:
         """
@@ -251,12 +250,6 @@ class ConversationStats:
         filter_messages.register_command(
             utils.filter_by_sender, column="sender_name", senders=senders
         )
-        filter_messages.register_command(
-            utils.filter_for_subject, column="sender_name", subject=subject
-        )
-
-        # filter_messages.register_command()
-
         filter_messages.register_command(utils.filter_by_date, **kwargs)
         return filter_messages(df)
 

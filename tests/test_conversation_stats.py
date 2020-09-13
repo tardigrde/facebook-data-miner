@@ -46,7 +46,7 @@ class TestConversationStatsForGroups:
         assert filtered.df.shape == (1, 6,)
 
     def test_filter_me(self, group_stats):
-        filtered = group_stats.filter(subject="me")
+        filtered = group_stats.filter(senders="me")
         # NOTE filters out the one group where I'm not a contributor, only a participant
         assert filtered.number_of_channels == 2
         assert filtered.df.shape == (4, 6)
@@ -54,7 +54,7 @@ class TestConversationStatsForGroups:
         assert filtered.percentage_of_media_messages == 0
 
     def test_filter_partner(self, group_stats):
-        filtered = group_stats.filter(subject="partner")
+        filtered = group_stats.filter(senders="partner")
         assert filtered.number_of_channels == 3
         assert filtered.df.shape == (14, 6)
         assert filtered.text_mc == 12
@@ -62,7 +62,7 @@ class TestConversationStatsForGroups:
         assert len(filtered.contributors) == 7
 
     def test_filter_subject_by_name(self, group_stats):
-        filtered = group_stats.filter(subject="Teflon Musk")
+        filtered = group_stats.filter(senders="Teflon Musk")
         assert filtered.number_of_channels == 1
         assert filtered.df.shape == (1, 6)
         assert filtered.text_mc == 1

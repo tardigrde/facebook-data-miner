@@ -39,7 +39,7 @@ class TestGroupStatisticsWithFiltering:
             channels="Tőke Hal, Foo Bar, Donald Duck and 2 others"
         ).stats
 
-        filtered_stats_me = group_stats.filter(subject="me")
+        filtered_stats_me = group_stats.filter(senders="me")
         assert filtered_stats_me.mc == 0
 
         filtered_stats_from_2011_07_17_15h = group_stats.filter(

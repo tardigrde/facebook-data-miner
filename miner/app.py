@@ -9,6 +9,7 @@ from miner.friends import Friends
 from miner.visualizer.table_creator import TableCreator
 from miner.visualizer.plotter import Plotter
 from miner.message.messaging_analyzer import MessagingAnalyzerManager
+from miner import utils
 
 DATA_PATH = f"{os.getcwd()}/data"
 # DATA_PATH = f"{os.getcwd()}/tests/test_data"
@@ -21,7 +22,7 @@ class App:
 
     def __init__(self, path):
         print("The app has been initialized...")
-        self.path = path
+        self.path = utils.unzip(path)
         self._friends = self.get_friends()
         self._conversations = self.get_conversations()
         self._analyzer = self.get_analyzer()

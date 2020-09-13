@@ -31,7 +31,7 @@ class TestPrivateStatisticsWithFiltering:
         # assert stats.most_used_chars == 0
 
     def test_stats_toke_hal_me(self, priv_stats):
-        stats = priv_stats(channels="Tőke Hal", subject="me")
+        stats = priv_stats(channels="Tőke Hal", senders="me")
 
         assert stats.mc == 4
         assert stats.unique_mc == 4
@@ -42,7 +42,7 @@ class TestPrivateStatisticsWithFiltering:
         # assert stats.most_used_chars == 0
 
     def test_stats_toke_hal_partner(self, priv_stats):
-        stats = priv_stats(channels="Tőke Hal", subject="partner")
+        stats = priv_stats(channels="Tőke Hal", senders="partner")
 
         assert stats.mc == 3
         assert stats.unique_mc == 3
@@ -53,9 +53,7 @@ class TestPrivateStatisticsWithFiltering:
         # assert stats.most_used_chars == 0
 
     def test_stats_toke_hal_all_2014_11(self, priv_stats):
-        stats = priv_stats(
-            channels="Tőke Hal", subject="all", start=dt(2014, 11), period="m"
-        )
+        stats = priv_stats(channels="Tőke Hal", start=dt(2014, 11), period="m")
 
         assert stats.mc == 6
         assert stats.unique_mc == 5
@@ -64,21 +62,19 @@ class TestPrivateStatisticsWithFiltering:
 
     def test_stats_toke_hal_partner_2014_11(self, priv_stats):
         stats = priv_stats(
-            channels="Tőke Hal", subject="partner", start=dt(2014, 11), period="m"
+            channels="Tőke Hal", senders="partner", start=dt(2014, 11), period="m"
         )
         assert stats.cc == 25
         assert stats.wc == 5
 
     def test_stats_toke_hal_me_2014_11(self, priv_stats):
         stats = priv_stats(
-            channels="Tőke Hal", subject="me", start=dt(2014, 11), period="m"
+            channels="Tőke Hal", senders="me", start=dt(2014, 11), period="m"
         )
         assert stats.unique_wc == 5
 
     def test_stats_toke_hal_all_2014_12(self, priv_stats):
-        stats = priv_stats(
-            channels="Tőke Hal", subject="all", start=dt(2014, 12), period="m"
-        )
+        stats = priv_stats(channels="Tőke Hal", start=dt(2014, 12), period="m")
         assert stats.mc == 1
         # assert stats.most_used_msgs == 0
         assert stats.unique_wc == 1
@@ -87,13 +83,13 @@ class TestPrivateStatisticsWithFiltering:
 
     def test_stats_toke_hal_partner_2014_12(self, priv_stats):
         stats = priv_stats(
-            channels="Tőke Hal", subject="partner", start=dt(2014, 12), period="m"
+            channels="Tőke Hal", senders="partner", start=dt(2014, 12), period="m"
         )
         assert stats.wc == 0
 
     def test_stats_toke_hal_me_2014_12(self, priv_stats):
         stats = priv_stats(
-            channels="Tőke Hal", subject="me", start=dt(2014, 12), period="m"
+            channels="Tőke Hal", senders="me", start=dt(2014, 12), period="m"
         )
         assert stats.unique_mc == 1
 
@@ -108,7 +104,7 @@ class TestPrivateStatisticsWithFiltering:
         # assert stats.most_used_chars == 0
 
     def test_stats_teflon_musk_me(self, priv_stats):
-        stats = priv_stats(channels="Teflon Musk", subject="me")
+        stats = priv_stats(channels="Teflon Musk", senders="me")
         assert stats.mc == 3
         assert stats.unique_mc == 1
         # assert stats.most_used_msgs == 0
@@ -118,7 +114,7 @@ class TestPrivateStatisticsWithFiltering:
         # assert stats.most_used_chars == 0
 
     def test_stats_teflon_musk_partner(self, priv_stats):
-        stats = priv_stats(channels="Teflon Musk", subject="partner")
+        stats = priv_stats(channels="Teflon Musk", senders="partner")
         assert stats.mc == 3
         assert stats.unique_mc == 1
         # assert stats.most_used_msgs == 0
@@ -128,9 +124,7 @@ class TestPrivateStatisticsWithFiltering:
         # assert stats.most_used_chars == 0
 
     def test_stats_teflon_musk_all_2014_9(self, priv_stats):
-        stats = priv_stats(
-            channels="Teflon Musk", subject="all", start=dt(2014, 9), period="m"
-        )
+        stats = priv_stats(channels="Teflon Musk", start=dt(2014, 9), period="m")
         assert stats.mc == 1
         # assert stats.most_used_msgs == 0
         assert stats.wc == 6
@@ -138,43 +132,39 @@ class TestPrivateStatisticsWithFiltering:
 
     def test_stats_teflon_musk_me_2014_9(self, priv_stats):
         stats = priv_stats(
-            channels="Teflon Musk", subject="me", start=dt(2014, 9), period="m"
+            channels="Teflon Musk", senders="me", start=dt(2014, 9), period="m"
         )
         assert stats.unique_wc == 6
 
     def test_stats_teflon_musk_partner_2014_9(self, priv_stats):
         stats = priv_stats(
-            channels="Teflon Musk", subject="partner", start=dt(2014, 9), period="m"
+            channels="Teflon Musk", senders="partner", start=dt(2014, 9), period="m"
         )
         assert stats.unique_mc == 0
         assert stats.cc == 0
 
     def test_stats_teflon_musk_all_2014_11(self, priv_stats):
-        stats = priv_stats(
-            channels="Teflon Musk", subject="all", start=dt(2014, 11), period="m"
-        )
+        stats = priv_stats(channels="Teflon Musk", start=dt(2014, 11), period="m")
         assert stats.mc == 4
         # assert stats.most_used_msgs == 0
         # assert stats.most_used_chars == 0
 
     def test_stats_teflon_musk_me_2014_11(self, priv_stats):
         stats = priv_stats(
-            channels="Teflon Musk", subject="me", start=dt(2014, 11), period="m"
+            channels="Teflon Musk", senders="me", start=dt(2014, 11), period="m"
         )
         assert stats.wc == 6
 
     def test_stats_teflon_musk_partner_2014_11(self, priv_stats):
         stats = priv_stats(
-            channels="Teflon Musk", subject="partner", start=dt(2014, 11), period="m"
+            channels="Teflon Musk", senders="partner", start=dt(2014, 11), period="m"
         )
         assert stats.unique_mc == 1
         assert stats.unique_wc == 1
         assert stats.cc == 4
 
     def test_stats_teflon_musk_all_2014_12(self, priv_stats):
-        stats = priv_stats(
-            channels="Teflon Musk", subject="all", start=dt(2014, 12), period="m"
-        )
+        stats = priv_stats(channels="Teflon Musk", start=dt(2014, 12), period="m")
 
         assert stats.mc == 1
         assert stats.unique_mc == 0

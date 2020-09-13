@@ -5,6 +5,7 @@ from miner.data import FacebookData
 from miner import utils
 
 
+# TODO rate of making friends
 class Friends(FacebookData):
     def __init__(
         self, path: str, reader: Callable = None, processors: List[Callable] = None
