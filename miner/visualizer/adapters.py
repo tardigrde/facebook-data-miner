@@ -84,10 +84,10 @@ class PlotDataAdapter(DataAdapter):
         utils.generate_date_series(period, start=index[0], end=index[-1])
 
     def get_stat_per_time_data(self, period, stat="mc", **kwargs):
-        me_stat = self.get_stats(subject="me", **kwargs).stat_per_period(
+        me_stat = self.get_stats(senders="me", **kwargs).stat_per_period(
             period, statistic=stat
         )
-        partner_stat = self.get_stats(subject="partner", **kwargs).stat_per_period(
+        partner_stat = self.get_stats(senders="partner", **kwargs).stat_per_period(
             period, statistic=stat
         )
         return list(me_stat.keys()), list(me_stat.values()), list(partner_stat.values())

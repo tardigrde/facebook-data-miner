@@ -323,87 +323,87 @@ class TestGetCount:
         assert stat_count(attribute="cc", start=dt(y=2020, m=8), period="m") == 5
 
     def test_total_number_of_messages_sent(self, stat_count):
-        assert stat_count(attribute="mc", subject="me",) == 18
+        assert stat_count(attribute="mc", senders="me",) == 18
         assert (
-            stat_count(attribute="mc", subject="me", start=dt(y=2014), period="y") == 7
+            stat_count(attribute="mc", senders="me", start=dt(y=2014), period="y") == 7
         )
         assert (
-            stat_count(attribute="mc", subject="me", start=dt(y=2018), period="y") == 2
+            stat_count(attribute="mc", senders="me", start=dt(y=2018), period="y") == 2
         )
         assert (
-            stat_count(attribute="mc", subject="me", start=dt(y=2020), period="y") == 9
+            stat_count(attribute="mc", senders="me", start=dt(y=2020), period="y") == 9
         )
 
         assert (
-            stat_count(attribute="mc", subject="me", start=dt(y=2014, m=9), period="m",)
+            stat_count(attribute="mc", senders="me", start=dt(y=2014, m=9), period="m",)
             == 1
         )
         assert (
             stat_count(
-                attribute="mc", subject="me", start=dt(y=2014, m=11), period="m",
+                attribute="mc", senders="me", start=dt(y=2014, m=11), period="m",
             )
             == 5
         )
         assert (
             stat_count(
-                attribute="mc", subject="me", start=dt(y=2014, m=12), period="m",
+                attribute="mc", senders="me", start=dt(y=2014, m=12), period="m",
             )
             == 1
         )
         assert (
-            stat_count(attribute="mc", subject="me", start=dt(y=2018, m=1), period="m",)
+            stat_count(attribute="mc", senders="me", start=dt(y=2018, m=1), period="m",)
             == 2
         )
 
         assert (
-            stat_count(attribute="mc", subject="me", start=dt(y=2000), period="y") == 0
+            stat_count(attribute="mc", senders="me", start=dt(y=2000), period="y") == 0
         )
         assert (
             stat_count(
-                attribute="mc", subject="me", start=dt(y=2011, m=11), period="m",
+                attribute="mc", senders="me", start=dt(y=2011, m=11), period="m",
             )
             == 0
         )
         assert (
-            stat_count(attribute="mc", subject="me", start=dt(y=2018, m=5), period="m",)
+            stat_count(attribute="mc", senders="me", start=dt(y=2018, m=5), period="m",)
             == 0
         )
 
         assert (
-            stat_count(attribute="mc", subject="me", start=dt(y=2020, m=2), period="m",)
+            stat_count(attribute="mc", senders="me", start=dt(y=2020, m=2), period="m",)
             == 6
         )
         assert (
-            stat_count(attribute="mc", subject="me", start=dt(y=2020, m=3), period="m",)
+            stat_count(attribute="mc", senders="me", start=dt(y=2020, m=3), period="m",)
             == 0
         )
         assert (
-            stat_count(attribute="mc", subject="me", start=dt(y=2020, m=4), period="m",)
+            stat_count(attribute="mc", senders="me", start=dt(y=2020, m=4), period="m",)
             == 2
         )
         assert (
-            stat_count(attribute="mc", subject="me", start=dt(y=2020, m=5), period="m",)
+            stat_count(attribute="mc", senders="me", start=dt(y=2020, m=5), period="m",)
             == 0
         )
         assert (
-            stat_count(attribute="mc", subject="me", start=dt(y=2020, m=6), period="m",)
+            stat_count(attribute="mc", senders="me", start=dt(y=2020, m=6), period="m",)
             == 0
         )
         assert (
-            stat_count(attribute="mc", subject="me", start=dt(y=2020, m=8), period="m",)
+            stat_count(attribute="mc", senders="me", start=dt(y=2020, m=8), period="m",)
             == 1
         )
 
         assert (
             stat_count(
-                attribute="mc", subject="me", start=dt(y=2020, m=2, d=13), period="d",
+                attribute="mc", senders="me", start=dt(y=2020, m=2, d=13), period="d",
             )
             == 1
         )
         assert (
             stat_count(
                 attribute="mc",
-                subject="me",
+                senders="me",
                 start=dt(y=2020, m=2, d=13, h=6),
                 period="h",
             )
@@ -412,7 +412,7 @@ class TestGetCount:
         assert (
             stat_count(
                 attribute="mc",
-                subject="me",
+                senders="me",
                 start=dt(y=2020, m=2, d=13, h=18),
                 period="h",
             )
@@ -420,81 +420,81 @@ class TestGetCount:
         )
 
     def test_total_number_of_words_sent(self, stat_count):
-        assert stat_count(attribute="wc", subject="me",) == 71
+        assert stat_count(attribute="wc", senders="me",) == 71
         assert (
-            stat_count(attribute="wc", subject="me", start=dt(y=2000), period="y") == 0
+            stat_count(attribute="wc", senders="me", start=dt(y=2000), period="y") == 0
         )
         assert (
-            stat_count(attribute="wc", subject="me", start=dt(y=2014), period="y") == 18
+            stat_count(attribute="wc", senders="me", start=dt(y=2014), period="y") == 18
         )
         assert (
-            stat_count(attribute="wc", subject="me", start=dt(y=2018), period="y") == 31
+            stat_count(attribute="wc", senders="me", start=dt(y=2018), period="y") == 31
         )
         assert (
-            stat_count(attribute="wc", subject="me", start=dt(y=2020), period="y") == 22
+            stat_count(attribute="wc", senders="me", start=dt(y=2020), period="y") == 22
         )
 
         assert (
-            stat_count(attribute="wc", subject="me", start=dt(y=2014, m=9), period="m",)
+            stat_count(attribute="wc", senders="me", start=dt(y=2014, m=9), period="m",)
             == 6
         )
         assert (
             stat_count(
-                attribute="wc", subject="me", start=dt(y=2014, m=11), period="m",
+                attribute="wc", senders="me", start=dt(y=2014, m=11), period="m",
             )
             == 11
         )
         assert (
             stat_count(
-                attribute="wc", subject="me", start=dt(y=2014, m=12), period="m",
+                attribute="wc", senders="me", start=dt(y=2014, m=12), period="m",
             )
             == 1
         )
 
         assert (
-            stat_count(attribute="wc", subject="me", start=dt(y=2018, m=1), period="m",)
+            stat_count(attribute="wc", senders="me", start=dt(y=2018, m=1), period="m",)
             == 31
         )
         assert (
-            stat_count(attribute="wc", subject="me", start=dt(y=2018, m=2), period="m",)
+            stat_count(attribute="wc", senders="me", start=dt(y=2018, m=2), period="m",)
             == 0
         )
 
         assert (
-            stat_count(attribute="wc", subject="me", start=dt(y=2020, m=2), period="m",)
+            stat_count(attribute="wc", senders="me", start=dt(y=2020, m=2), period="m",)
             == 16
         )
         assert (
-            stat_count(attribute="wc", subject="me", start=dt(y=2020, m=3), period="m",)
+            stat_count(attribute="wc", senders="me", start=dt(y=2020, m=3), period="m",)
             == 0
         )
         assert (
-            stat_count(attribute="wc", subject="me", start=dt(y=2020, m=4), period="m",)
+            stat_count(attribute="wc", senders="me", start=dt(y=2020, m=4), period="m",)
             == 4
         )
         assert (
-            stat_count(attribute="wc", subject="me", start=dt(y=2020, m=5), period="m",)
+            stat_count(attribute="wc", senders="me", start=dt(y=2020, m=5), period="m",)
             == 0
         )
         assert (
-            stat_count(attribute="wc", subject="me", start=dt(y=2020, m=6), period="m",)
+            stat_count(attribute="wc", senders="me", start=dt(y=2020, m=6), period="m",)
             == 0
         )
         assert (
-            stat_count(attribute="wc", subject="me", start=dt(y=2020, m=8), period="m",)
+            stat_count(attribute="wc", senders="me", start=dt(y=2020, m=8), period="m",)
             == 2
         )
 
         assert (
             stat_count(
-                attribute="wc", subject="me", start=dt(y=2020, m=2, d=13), period="d",
+                attribute="wc", senders="me", start=dt(y=2020, m=2, d=13), period="d",
             )
             == 5
         )
         assert (
             stat_count(
                 attribute="wc",
-                subject="me",
+                senders="me",
                 start=dt(y=2020, m=2, d=13, h=6),
                 period="h",
             )
@@ -503,7 +503,7 @@ class TestGetCount:
         assert (
             stat_count(
                 attribute="wc",
-                subject="me",
+                senders="me",
                 start=dt(y=2020, m=2, d=13, h=7),
                 period="h",
             )
@@ -511,77 +511,77 @@ class TestGetCount:
         )
 
     def test_total_number_of_characters_sent(self, stat_count):
-        assert stat_count(attribute="cc", subject="me",) == 321
+        assert stat_count(attribute="cc", senders="me",) == 321
 
         assert (
-            stat_count(attribute="cc", subject="me", start=dt(y=2000), period="y") == 0
+            stat_count(attribute="cc", senders="me", start=dt(y=2000), period="y") == 0
         )
         assert (
-            stat_count(attribute="cc", subject="me", start=dt(y=2014), period="y") == 70
+            stat_count(attribute="cc", senders="me", start=dt(y=2014), period="y") == 70
         )
         assert (
-            stat_count(attribute="cc", subject="me", start=dt(y=2018), period="y")
+            stat_count(attribute="cc", senders="me", start=dt(y=2018), period="y")
             == 167
         )
         assert (
-            stat_count(attribute="cc", subject="me", start=dt(y=2020), period="y") == 84
+            stat_count(attribute="cc", senders="me", start=dt(y=2020), period="y") == 84
         )
 
         assert (
-            stat_count(attribute="cc", subject="me", start=dt(y=2014, m=9), period="m",)
+            stat_count(attribute="cc", senders="me", start=dt(y=2014, m=9), period="m",)
             == 24
         )
         assert (
             stat_count(
-                attribute="cc", subject="me", start=dt(y=2014, m=11), period="m",
+                attribute="cc", senders="me", start=dt(y=2014, m=11), period="m",
             )
             == 43
         )
         assert (
             stat_count(
-                attribute="cc", subject="me", start=dt(y=2014, m=12), period="m",
+                attribute="cc", senders="me", start=dt(y=2014, m=12), period="m",
             )
             == 3
         )
 
         assert (
-            stat_count(attribute="cc", subject="me", start=dt(y=2018, m=1), period="m",)
+            stat_count(attribute="cc", senders="me", start=dt(y=2018, m=1), period="m",)
             == 167
         )
         assert (
-            stat_count(attribute="cc", subject="me", start=dt(y=2018, m=2), period="m",)
+            stat_count(attribute="cc", senders="me", start=dt(y=2018, m=2), period="m",)
             == 0
         )
 
         assert (
-            stat_count(attribute="cc", subject="me", start=dt(y=2020, m=2), period="m",)
+            stat_count(attribute="cc", senders="me", start=dt(y=2020, m=2), period="m",)
             == 62
         )
         assert (
-            stat_count(attribute="cc", subject="me", start=dt(y=2020, m=3), period="m",)
+            stat_count(attribute="cc", senders="me", start=dt(y=2020, m=3), period="m",)
             == 0
         )
         assert (
-            stat_count(attribute="cc", subject="me", start=dt(y=2020, m=4), period="m",)
+            stat_count(attribute="cc", senders="me", start=dt(y=2020, m=4), period="m",)
             == 17
         )
         assert (
-            stat_count(attribute="cc", subject="me", start=dt(y=2020, m=5), period="m",)
+            stat_count(attribute="cc", senders="me", start=dt(y=2020, m=5), period="m",)
             == 0
         )
         assert (
-            stat_count(attribute="cc", subject="me", start=dt(y=2020, m=6), period="m",)
+            stat_count(attribute="cc", senders="me", start=dt(y=2020, m=6), period="m",)
             == 0
         )
         assert (
-            stat_count(attribute="cc", subject="me", start=dt(y=2020, m=8), period="m",)
+            stat_count(attribute="cc", senders="me", start=dt(y=2020, m=8), period="m",)
             == 5
         )
 
         assert (
             stat_count(
                 attribute="cc",
-                subject="me",
+                senders="me",
                 start=dt(y=2020, m=2, d=13, h=6),
                 period="d",
             )
@@ -590,7 +590,7 @@ class TestGetCount:
         assert (
             stat_count(
                 attribute="cc",
-                subject="me",
+                senders="me",
                 start=dt(y=2020, m=2, d=13, h=7),
                 period="d",
             )
@@ -600,7 +600,7 @@ class TestGetCount:
         assert (
             stat_count(
                 attribute="cc",
-                subject="me",
+                senders="me",
                 start=dt(y=2020, m=2, d=13, h=6),
                 period="h",
             )
@@ -609,7 +609,7 @@ class TestGetCount:
         assert (
             stat_count(
                 attribute="cc",
-                subject="me",
+                senders="me",
                 start=dt(y=2020, m=2, d=13, h=7),
                 period="h",
             )
@@ -617,90 +617,90 @@ class TestGetCount:
         )
 
     def test_total_number_of_messages_received(self, stat_count):
-        assert stat_count(attribute="mc", subject="partner",) == 13
+        assert stat_count(attribute="mc", senders="partner",) == 13
         assert (
-            stat_count(attribute="mc", subject="partner", start=dt(y=2000), period="y",)
+            stat_count(attribute="mc", senders="partner", start=dt(y=2000), period="y",)
             == 0
         )
         assert (
-            stat_count(attribute="mc", subject="partner", start=dt(y=2014), period="y",)
+            stat_count(attribute="mc", senders="partner", start=dt(y=2014), period="y",)
             == 6
         )
         assert (
-            stat_count(attribute="mc", subject="partner", start=dt(y=2018), period="y",)
+            stat_count(attribute="mc", senders="partner", start=dt(y=2018), period="y",)
             == 1
         )
         assert (
-            stat_count(attribute="mc", subject="partner", start=dt(y=2020), period="y",)
+            stat_count(attribute="mc", senders="partner", start=dt(y=2020), period="y",)
             == 6
         )
 
         assert (
             stat_count(
-                attribute="mc", subject="partner", start=dt(y=2011, m=11), period="m",
+                attribute="mc", senders="partner", start=dt(y=2011, m=11), period="m",
             )
             == 0
         )
 
         assert (
             stat_count(
-                attribute="mc", subject="partner", start=dt(y=2014, m=9), period="m",
+                attribute="mc", senders="partner", start=dt(y=2014, m=9), period="m",
             )
             == 0
         )
         assert (
             stat_count(
-                attribute="mc", subject="partner", start=dt(y=2014, m=11), period="m",
+                attribute="mc", senders="partner", start=dt(y=2014, m=11), period="m",
             )
             == 5
         )
         assert (
             stat_count(
-                attribute="mc", subject="partner", start=dt(y=2014, m=12), period="m",
+                attribute="mc", senders="partner", start=dt(y=2014, m=12), period="m",
             )
             == 1
         )
 
         assert (
             stat_count(
-                attribute="mc", subject="partner", start=dt(y=2018, m=1), period="m",
+                attribute="mc", senders="partner", start=dt(y=2018, m=1), period="m",
             )
             == 1
         )
         assert (
             stat_count(
-                attribute="mc", subject="partner", start=dt(y=2018, m=5), period="m",
+                attribute="mc", senders="partner", start=dt(y=2018, m=5), period="m",
             )
             == 0
         )
 
         assert (
             stat_count(
-                attribute="mc", subject="partner", start=dt(y=2020, m=2), period="m",
+                attribute="mc", senders="partner", start=dt(y=2020, m=2), period="m",
             )
             == 4
         )
         assert (
             stat_count(
-                attribute="mc", subject="partner", start=dt(y=2020, m=3), period="m",
+                attribute="mc", senders="partner", start=dt(y=2020, m=3), period="m",
             )
             == 1
         )
         assert (
             stat_count(
-                attribute="mc", subject="partner", start=dt(y=2020, m=4), period="m",
+                attribute="mc", senders="partner", start=dt(y=2020, m=4), period="m",
             )
             == 0
         )
         assert (
             stat_count(
-                attribute="mc", subject="partner", start=dt(y=2020, m=5), period="m",
+                attribute="mc", senders="partner", start=dt(y=2020, m=5), period="m",
             )
             == 1
         )
         assert (
             stat_count(
-                attribute="mc", subject="partner", start=dt(y=2020, m=8), period="m",
+                attribute="mc", senders="partner", start=dt(y=2020, m=8), period="m",
             )
             == 0
         )
@@ -708,7 +708,7 @@ class TestGetCount:
         assert (
             stat_count(
                 attribute="mc",
-                subject="partner",
+                senders="partner",
                 start=dt(y=2020, m=2, d=13),
                 period="d",
             )
@@ -717,7 +717,7 @@ class TestGetCount:
         assert (
             stat_count(
                 attribute="mc",
-                subject="partner",
+                senders="partner",
                 start=dt(y=2020, m=2, d=14),
                 period="d",
             )
@@ -726,7 +726,7 @@ class TestGetCount:
         assert (
             stat_count(
                 attribute="mc",
-                subject="partner",
+                senders="partner",
                 start=dt(y=2020, m=2, d=18),
                 period="d",
             )
@@ -734,72 +734,72 @@ class TestGetCount:
         )
 
     def test_total_number_of_words_received(self, stat_count):
-        assert stat_count(attribute="wc", subject="partner",) == 20
+        assert stat_count(attribute="wc", senders="partner",) == 20
 
         assert (
-            stat_count(attribute="wc", subject="partner", start=dt(y=2000), period="y",)
+            stat_count(attribute="wc", senders="partner", start=dt(y=2000), period="y",)
             == 0
         )
         assert (
-            stat_count(attribute="wc", subject="partner", start=dt(y=2014), period="y",)
+            stat_count(attribute="wc", senders="partner", start=dt(y=2014), period="y",)
             == 7
         )
         assert (
-            stat_count(attribute="wc", subject="partner", start=dt(y=2018), period="y",)
+            stat_count(attribute="wc", senders="partner", start=dt(y=2018), period="y",)
             == 1
         )
         assert (
-            stat_count(attribute="wc", subject="partner", start=dt(y=2020), period="y",)
+            stat_count(attribute="wc", senders="partner", start=dt(y=2020), period="y",)
             == 12
         )
 
         assert (
             stat_count(
-                attribute="wc", subject="partner", start=dt(y=2014, m=9), period="m",
+                attribute="wc", senders="partner", start=dt(y=2014, m=9), period="m",
             )
             == 0
         )
         assert (
             stat_count(
-                attribute="wc", subject="partner", start=dt(y=2014, m=11), period="m",
+                attribute="wc", senders="partner", start=dt(y=2014, m=11), period="m",
             )
             == 7
         )
         assert (
             stat_count(
-                attribute="wc", subject="partner", start=dt(y=2014, m=12), period="m",
+                attribute="wc", senders="partner", start=dt(y=2014, m=12), period="m",
             )
             == 0
         )
 
         assert (
             stat_count(
-                attribute="wc", subject="partner", start=dt(y=2018, m=1), period="m",
+                attribute="wc", senders="partner", start=dt(y=2018, m=1), period="m",
             )
             == 1
         )
         assert (
             stat_count(
-                attribute="wc", subject="partner", start=dt(y=2018, m=2), period="m",
+                attribute="wc", senders="partner", start=dt(y=2018, m=2), period="m",
             )
             == 0
         )
 
         assert (
             stat_count(
-                attribute="wc", subject="partner", start=dt(y=2020, m=2), period="m",
+                attribute="wc", senders="partner", start=dt(y=2020, m=2), period="m",
             )
             == 11
         )
         assert (
             stat_count(
-                attribute="wc", subject="partner", start=dt(y=2020, m=3), period="m",
+                attribute="wc", senders="partner", start=dt(y=2020, m=3), period="m",
             )
             == 0
         )
         assert (
             stat_count(
-                attribute="wc", subject="partner", start=dt(y=2020, m=5), period="m",
+                attribute="wc", senders="partner", start=dt(y=2020, m=5), period="m",
             )
             == 1
         )
@@ -807,7 +807,7 @@ class TestGetCount:
         assert (
             stat_count(
                 attribute="wc",
-                subject="partner",
+                senders="partner",
                 start=dt(y=2020, m=2, d=13),
                 period="d",
             )
@@ -816,7 +816,7 @@ class TestGetCount:
         assert (
             stat_count(
                 attribute="wc",
-                subject="partner",
+                senders="partner",
                 start=dt(y=2020, m=2, d=14),
                 period="d",
             )
@@ -825,7 +825,7 @@ class TestGetCount:
         assert (
             stat_count(
                 attribute="wc",
-                subject="partner",
+                senders="partner",
                 start=dt(y=2020, m=2, d=18),
                 period="d",
             )
@@ -833,72 +833,72 @@ class TestGetCount:
         )
 
     def test_total_number_of_characters_received(self, stat_count):
-        assert stat_count(attribute="cc", subject="partner",) == 88
+        assert stat_count(attribute="cc", senders="partner",) == 88
 
         assert (
-            stat_count(attribute="cc", subject="partner", start=dt(y=2000), period="y",)
+            stat_count(attribute="cc", senders="partner", start=dt(y=2000), period="y",)
             == 0
         )
         assert (
-            stat_count(attribute="cc", subject="partner", start=dt(y=2014), period="y",)
+            stat_count(attribute="cc", senders="partner", start=dt(y=2014), period="y",)
             == 29
         )
         assert (
-            stat_count(attribute="cc", subject="partner", start=dt(y=2018), period="y",)
+            stat_count(attribute="cc", senders="partner", start=dt(y=2018), period="y",)
             == 3
         )
         assert (
-            stat_count(attribute="cc", subject="partner", start=dt(y=2020), period="y",)
+            stat_count(attribute="cc", senders="partner", start=dt(y=2020), period="y",)
             == 56
         )
 
         assert (
             stat_count(
-                attribute="cc", subject="partner", start=dt(y=2014, m=9), period="m",
+                attribute="cc", senders="partner", start=dt(y=2014, m=9), period="m",
             )
             == 0
         )
         assert (
             stat_count(
-                attribute="cc", subject="partner", start=dt(y=2014, m=11), period="m",
+                attribute="cc", senders="partner", start=dt(y=2014, m=11), period="m",
             )
             == 29
         )
         assert (
             stat_count(
-                attribute="cc", subject="partner", start=dt(y=2014, m=12), period="m",
+                attribute="cc", senders="partner", start=dt(y=2014, m=12), period="m",
             )
             == 0
         )
 
         assert (
             stat_count(
-                attribute="cc", subject="partner", start=dt(y=2018, m=1), period="m",
+                attribute="cc", senders="partner", start=dt(y=2018, m=1), period="m",
             )
             == 3
         )
         assert (
             stat_count(
-                attribute="cc", subject="partner", start=dt(y=2018, m=2), period="m",
+                attribute="cc", senders="partner", start=dt(y=2018, m=2), period="m",
             )
             == 0
         )
 
         assert (
             stat_count(
-                attribute="cc", subject="partner", start=dt(y=2020, m=2), period="m",
+                attribute="cc", senders="partner", start=dt(y=2020, m=2), period="m",
             )
             == 52
         )
         assert (
             stat_count(
-                attribute="cc", subject="partner", start=dt(y=2020, m=3), period="m",
+                attribute="cc", senders="partner", start=dt(y=2020, m=3), period="m",
             )
             == 0
         )
         assert (
             stat_count(
-                attribute="cc", subject="partner", start=dt(y=2020, m=5), period="m",
+                attribute="cc", senders="partner", start=dt(y=2020, m=5), period="m",
             )
             == 4
         )
@@ -906,7 +906,7 @@ class TestGetCount:
         assert (
             stat_count(
                 attribute="cc",
-                subject="partner",
+                senders="partner",
                 start=dt(y=2020, m=2, d=13),
                 period="d",
             )
@@ -915,7 +915,7 @@ class TestGetCount:
         assert (
             stat_count(
                 attribute="cc",
-                subject="partner",
+                senders="partner",
                 start=dt(y=2020, m=2, d=14),
                 period="d",
             )
@@ -924,7 +924,7 @@ class TestGetCount:
         assert (
             stat_count(
                 attribute="cc",
-                subject="partner",
+                senders="partner",
                 start=dt(y=2020, m=2, d=18),
                 period="d",
             )

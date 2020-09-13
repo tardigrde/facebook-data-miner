@@ -9,16 +9,10 @@ from miner.friends import Friends
 from miner.visualizer.table_creator import TableCreator
 from miner.visualizer.plotter import Plotter
 from miner.message.messaging_analyzer import MessagingAnalyzerManager
+from miner import utils
 
-# DATA_PATH = f"{os.getcwd()}/data"
-DATA_PATH = f"{os.getcwd()}/tests/test_data"
-
-
-def get_how_many_friends_in_group_message():  # * needs people
-    # TODO stat does not belong here
-    # OR
-    # maybe inject people here but not so straightforward
-    pass
+DATA_PATH = f"{os.getcwd()}/data"
+# DATA_PATH = f"{os.getcwd()}/tests/test_data"
 
 
 class App:
@@ -28,7 +22,7 @@ class App:
 
     def __init__(self, path):
         print("The app has been initialized...")
-        self.path = path
+        self.path = utils.unzip(path)
         self._friends = self.get_friends()
         self._conversations = self.get_conversations()
         self._analyzer = self.get_analyzer()
@@ -83,8 +77,10 @@ class App:
         plotter.plot_msg_type_ratio()
 
     def get_messages_ranking(self):
-        analyzer = self.analyzer
-        ranking = analyzer.get_ranking_of_partners_by_convo_stats(statistic="mc")
+        # TODO or group
+        ranking = self.analyzer.private.get_ranking_of_senders_by_convo_stats(
+            statistic="mc"
+        )
         return ranking
 
 

@@ -76,22 +76,18 @@ class MessagingAnalyzerManager:
 
         return any([private.stats.start > group_start for group_start in g_start_times])
 
-    def get_stats_together(self, name: str, subject="all") -> ConversationStats:
-        # TODO do we want to get all stats or just the ones they wrote
-        # TODO subject can only be all and partner but this is not done yet.... maybe just all
+    def get_stats_together(self, name: str) -> ConversationStats:
         private, group = self.all_interactions(name=name)
         groups = [
-            self.group_messaging_analyzer.filter(channels=g)
-            .stats.filter(subject=subject)
-            .df
-            for g in group.data.keys()
+            group_stats.filter(senders=name).df
+            for group_stats in self.group_messaging_analyzer.stats_per_channel.values()
         ]
-        df = utils.stack_dfs(private.stats.filter(sender=subject).df, *groups)
+        df = utils.stack_dfs(private.stats.filter(senders=name).df, *groups)
         return ConversationStats(df)
 
 
-class MessagingAnalyzer:  # TODO change kind to is_group=False
-    def __init__(self, data: Dict[str, Conversation], kind) -> None:
+class MessagingAnalyzer:
+    def __init__(self, data: Dict[str, Conversation], kind: str = "private") -> None:
         self.data = data  # channel to convo map
         self._kind = kind
         self.df: pd.DataFrame = self._get_df(self.data)
@@ -217,11 +213,10 @@ class MessagingAnalyzer:  # TODO change kind to is_group=False
         if senders is not None:
             data = self._filter_by_sender(data, senders)
         if channels is not None:
-            # todo rename filter_by_channel
             data = self._filter_by_channel(data, channels)
         if not data:
             return None
-        return MessagingAnalyzer(data, self.is_group)
+        return MessagingAnalyzer(data, self._kind)
 
     def _get_stats_per_channel(self) -> Dict[str, ConversationStats]:
         return {
@@ -232,7 +227,7 @@ class MessagingAnalyzer:  # TODO change kind to is_group=False
     def _get_stats_per_sender(self) -> Dict[str, ConversationStats]:
         stat_per_participant = {}
         for name in self.participants:
-            stat_per_participant[name] = self.stats.filter(sender=name)
+            stat_per_participant[name] = self.stats.filter(senders=name)
         return stat_per_participant
 
     @staticmethod

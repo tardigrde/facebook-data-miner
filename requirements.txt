@@ -1,5 +1,10 @@
-seaborn==0.10.1
-dateparser==0.7.6
-pandas==1.0.3
 matplotlib==3.2.1
+numpy==1.18.1
+pandas==1.0.3
+prettytable==0.7.2
+dataclasses==0.7
 python_dateutil==2.8.1
+pyicu==2.5
+pycld2==0.41
+morfessor==2.0.6
+polyglot==16.7.4

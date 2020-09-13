@@ -3,12 +3,13 @@ import copy
 from typing import Union, List, Dict, Callable, Any, NamedTuple
 from dateutil.relativedelta import relativedelta
 from datetime import datetime, timedelta
-import dateparser
 from itertools import islice
 import json
 import os
+import zipfile
 import time
 import pandas as pd
+import re
 
 # https://en.wikipedia.org/wiki/ISO_8601
 DATE_FORMAT = "%Y-%m-%d"
@@ -107,6 +108,23 @@ class TooFewPeopleError(Exception):
     pass
 
 
+class NonExistentChannel(Exception):
+    pass
+
+
+class NonExistentSender(Exception):
+    pass
+
+
+def unzip(path):
+    if not path.endswith(".zip"):
+        return path
+    with zipfile.ZipFile(path, "r") as zip_ref:
+        new_path = path.split(".zip")[0]
+        zip_ref.extractall()
+        return new_path
+
+
 def get_group_convo_map(data):
     group_convo_map = {}
     # no need for prefill
@@ -144,19 +162,6 @@ class string_kwarg_to_list_converter:
         return wrapper
 
 
-def subject_checker(func):
-    def wrapper(*args, **kwargs):
-        if not kwargs.get("subject") or kwargs.get("subject") not in (
-            "all",
-            "me",
-            "partner",
-        ):
-            raise ValueError("Parameter `subject` should be one of {all, me, partner}")
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
 def column_checker(func):
     def wrapper(*args, **kwargs):
         if not kwargs.get("column") or not isinstance(kwargs.get("column"), str):
@@ -187,20 +192,25 @@ def attribute_checker(func):
     return wrapper
 
 
-# TODO support adding only start or end
 def start_end_period_checker(func):
     def wrapper(*args, **kwargs):
-        if kwargs.get("start") is not None and kwargs.get("end") is not None:
-            return func(*args, **kwargs)
-
-        if kwargs.get("start") is None and kwargs.get("end") is None:
+        if (
+            kwargs.get("start") is None
+            and kwargs.get("end") is None
+            and kwargs.get("period") is None
+        ):
             kwargs["start"] = FACEBOOK_FOUNDATION_DATE
             kwargs["end"] = datetime.now()
-            return func(*args, **kwargs)
+        if kwargs.get("start") and isinstance(kwargs.get("start"), str):
+            kwargs["start"] = datetime.strptime(kwargs.get("start"), DATE_FORMAT)
+        if kwargs.get("end") and isinstance(kwargs.get("end"), str):
+            kwargs["end"] = datetime.strptime(kwargs.get("end"), DATE_FORMAT)
 
-        if not kwargs.get("period") or DELTA_MAP[kwargs.get("period")] is None:
-            raise ValueError("Parameter `period` should be one of {y|m|d|h}")
-        kwargs["period"] = DELTA_MAP[kwargs.get("period")]
+        if kwargs.get("period"):
+            if DELTA_MAP[kwargs.get("period")] is None:
+                raise ValueError("Parameter `period` should be one of {y|m|d|h}")
+            kwargs["period"] = DELTA_MAP[kwargs.get("period")]
+
         return func(*args, **kwargs)
 
     return wrapper
@@ -235,18 +245,18 @@ def get_start_based_on_period(join_date, period):
     return join_date
 
 
-def get_stats_for_time_intervals(stat_getter, time_series, period, subject="all"):
-    data = {}
-    for i in range(len(time_series)):
-        start = time_series[i]
-        try:  # with this solution we will have data for the very last moments until datetime.now()
-            end = time_series[i + 1]
-        except IndexError:
-            end = None
-        data[start] = stat_getter.filter(
-            subject=subject, start=start, end=end, period=period
-        )
-    return data
+# def get_stats_for_time_intervals(stat_getter, time_series, period):
+#     data = {}
+#     for i in range(len(time_series)):
+#         start = time_series[i]
+#         try:  # with this solution we will have data for the very last moments until datetime.now()
+#             end = time_series[i + 1]
+#         except IndexError:
+#             end = None
+#         data[start] = stat_getter.filter(
+#             senders=, start=start, end=end, period=period
+#         )
+#     return data
 
 
 def prefill_dict(dict, keys, value):
@@ -330,6 +340,19 @@ def is_nan(value) -> bool:
     return not isinstance(value, str) and math.isnan(value)
 
 
+def emoji_matcher(text):
+    regex_pattern = re.compile(
+        pattern="["
+        "\U0001F600-\U0001F64F"  # emoticons
+        "\U0001F300-\U0001F5FF"  # symbols & pictographs
+        "\U0001F680-\U0001F6FF"  # transport & map symbols
+        "\U0001F1E0-\U0001F1FF"  # flags (iOS)
+        "]+",
+        flags=re.UNICODE,
+    )
+    return re.findall(regex_pattern, text)
+
+
 def replace_accents(string):
     for char in ACCENTS_MAP.keys():
         if char in string:
@@ -372,44 +395,49 @@ def filter_by_date(df: pd.DataFrame, start=None, end=None, period=None):
     @param period: one of {y|m|d|h}
     @return:
     """
+    now = datetime.now()
     if start and end:
         return df.loc[start:end]
-    elif start and not end:
+    elif start and not end and not period:
+        return df.loc[start:]
+    elif end and not start and not period:
+        return df.loc[:end]
+    elif start and period and not end:
         return df.loc[start : start + period]
-    elif not start and end:
+    elif not start and period and end:
         return df.loc[end - period : end]
 
 
 @column_checker
-@string_kwarg_to_list_converter("channel")
+@string_kwarg_to_list_converter("channels")
 def filter_by_channel(
-    df: pd.DataFrame, column: str = "partner", channel: Union[str, List[str]] = None
+    df: pd.DataFrame, column: str = "partner", channels: Union[str, List[str]] = None
 ):
-    if not channel:
+    if not channels:
         return df
-    partner_matched = df[df[column].isin(channel)]
-    return partner_matched
+
+    match = df[df[column].isin(channels)]
+    if match is None or len(match) == 0:
+        raise NonExistentChannel("None of the `channels` you specified exist.")
+    return match
 
 
 @column_checker
-@string_kwarg_to_list_converter("sender")
+@string_kwarg_to_list_converter("senders")
 def filter_by_sender(
-    df: pd.DataFrame, column: str = "sender_name", sender: Union[str, List[str]] = None
+    df: pd.DataFrame, column: str = "sender_name", senders: Union[str, List[str]] = None
 ):
-    if not sender:
+    if not senders:
         return df
-    partner_matched = df[df[column].isin(sender)]
-    return partner_matched
-
-
-@column_checker
-@subject_checker
-def filter_for_subject(df: pd.DataFrame, column: str = "", subject: str = "all"):
-    if subject == "me":
+    if senders == ["me"]:
         return df[df[column] == ME]
-    elif subject == "partner":
+    elif senders == ["partner"]:
         return df[df[column] != ME]
-    return df
+    elif senders:
+        match = df[df[column].isin(senders)]
+        # if match is None or len(match) == 0:
+        #     raise NonExistentSender('None of the `senders` you specified exist.')
+        return match
 
 
 @start_end_period_checker

@@ -5,6 +5,9 @@ import pandas as pd
 import numpy as np
 import math
 
+import polyglot
+from polyglot.detect import Detector
+
 from miner import utils
 
 
@@ -128,7 +131,26 @@ class ConversationStats:
     def most_used_words(self) -> pd.Series:
         return self.words.value_counts()
 
-    # TODO sticker,share,ip?
+    @property
+    def wc_in_messages(self):
+        wcs = []
+        for msg in self.messages:
+            length = len(msg.split())
+            wcs.append(length)
+        return wcs
+
+    @property
+    def cc_in_messages(self):
+        ccs = []
+        for msg in self.messages:
+            ccs.append(len(msg))
+        return ccs
+
+    @property
+    def reacted_messages(self):
+        if not "reactions" in self.df:
+            return pd.Series()
+        return self.df[self.df.reactions.notna()]
 
     @property
     def files(self) -> pd.Series:
@@ -154,6 +176,16 @@ class ConversationStats:
     def average_word_length(self):
         lengths = [len(i) for i in self.words]
         return 0 if len(lengths) == 0 else (float(sum(lengths)) / len(lengths))
+
+    @property
+    def message_language_map(self):
+        map = {}
+        for msg in self.messages:
+            try:
+                map[msg] = Detector(msg)
+            except polyglot.detect.base.UnknownLanguage:
+                map[msg] = None
+        return map
 
     def media_message_extractor(self, kind: str) -> pd.Series:
         if kind not in self.df:
@@ -196,38 +228,27 @@ class ConversationStats:
         periods = utils.sort_dict(periods, sorting_func)
         return periods
 
-    # todo why not channels and senders for symmetry
-    # what about filter for media?
-    # filter for emojis
-    # filtrer for long and short messages
-    # filter for english and non english messages
-    # filter for reacted messages
-    # etc
     @staticmethod
     def _get_filtered_df(
         df: pd.DataFrame,
-        channel: Union[str, List[str]] = None,
-        sender: Union[str, List[str]] = None,
-        subject: str = "all",
+        channels: Union[str, List[str]] = None,
+        senders: Union[str, List[str]] = None,
         **kwargs,
     ) -> pd.DataFrame:
         """
         @param df:
-        @param channel: Union[str, List[str]] = None,
-        @param sender: Union[str, List[str]] = None,
+        @param channels: Union[str, List[str]] = None,
+        @param senders: Union[str, List[str]] = None,
         @param subject: str = "all",
         @param kwargs: {start,end,period} : Union[str, datetime] = None
         @return:
         """
         filter_messages = utils.CommandChainCreator()
         filter_messages.register_command(
-            utils.filter_by_channel, column="partner", channel=channel
+            utils.filter_by_channel, column="partner", channels=channels
         )
         filter_messages.register_command(
-            utils.filter_by_sender, column="sender_name", sender=sender
-        )
-        filter_messages.register_command(
-            utils.filter_for_subject, column="sender_name", subject=subject
+            utils.filter_by_sender, column="sender_name", senders=senders
         )
         filter_messages.register_command(utils.filter_by_date, **kwargs)
         return filter_messages(df)
