@@ -86,7 +86,7 @@ class MessagingAnalyzerManager:
             .df
             for g in group.data.keys()
         ]
-        df = utils.stack_dfs(private.stats.filter(sender=subject).df, *groups)
+        df = utils.stack_dfs(private.stats.filter(senders=subject).df, *groups)
         return ConversationStats(df)
 
 
@@ -232,7 +232,7 @@ class MessagingAnalyzer:  # TODO change kind to is_group=False
     def _get_stats_per_sender(self) -> Dict[str, ConversationStats]:
         stat_per_participant = {}
         for name in self.participants:
-            stat_per_participant[name] = self.stats.filter(sender=name)
+            stat_per_participant[name] = self.stats.filter(senders=name)
         return stat_per_participant
 
     @staticmethod

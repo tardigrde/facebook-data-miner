@@ -231,25 +231,25 @@ class ConversationStats:
     @staticmethod
     def _get_filtered_df(
         df: pd.DataFrame,
-        channel: Union[str, List[str]] = None,
-        sender: Union[str, List[str]] = None,
+        channels: Union[str, List[str]] = None,
+        senders: Union[str, List[str]] = None,
         subject: str = "all",
         **kwargs,
     ) -> pd.DataFrame:
         """
         @param df:
-        @param channel: Union[str, List[str]] = None,
-        @param sender: Union[str, List[str]] = None,
+        @param channels: Union[str, List[str]] = None,
+        @param senders: Union[str, List[str]] = None,
         @param subject: str = "all",
         @param kwargs: {start,end,period} : Union[str, datetime] = None
         @return:
         """
         filter_messages = utils.CommandChainCreator()
         filter_messages.register_command(
-            utils.filter_by_channel, column="partner", channel=channel
+            utils.filter_by_channel, column="partner", channels=channels
         )
         filter_messages.register_command(
-            utils.filter_by_sender, column="sender_name", sender=sender
+            utils.filter_by_sender, column="sender_name", senders=senders
         )
         filter_messages.register_command(
             utils.filter_for_subject, column="sender_name", subject=subject

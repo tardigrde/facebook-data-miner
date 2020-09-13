@@ -382,24 +382,24 @@ def filter_by_date(df: pd.DataFrame, start=None, end=None, period=None):
 
 
 @column_checker
-@string_kwarg_to_list_converter("channel")
+@string_kwarg_to_list_converter("channels")
 def filter_by_channel(
-    df: pd.DataFrame, column: str = "partner", channel: Union[str, List[str]] = None
+    df: pd.DataFrame, column: str = "partner", channels: Union[str, List[str]] = None
 ):
-    if not channel:
+    if not channels:
         return df
-    partner_matched = df[df[column].isin(channel)]
+    partner_matched = df[df[column].isin(channels)]
     return partner_matched
 
 
 @column_checker
-@string_kwarg_to_list_converter("sender")
+@string_kwarg_to_list_converter("senders")
 def filter_by_sender(
-    df: pd.DataFrame, column: str = "sender_name", sender: Union[str, List[str]] = None
+    df: pd.DataFrame, column: str = "sender_name", senders: Union[str, List[str]] = None
 ):
-    if not sender:
+    if not senders:
         return df
-    partner_matched = df[df[column].isin(sender)]
+    partner_matched = df[df[column].isin(senders)]
     return partner_matched
 
 

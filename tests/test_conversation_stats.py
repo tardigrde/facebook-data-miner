@@ -31,7 +31,7 @@ class TestConversationStatsForGroups:
         assert isinstance(group_stats.start, datetime)
 
     def test_filter_channel(self, group_stats):
-        filtered = group_stats.filter(channel="marathon")
+        filtered = group_stats.filter(channels="marathon")
         assert filtered.number_of_channels == 1
         assert filtered.contributors == ["Levente Csőke", "Foo Bar", "Donald Duck"]
         assert filtered.created_by_me is True
@@ -39,7 +39,7 @@ class TestConversationStatsForGroups:
         assert filtered.mc == 9
 
     def test_filter_sender(self, group_stats):
-        filtered = group_stats.filter(sender="Teflon Musk")
+        filtered = group_stats.filter(senders="Teflon Musk")
         assert filtered.contributors == ["Teflon Musk"]
         assert filtered.wc == 3
         assert filtered.cc == 18
@@ -167,14 +167,14 @@ class TestConversationStatsForPrivate:
         assert isinstance(priv_stats.start, datetime)
 
     def test_filter_channels(self, priv_stats):
-        filtered = priv_stats.filter(channel="Foo Bar")
+        filtered = priv_stats.filter(channels="Foo Bar")
         assert filtered.channels == ["Foo Bar"]
         assert filtered.created_by_me is True
         assert filtered.cc == 140
         assert filtered.df.shape == (15, 10)
 
     def test_filter_senders(self, priv_stats):
-        filtered = priv_stats.filter(sender="Foo Bar")
+        filtered = priv_stats.filter(senders="Foo Bar")
         assert filtered.channels == ["Foo Bar"]
         assert not filtered.created_by_me
         assert filtered.cc == 56
