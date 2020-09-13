@@ -1,6 +1,6 @@
 import pytest
 
-from miner.message.messaging_analyzer import MessagingAnalyzer
+from miner.message.messaging_analyzer import MessagingAnalyzerManager, MessagingAnalyzer
 from miner.message.conversation_stats import ConversationStats
 
 from miner.utils import dt
@@ -9,6 +9,54 @@ from miner.utils import dt
 @pytest.fixture(scope="session")
 def stat_count(priv_msg_analyzer):
     return priv_msg_analyzer.get_stat_count
+
+
+class TestMessagingAnalyzerManager:
+    def test_private_and_group(self, analyzer):
+        isinstance(analyzer, MessagingAnalyzerManager)
+        isinstance(analyzer.private, MessagingAnalyzer)
+        isinstance(analyzer.group, MessagingAnalyzer)
+
+    def test_people_i_have_private_and_group__convo_with(self, analyzer):
+        assert len(analyzer.people_i_have_private_convo_with) == 4
+        assert len(analyzer.people_i_have_group_convo_with) == 8
+
+    def test_get_who_i_have_private_convo_with_from_a_group(self, analyzer):
+        have = analyzer.get_who_i_have_private_convo_with_from_a_group("marathon")
+        assert have == ["Foo Bar", "Teflon Musk"]
+
+    def test_how_much_i_speak_in_private_with_group_members(self, analyzer):
+        spoke = analyzer.how_much_i_speak_in_private_with_group_members("marathon")
+        assert spoke == {"Foo Bar": 15, "Teflon Musk": 6}
+
+    def test_all_interactions(self, analyzer):
+        private, group = analyzer.all_interactions("Teflon Musk")
+        assert private.stats.channels == ["Teflon Musk"]
+        assert group.stats.channels == ["Foo Bar, John Doe and Teflon Musk", "marathon"]
+
+    def test_is_priv_msg_first_then_group(self, analyzer):
+        is_priv = analyzer.is_priv_msg_first_then_group("Teflon Musk")
+        assert is_priv is True
+
+        is_priv = analyzer.is_priv_msg_first_then_group("Benedek Elek")
+        assert is_priv is True
+
+        is_priv = analyzer.is_priv_msg_first_then_group("Foo Bar")
+        assert is_priv is True
+
+        is_priv = analyzer.is_priv_msg_first_then_group("Tőke Hal")
+        assert is_priv is True
+
+    def test_get_stats_together(self, analyzer):
+        stats = analyzer.get_stats_together("Foo Bar")
+        assert stats.channels == [
+            "Tőke Hal, Foo Bar, Donald Duck and 2 others",
+            "Foo Bar, John Doe and Teflon Musk",
+            "marathon",
+            "Foo Bar",
+        ]
+        assert stats.contributors == ["Foo Bar"]
+        assert stats.df.shape == (9, 10,)
 
 
 class TestMessagingAnalyzerMethodsForGroups:

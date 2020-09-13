@@ -29,9 +29,11 @@ class MessagingAnalyzerManager:
     def group(self) -> MessagingAnalyzer:
         return self.group_messaging_analyzer
 
+    @property
     def people_i_have_private_convo_with(self) -> List[str]:
         return list(self.private_messaging_analyzer.data.keys())
 
+    @property
     def people_i_have_group_convo_with(self) -> List[str]:
         return list(self.group_messaging_analyzer.group_convo_map.keys())
 
@@ -69,7 +71,10 @@ class MessagingAnalyzerManager:
         # TODO test
         private = self.private_messaging_analyzer.filter(channels=name)
         group = self.group_messaging_analyzer.filter(senders=name)
+        if group is None:
+            return True
         g_start_times = []
+
         for g in group.data.keys():
             start_time = self.group_messaging_analyzer.filter(channels=g).stats.start
             g_start_times.append(start_time)
