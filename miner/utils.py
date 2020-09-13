@@ -9,6 +9,7 @@ import json
 import os
 import time
 import pandas as pd
+import re
 
 # https://en.wikipedia.org/wiki/ISO_8601
 DATE_FORMAT = "%Y-%m-%d"
@@ -142,19 +143,6 @@ class string_kwarg_to_list_converter:
             return func(*args, **kwargs)
 
         return wrapper
-
-
-def subject_checker(func):
-    def wrapper(*args, **kwargs):
-        if not kwargs.get("subject") or kwargs.get("subject") not in (
-            "all",
-            "me",
-            "partner",
-        ):
-            raise ValueError("Parameter `subject` should be one of {all, me, partner}")
-        return func(*args, **kwargs)
-
-    return wrapper
 
 
 def column_checker(func):
@@ -330,6 +318,19 @@ def is_nan(value) -> bool:
     return not isinstance(value, str) and math.isnan(value)
 
 
+def emoji_matcher(text):
+    regex_pattern = re.compile(
+        pattern="["
+        "\U0001F600-\U0001F64F"  # emoticons
+        "\U0001F300-\U0001F5FF"  # symbols & pictographs
+        "\U0001F680-\U0001F6FF"  # transport & map symbols
+        "\U0001F1E0-\U0001F1FF"  # flags (iOS)
+        "]+",
+        flags=re.UNICODE,
+    )
+    return re.findall(regex_pattern, text)
+
+
 def replace_accents(string):
     for char in ACCENTS_MAP.keys():
         if char in string:
@@ -403,12 +404,13 @@ def filter_by_sender(
 
 
 @column_checker
-@subject_checker
 def filter_for_subject(df: pd.DataFrame, column: str = "", subject: str = "all"):
     if subject == "me":
         return df[df[column] == ME]
     elif subject == "partner":
         return df[df[column] != ME]
+    elif subject and subject != "all":
+        return df[df[column] == subject]
     return df
 
 

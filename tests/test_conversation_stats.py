@@ -61,6 +61,14 @@ class TestConversationStatsForGroups:
         assert filtered.percentage_of_media_messages == pytest.approx(14.28, 0.1)
         assert len(filtered.contributors) == 7
 
+    def test_filter_subject_by_name(self, group_stats):
+        filtered = group_stats.filter(subject="Teflon Musk")
+        assert filtered.number_of_channels == 1
+        assert filtered.df.shape == (1, 6)
+        assert filtered.text_mc == 1
+        assert filtered.percentage_of_media_messages == 0
+        assert len(filtered.contributors) == 1
+
     def test_filter_date(self, group_stats):
         filtered = group_stats.filter(start=utils.dt(y=2018), period="y")
         assert filtered.channels == ["marathon"]
@@ -80,6 +88,28 @@ class TestConversationStatsForGroups:
     def test_average_word_length(self, group_stats):
         avg = group_stats.average_word_length
         assert avg == pytest.approx(4.15, 0.01)
+
+    def test_wc_in_messages(self, group_stats):
+        wcs = group_stats.wc_in_messages
+        assert max(wcs) == 7
+        assert min(wcs) == 1
+        assert sum(wcs) / len(wcs) == pytest.approx(2.5, 0.01)
+
+    def test_cc_in_messages(self, group_stats):
+        ccs = group_stats.cc_in_messages
+        assert max(ccs) == 31
+        assert min(ccs) == 2
+        assert sum(ccs) / len(ccs) == pytest.approx(11.875, 0.01)
+
+    def test_message_language_map(self, group_stats):
+        msg_lang = group_stats.message_language_map
+        assert msg_lang["test"].language.code == "en"
+        assert msg_lang["marathon?"].language.code == "hu"
+        assert msg_lang["blabla"].reliable == False
+
+    def test_reacted_messages(self, group_stats):
+        reacted_messages = group_stats.reacted_messages
+        assert len(reacted_messages) == 0
 
     def test_get_grouped_time_series_data(self, group_stats):
         time_series = group_stats.get_grouped_time_series_data(period="y")
@@ -150,6 +180,10 @@ class TestConversationStatsForPrivate:
         assert filtered.cc == 56
         assert filtered.df.shape == (6, 10)
 
+    def test_filter_subject(self):
+        # TODO should be the same as filter for sender
+        pass
+
     def test_stats_are_in_df(self, priv_msg_analyzer):
         stats_df = priv_msg_analyzer.filter(
             senders="Teflon Musk"
@@ -175,6 +209,37 @@ class TestConversationStatsForPrivate:
     def test_average_word_length(self, priv_stats):
         avg = priv_stats.average_word_length
         assert avg == pytest.approx(4.49, 0.01)
+
+    def test_wc_in_messages(self, priv_stats):
+        wcs = priv_stats.wc_in_messages
+        assert max(wcs) == 29
+        assert min(wcs) == 1
+        assert sum(wcs) / len(wcs) == pytest.approx(4.13, 0.01)
+
+    def test_cc_in_messages(self, priv_stats):
+        ccs = priv_stats.cc_in_messages
+        assert max(ccs) == 188
+        assert min(ccs) == 2
+        assert sum(ccs) / len(ccs) == pytest.approx(21.72, 0.01)
+
+    def test_message_language_map(self, priv_stats):
+        txt = "yo Legyen az, hogy most megprobalok ekezet nelkul irni. Seems pretty easy. I need some english words in here. Right? A magyar szavak felismereset probalom tesztelni ezzekkel a mondatokkal."
+        msg_lang = priv_stats.message_language_map
+        assert msg_lang["are you the real teflon musk?"].language.code == "en"
+        assert msg_lang["Excepteur...laborum. :D"].language.code == "la"
+
+        assert msg_lang[txt].reliable == True
+        assert msg_lang[txt].language.code == "en"
+        assert msg_lang[txt].languages[0].code == "en"
+        assert msg_lang[txt].languages[1].code == "hu"
+
+    def test_reacted_messages(self, priv_stats):
+        reacted_messages = priv_stats.reacted_messages
+        assert len(reacted_messages) == 3
+        assert sum(reacted_messages.content.notna()) == 1
+        assert sum(reacted_messages.gifs.notna()) == 2
+
+        assert reacted_messages.reactions[0][0].get("reaction") == "❤"
 
     def test_get_grouped_time_series_data(self, priv_msg_analyzer):
         grouped = priv_msg_analyzer.stats.get_grouped_time_series_data(period="y")
