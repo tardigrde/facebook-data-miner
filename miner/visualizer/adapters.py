@@ -1,13 +1,15 @@
 import pandas as pd
 
-from miner import utils
+from miner.utils import utils, const
+
 
 # TODO make this somehow more generic
 
 
 class DataAdapter:
-    def __init__(self, analyzer):
+    def __init__(self, analyzer, config):
         self.analyzer = analyzer
+        self.config = config
 
     @property
     def private_analyzer(self):
@@ -29,8 +31,8 @@ class DataAdapter:
 
 
 class TableDataAdapter(DataAdapter):
-    def __init__(self, analyzer):
-        super().__init__(analyzer)
+    def __init__(self, analyzer, config):
+        super().__init__(analyzer, config)
 
     def get_basic_stats(self):
         stat_names = [
@@ -43,7 +45,7 @@ class TableDataAdapter(DataAdapter):
         titles = []
         stats = []
         for name in stat_names:
-            readable = utils.STAT_MAP.get(name)
+            readable = const.STAT_MAP.get(name)
             stat = getattr(self.private_analyzer.stats, name)
             titles.append(readable)
             stats.append(stat)
@@ -59,7 +61,7 @@ class TableDataAdapter(DataAdapter):
         )
 
     def get_stat_per_period_data(self, period, stat="mc"):
-        dates, counts = [""], [utils.STAT_MAP.get(stat)]
+        dates, counts = [""], [const.STAT_MAP.get(stat)]
         data = self.private_analyzer.stats.stat_per_period(period, statistic=stat)
         for date, count in data.items():
             dates.append(date)
@@ -72,8 +74,8 @@ class PlotDataAdapter(DataAdapter):
     Class for adopting statistics data for Visualizer to use.
     """
 
-    def __init__(self, analyzer):
-        super().__init__(analyzer)
+    def __init__(self, analyzer, config):
+        super().__init__(analyzer, config)
 
     def set_up_time_series_data(self, period, stat="text_mc", **kwargs):
         stats = self.get_stats(**kwargs)
@@ -81,7 +83,12 @@ class PlotDataAdapter(DataAdapter):
 
     def get_time_series_data(self, period, stat=None, **kwargs):
         index, me, partner = self.get_stat_per_time_data(period, stat)
-        utils.generate_date_series(period, start=index[0], end=index[-1])
+        utils.generate_date_series(
+            self.config.get("profile").registration_timestamp,
+            period,
+            start=index[0],
+            end=index[-1],
+        )
 
     def get_stat_per_time_data(self, period, stat="mc", **kwargs):
         me_stat = self.get_stats(senders="me", **kwargs).stat_per_period(

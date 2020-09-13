@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 from miner.person import Person
-from miner import utils
+from miner.utils import const
 
 TEST_DATA_PATH = f"{os.getcwd()}/test_data"
 
@@ -74,7 +74,7 @@ def test_some_individual_as_media_dir(people):
 
 def test_individual_media_has_one_folder_of_possibles(people):
     listed_dir = os.listdir(
-        f"{TEST_DATA_PATH}/{utils.MESSAGE_SUBPATH}/{people.data.get('Teflon Musk').media_dir}"
+        f"{TEST_DATA_PATH}/{const.MESSAGE_SUBPATH}/{people.data.get('Teflon Musk').media_dir}"
     )
     assert "files" in listed_dir
     assert "photos" in listed_dir

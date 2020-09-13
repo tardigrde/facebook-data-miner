@@ -1,7 +1,7 @@
 import pytest
 from miner.message.conversations import Conversations
 from miner.message.conversation import Conversation
-from miner import utils
+from miner.utils import utils
 
 import os
 
@@ -49,7 +49,7 @@ def test_get_all_people_from_convo(conversations):
         "Facebook User",
         "Foo Bar",
         "John Doe",
-        utils.ME,
+        "Levente Csőke",
         "Teflon Musk",
         "Benedek Elek",
         "Donald Duck",

@@ -1,7 +1,9 @@
-from miner import utils
-import pandas as pd
 import os
-from typing import Union, List, Dict, Callable, Any, NamedTuple
+from typing import List, Dict, Callable, Any, NamedTuple
+
+import pandas as pd
+
+from miner.utils import utils, command
 
 DATA_PATH = f"{os.getcwd()}/data"
 
@@ -45,7 +47,7 @@ class FacebookData:
         return self.preprocessor(raw_data)
 
     def get_preprocessor(self, processors):
-        preprocessor = utils.CommandChainCreator()
+        preprocessor = command.CommandChainCreator()
         if processors is None:
             self.register_processors(preprocessor)
         else:

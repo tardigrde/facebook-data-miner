@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-from typing import Union, List, Dict, Callable, Any
-from collections import namedtuple
-import pandas as pd
+import logging
 import os
+from collections import namedtuple
+from typing import List, Dict, Callable
+
+import pandas as pd
 
 from miner.data import FacebookData
-from miner import utils
+from miner.utils import utils, const
 
 
 class Conversation(FacebookData):
@@ -53,7 +55,7 @@ class Conversation(FacebookData):
 
     def get_media_dir(self, data: Dict) -> str:
         for message in data.get("messages"):
-            if intersection := list(set(message) & set(utils.MEDIA_DIRS)):
+            if intersection := list(set(message) & set(const.MEDIA_DIRS)):
                 uri = message.get(intersection[0])[0].get("uri")
                 return self.get_dirname(os.path.dirname(os.path.dirname(uri)))
 
@@ -68,5 +70,4 @@ class Conversation(FacebookData):
         elif "archived_threads/" in dirname:
             return dirname.split("archived_threads/")[1]
         else:
-            # TODO add logger
-            print("WARNING! Missing thread_path for messages or media.")
+            logging.warning("WARNING! Missing thread_path for messages or media.")

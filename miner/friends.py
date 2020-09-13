@@ -1,8 +1,8 @@
-from typing import Union, List, Dict, Callable, Any
 from collections import namedtuple
+from typing import List, Dict, Callable
 
 from miner.data import FacebookData
-from miner import utils
+from miner.utils import utils
 
 
 # TODO rate of making friends

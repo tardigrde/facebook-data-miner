@@ -6,7 +6,7 @@ import pandas as pd
 from miner.message.messaging_analyzer import MessagingAnalyzerManager
 from miner.message.conversations import Conversations
 from miner.message.conversation_stats import ConversationStats
-from miner import utils
+from miner.utils import utils
 
 
 @pytest.fixture

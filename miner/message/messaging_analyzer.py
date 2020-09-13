@@ -1,25 +1,27 @@
 from __future__ import annotations
 
-from typing import Union, List, Dict, Callable, Any, NamedTuple, Tuple
-from datetime import datetime
+import copy
+from typing import List, Dict, Tuple, Any
+
 import pandas as pd
 
-import copy
-import numpy as np
+from miner.message.conversation import Conversation
 from miner.message.conversation_stats import ConversationStats
 from miner.message.conversations import Conversations
-from miner.message.conversation import Conversation
-from miner import utils
+from miner.utils import utils, decorators
 
 
 class MessagingAnalyzerManager:
-    def __init__(self, conversations: Conversations) -> None:
+    def __init__(self, conversations: Conversations, config: Dict[str, Any]) -> None:
         self.conversations = conversations
+        self.config = config
         self.private_messaging_analyzer = MessagingAnalyzer(
-            conversations.private, "private"
+            conversations.private, config, "private"
         )
         # TODO maybe move group_convo_map creation to here, not conversations
-        self.group_messaging_analyzer = MessagingAnalyzer(conversations.group, "group")
+        self.group_messaging_analyzer = MessagingAnalyzer(
+            conversations.group, config, "group"
+        )
 
     @property
     def private(self) -> MessagingAnalyzer:
@@ -88,16 +90,22 @@ class MessagingAnalyzerManager:
             for group_stats in self.group_messaging_analyzer.stats_per_channel.values()
         ]
         df = utils.stack_dfs(private.stats.filter(senders=name).df, *groups)
-        return ConversationStats(df)
+        return ConversationStats(df, self.config)
 
 
 class MessagingAnalyzer:
-    def __init__(self, data: Dict[str, Conversation], kind: str = "private") -> None:
+    def __init__(
+        self,
+        data: Dict[str, Conversation],
+        config: Dict[str, Any],
+        kind: str = "private",
+    ) -> None:
         self.data = data  # channel to convo map
+        self.config = config
         self._kind = kind
         self.df: pd.DataFrame = self._get_df(self.data)
 
-        self._stats = ConversationStats(self.df)
+        self._stats = ConversationStats(self.df, config)
         # TODO maybe rename
         self.group_convo_map = utils.get_group_convo_map(data)  # name to convo map
 
@@ -206,8 +214,8 @@ class MessagingAnalyzer:
         return count_dict, percent_dict
 
     # TODO myabe move this to a filterer class?!?!?!
-    @utils.string_kwarg_to_list_converter("senders")
-    @utils.string_kwarg_to_list_converter("channels")
+    @decorators.string_kwarg_to_list_converter("senders")
+    @decorators.string_kwarg_to_list_converter("channels")
     def filter(self, channels=None, senders=None):
         # TODO test if can pipe filters like this or not by filtering for both channels and senders
         # see how it behaves with private as well
@@ -221,11 +229,11 @@ class MessagingAnalyzer:
             data = self._filter_by_channel(data, channels)
         if not data:
             return None
-        return MessagingAnalyzer(data, self._kind)
+        return MessagingAnalyzer(data, self.config, self._kind)
 
     def _get_stats_per_channel(self) -> Dict[str, ConversationStats]:
         return {
-            channel: ConversationStats(convo.data)
+            channel: ConversationStats(convo.data, self.config)
             for channel, convo in self.data.items()
         }
 

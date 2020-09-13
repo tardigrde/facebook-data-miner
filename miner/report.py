@@ -1,10 +1,4 @@
-from typing import Union, List, Dict, Callable, Any, NamedTuple
-from miner.message.conversations import Conversations
-from miner.message.messaging_analyzer import ConversationAnalyzer
-from miner.people import People
-from miner.friends import Friends
-
-from miner import utils
+from miner.utils import const
 
 
 class Report:
@@ -42,7 +36,7 @@ class Report:
         print(40 * "-")
 
     def fill_stat_per_period_data(self, stat="mc"):
-        self.add_content("Time period statistic", utils.STAT_MAP.get(stat))
+        self.add_content("Time period statistic", const.STAT_MAP.get(stat))
         for time, stat in self.data.get_stat_per_period_data(stat=stat):
             self.add_content(time, stat)
 
@@ -63,7 +57,7 @@ class ReportDataAdapter:
             "cc",
         ]
         for name in stat_names:
-            readable = utils.STAT_MAP.get(name)
+            readable = const.STAT_MAP.get(name)
             stat = getattr(self.analyzer.stats, name)
             yield readable, stat
 

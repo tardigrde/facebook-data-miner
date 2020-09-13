@@ -1,0 +1,6 @@
+- logging:
+    - level: DEBUG
+general:
+  date-format: "%Y-%m-%d"
+  
+

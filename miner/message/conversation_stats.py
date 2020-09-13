@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from typing import Union, List, Dict, Callable, Any, NamedTuple
-import pandas as pd
-import numpy as np
 import math
+from typing import Union, List, Dict, Any
 
+import numpy as np
+import pandas as pd
 import polyglot
 from polyglot.detect import Detector
 
-from miner import utils
+from miner.utils import utils, period_manager, command
 
 
 class ConversationStats:
@@ -16,8 +16,9 @@ class ConversationStats:
     Statistics of conversation with one person.
     """
 
-    def __init__(self, df: pd.DataFrame) -> None:
+    def __init__(self, df: pd.DataFrame, config: Dict[str, Any]) -> None:
         self.df: pd.DataFrame = df
+        self.config = config
         self._stats_df: pd.DataFrame = self._get_convos_in_numbers()
         self._stat_sum = self._stats_df.sum()
 
@@ -28,7 +29,7 @@ class ConversationStats:
         if df is None:
             df = self.df
         df = self._get_filtered_df(df, **kwargs)
-        return ConversationStats(df)
+        return ConversationStats(df, self.config)
 
     def _get_convos_in_numbers(self) -> pd.DataFrame:
         stats = StatsDataframe()
@@ -53,13 +54,14 @@ class ConversationStats:
     @property
     def creator(self) -> str:
         if self.number_of_channels > 1:
-            return None  # or raise some error?
+            raise utils.TooManyChannelsError("Too many `channels` to calculate this.")
         return self.df.iloc[0].sender_name
 
     @property
     def created_by_me(self) -> bool:
-        # raose error if number_of_channels > 1
-        return self.creator == utils.ME
+        if self.number_of_channels > 1:
+            raise utils.TooManyChannelsError("Too many `channels` to calculate this.")
+        return self.creator == self.config.get("profile").name
 
     @property
     def start(self) -> np.datetime64:
@@ -193,9 +195,11 @@ class ConversationStats:
         return self.df[kind].dropna()
 
     def get_grouped_time_series_data(self, period: str = "y") -> pd.DataFrame:
-        grouping_rule = utils.PERIOD_MANAGER.get_grouping_rules(period, self._stats_df)
+        grouping_rule = period_manager.PERIOD_MANAGER.get_grouping_rules(
+            period, self._stats_df
+        )
         groups_df = self._stats_df.groupby(grouping_rule).sum()
-        return utils.PERIOD_MANAGER.set_df_grouping_indices_to_datetime(
+        return period_manager.PERIOD_MANAGER.set_df_grouping_indices_to_datetime(
             groups_df, period=period
         )
 
@@ -212,24 +216,29 @@ class ConversationStats:
                 words.append(token)
         return pd.Series(words)
 
-    @staticmethod
-    def _count_stat_for_period(df, period, statistic):
+    def _count_stat_for_period(self, df, period, statistic):
         # DOES too much
         periods = {}
-        periods = utils.prefill_dict(periods, utils.PERIOD_MAP.get(period), 0)
+        periods = utils.prefill_dict(
+            periods,
+            utils.get_period_map(self.config.get("profile").registration_timestamp).get(
+                period
+            ),
+            0,
+        )
 
         for date, row in df.iterrows():
             stat = row[statistic]
             if stat is None:
                 continue
-            key = utils.PERIOD_MANAGER.date_to_period(date, period)
+            key = period_manager.PERIOD_MANAGER.date_to_period(date, period)
             periods = utils.fill_dict(periods, key, stat)
-        sorting_func = utils.PERIOD_MANAGER.sorting_method(period)
+        sorting_func = period_manager.PERIOD_MANAGER.sorting_method(period)
         periods = utils.sort_dict(periods, sorting_func)
         return periods
 
-    @staticmethod
     def _get_filtered_df(
+        self,
         df: pd.DataFrame,
         channels: Union[str, List[str]] = None,
         senders: Union[str, List[str]] = None,
@@ -243,12 +252,15 @@ class ConversationStats:
         @param kwargs: {start,end,period} : Union[str, datetime] = None
         @return:
         """
-        filter_messages = utils.CommandChainCreator()
+        filter_messages = command.CommandChainCreator()
         filter_messages.register_command(
             utils.filter_by_channel, column="partner", channels=channels
         )
         filter_messages.register_command(
-            utils.filter_by_sender, column="sender_name", senders=senders
+            utils.filter_by_sender,
+            column="sender_name",
+            senders=senders,
+            me=self.config.get("profile").name,
         )
         filter_messages.register_command(utils.filter_by_date, **kwargs)
         return filter_messages(df)

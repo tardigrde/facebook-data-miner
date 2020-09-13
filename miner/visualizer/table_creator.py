@@ -1,7 +1,7 @@
 from prettytable import PrettyTable
 
+from miner.utils import const
 from miner.visualizer.adapters import TableDataAdapter
-from miner import utils
 
 
 class TableCreator:
@@ -68,7 +68,7 @@ class TableCreator:
         # print(40 * "-")
 
     def fill_stat_per_period_data(self, period, stat="mc"):
-        self.add_content("Time period statistic", utils.STAT_MAP.get(stat))
+        self.add_content("Time period statistic", const.STAT_MAP.get(stat))
         for time, stat in self.data.get_stat_per_period_data(period, stat=stat):
             self.add_content(time, stat)
 
