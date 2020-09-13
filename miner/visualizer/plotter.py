@@ -1,10 +1,9 @@
-import matplotlib.pyplot as plt
-import pandas as pd
-import numpy as np
 import argparse
 import os
 
-from typing import Union, List, Dict, Callable, Any, NamedTuple
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 
 from miner.visualizer.adapters import PlotDataAdapter
 

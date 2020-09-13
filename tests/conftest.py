@@ -3,11 +3,17 @@ import os
 
 from miner.message.messaging_analyzer import MessagingAnalyzerManager
 from miner.message.conversations import Conversations
+from miner.app import App
 from miner.people import People
 from miner.data import FacebookData
 from miner.friends import Friends
 
 TEST_DATA_PATH = f"{os.getcwd()}/test_data"
+
+
+@pytest.fixture(scope="session")
+def app():
+    return App(TEST_DATA_PATH)
 
 
 @pytest.fixture(scope="session")
@@ -39,8 +45,8 @@ def facebook_data():
 
 
 @pytest.fixture(scope="session")
-def analyzer(conversations):
-    return MessagingAnalyzerManager(conversations)
+def analyzer(conversations, app):
+    return MessagingAnalyzerManager(conversations, app.config)
 
 
 @pytest.fixture(scope="session")

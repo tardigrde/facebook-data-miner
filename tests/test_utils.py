@@ -3,7 +3,7 @@ import tempfile
 import pytest
 import os
 
-from miner import utils
+from miner.utils import utils, command
 from helpers import lower_string, add_string, split_string, tempfile_tree
 
 TEST_DATA_PATH = f"{os.getcwd()}/test_data"
@@ -16,7 +16,7 @@ def tempfiles():
 
 @pytest.fixture(scope="module")
 def command_chain():
-    ccc = utils.CommandChainCreator()
+    ccc = command.CommandChainCreator()
     ccc.register_command(utils.decode_data, utils.utf8_decoder)
     ccc.register_command(lower_string)
     ccc.register_command(add_string, addition="abc")

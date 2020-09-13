@@ -3,7 +3,7 @@ import pytest
 import os
 
 from miner.message.conversation import Conversation
-from miner import utils
+from miner.utils import utils
 
 TEST_DATA_PATH = f"{os.getcwd()}/test_data"
 
@@ -44,8 +44,8 @@ def test_title(convo):
     assert convo.metadata.title == "Tőke Hal"
 
 
-def test_participants(convo):
-    assert convo.metadata.participants == ["Tőke Hal", utils.ME]
+def test_participants(convo, app):
+    assert convo.metadata.participants == ["Tőke Hal", app.config.get("profile").name]
 
 
 def test_thread_path(convo):

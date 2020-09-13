@@ -1,11 +1,10 @@
-from typing import Union, List, Dict, Callable, Any, NamedTuple
-import time
 import os
+from typing import List, Dict, Callable, Any
 
-from miner.message.conversations import Conversations
 from miner.friends import Friends
+from miner.message.conversations import Conversations
 from miner.person import Person
-from miner import utils
+from miner.utils import utils
 
 DATA_PATH = f"{os.getcwd()}/data"
 

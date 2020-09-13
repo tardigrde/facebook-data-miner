@@ -1,6 +1,6 @@
 import pytest
 
-from miner.utils import dt
+from miner.utils.utils import dt
 from miner.message.conversation_stats import ConversationStats
 
 

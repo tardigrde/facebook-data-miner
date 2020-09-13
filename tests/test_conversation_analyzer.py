@@ -3,7 +3,7 @@ import pytest
 from miner.message.messaging_analyzer import MessagingAnalyzerManager, MessagingAnalyzer
 from miner.message.conversation_stats import ConversationStats
 
-from miner.utils import dt
+from miner.utils.utils import dt
 
 
 @pytest.fixture(scope="session")

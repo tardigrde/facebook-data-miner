@@ -1,11 +1,10 @@
 from __future__ import annotations
-import pandas as pd
-import os
-from typing import Union, List, Dict, Callable, Any, NamedTuple
 
+import os
+from typing import List, Dict, Callable
 
 from miner.message.conversation import Conversation
-from miner import utils
+from miner.utils import utils, const
 
 DATA_PATH = f"{os.getcwd()}/data"
 
@@ -60,7 +59,6 @@ class Conversations:
             while json := next(jsons):
                 convo += Conversation(path=json)
         except StopIteration:
-            # print("WARNING! Convo map is empty!")
             pass
         finally:
             convo_map[convo.metadata.title] = convo
@@ -93,7 +91,7 @@ class ConversationsPaths:
         if ctype not in ("private", "group"):
             raise ValueError("Only `private` and `group` are supported.")
         self.ctype: str = ctype
-        self.thread_type: str = utils.MESSAGE_TYPE_MAP.get(self.ctype)
+        self.thread_type: str = const.MESSAGE_TYPE_MAP.get(self.ctype)
         self.data_path: str = path
 
         self.paths_json: str = f"{self.data_path}/{self.sub_path}/{self.ctype}_messages.json"

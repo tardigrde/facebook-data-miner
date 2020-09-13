@@ -1,8 +1,11 @@
 from __future__ import annotations
-from typing import Union, List, Dict, Callable, Any, NamedTuple
-import pandas as pd
+
 from dataclasses import dataclass
-from miner import utils
+from typing import List
+
+import pandas as pd
+
+from miner.utils import utils
 
 
 @dataclass

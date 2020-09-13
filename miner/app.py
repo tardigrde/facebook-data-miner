@@ -1,17 +1,19 @@
-import os
 import argparse
-import time
-from typing import Union, List, Dict, Callable, Any, NamedTuple
+import logging
+import os
 
-from miner.message.conversations import Conversations
-from miner.people import People
 from miner.friends import Friends
-from miner.visualizer.table_creator import TableCreator
-from miner.visualizer.plotter import Plotter
+from miner.message.conversations import Conversations
 from miner.message.messaging_analyzer import MessagingAnalyzerManager
-from miner import utils
+from miner.people import People
+from miner.profile_information import ProfileInformation
+from miner.utils import utils
+from miner.visualizer.plotter import Plotter
+from miner.visualizer.table_creator import TableCreator
 
 DATA_PATH = f"{os.getcwd()}/data"
+
+
 # DATA_PATH = f"{os.getcwd()}/tests/test_data"
 
 
@@ -21,14 +23,27 @@ class App:
     """
 
     def __init__(self, path):
-        print("The app has been initialized...")
         self.path = utils.unzip(path)
+        self.configure_logger()
+        self.config = self.build_config()
+
+        logging.info("The app has been initialized...")
+
         self._friends = self.get_friends()
         self._conversations = self.get_conversations()
         self._analyzer = self.get_analyzer()
         # self._people = self.get_people()
 
-    # TODO add properties because from notebook e.g. get_analyzer has to recalculate everything
+    def build_config(self):
+        return {"profile": self.profile_information()}
+
+    @staticmethod
+    def configure_logger():
+        logging.basicConfig(filename="miner.log", level=logging.DEBUG)
+
+    def profile_information(self):
+        return ProfileInformation(self.path)
+
     @property
     def friends(self):
         return self._friends
@@ -41,6 +56,7 @@ class App:
     def analyzer(self):
         return self._analyzer
 
+    # TODO correct this
     """@property
     def people(self):
         return self._people """
@@ -55,7 +71,7 @@ class App:
         return People(friends=self.friends, convos=self.conversations,)
 
     def get_analyzer(self):
-        return MessagingAnalyzerManager(self.conversations)
+        return MessagingAnalyzerManager(self.conversations, self.config)
 
     def get_plotter(self):
         return Plotter(self.analyzer)
