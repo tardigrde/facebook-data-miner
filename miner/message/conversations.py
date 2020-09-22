@@ -4,7 +4,7 @@ import os
 from typing import List, Dict, Callable
 
 from miner.message.conversation import Conversation
-from miner.utils import utils, const
+from miner.utils import utils, const, decorators
 
 DATA_PATH = f"{os.getcwd()}/data"
 
@@ -27,6 +27,7 @@ class Conversations:
             directories=paths_factory.get_dirs(ctype="group"),
             dir_lister=self._get_json_paths,
         )
+        # TODO
         # self.group_convo_map = self.add_group_convo_participation()
 
     @property
@@ -40,6 +41,38 @@ class Conversations:
     @property
     def group(self) -> Dict[str, Conversation]:
         return self._group
+
+    @decorators.kind_checker
+    @decorators.string_kwarg_to_list_converter("channels")
+    @decorators.string_kwarg_to_list_converter("cols")
+    def get(
+        self,
+        kind: str = "private",
+        channels: List[str] = None,
+        cols: List[str] = None,
+        output: str = "csv",
+    ):
+        data = getattr(self, kind)
+        filtered_channels = (
+            data.keys() if channels is None else list(set(data.keys()) & set(channels))
+        )
+        if not filtered_channels:
+            return f"Could not filter for these channels: {channels}. Please double-check the channel names."
+        res = utils.stack_dfs(
+            *[data.get(channel).data for channel in filtered_channels]
+        )
+        filtered_cols = (
+            list(res.columns)
+            if cols is None
+            else [col for col in cols if col in res.columns]
+        )
+        if not filtered_cols:
+            return (
+                f"Could not filter for these columns: {cols}. Please double-check the column names. Hint: if cols "
+                f"is None, all columns will be returned. "
+            )
+
+        return utils.df_to_file(output, res[filtered_cols])
 
     def _get_convos(
         self, directories: List[str], dir_lister: Callable

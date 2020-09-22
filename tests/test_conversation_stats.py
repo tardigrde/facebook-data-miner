@@ -11,12 +11,12 @@ from miner.utils import utils
 
 @pytest.fixture
 def priv_stats(priv_msg_analyzer):
-    return priv_msg_analyzer.stats
+    return priv_msg_analyzer._stats
 
 
 @pytest.fixture(scope="module")
 def group_stats(group_msg_analyzer):
-    return group_msg_analyzer.stats
+    return group_msg_analyzer._stats
 
 
 class TestConversationStatsForGroups:
@@ -43,13 +43,13 @@ class TestConversationStatsForGroups:
         assert filtered.contributors == ["Teflon Musk"]
         assert filtered.wc == 3
         assert filtered.cc == 18
-        assert filtered.df.shape == (1, 6,)
+        assert filtered.df.shape == (1, 4,)
 
     def test_filter_me(self, group_stats):
         filtered = group_stats.filter(senders="me")
         # NOTE filters out the one group where I'm not a contributor, only a participant
         assert filtered.number_of_channels == 2
-        assert filtered.df.shape == (4, 6)
+        assert filtered.df.shape == (4, 4)
         assert filtered.text_mc == 4
         assert filtered.percentage_of_media_messages == 0
 
@@ -64,7 +64,7 @@ class TestConversationStatsForGroups:
     def test_filter_subject_by_name(self, group_stats):
         filtered = group_stats.filter(senders="Teflon Musk")
         assert filtered.number_of_channels == 1
-        assert filtered.df.shape == (1, 6)
+        assert filtered.df.shape == (1, 4)
         assert filtered.text_mc == 1
         assert filtered.percentage_of_media_messages == 0
         assert len(filtered.contributors) == 1
@@ -178,7 +178,7 @@ class TestConversationStatsForPrivate:
         assert filtered.channels == ["Foo Bar"]
         assert not filtered.created_by_me
         assert filtered.cc == 56
-        assert filtered.df.shape == (6, 10)
+        assert filtered.df.shape == (6, 8)
 
     def test_filter_subject(self):
         # TODO should be the same as filter for sender
@@ -186,8 +186,8 @@ class TestConversationStatsForPrivate:
 
     def test_stats_are_in_df(self, priv_msg_analyzer):
         stats_df = priv_msg_analyzer.filter(
-            senders="Teflon Musk"
-        ).stats._get_convos_in_numbers()
+            participants="Teflon Musk"
+        )._stats._get_convos_in_numbers()
 
         assert "mc" in stats_df
         assert "text_mc" in stats_df
@@ -196,7 +196,7 @@ class TestConversationStatsForPrivate:
         assert "cc" in stats_df
 
     def test_stats_index_can_be_grouped(self, priv_msg_analyzer):
-        stats = priv_msg_analyzer.filter(senders="Teflon Musk").stats
+        stats = priv_msg_analyzer.filter(participants="Teflon Musk")._stats
         assert stats.df.index[0].year == 2014
         assert stats.df.index[0].month == 9
         assert stats.df.index[0].day == 24
@@ -242,7 +242,7 @@ class TestConversationStatsForPrivate:
         assert reacted_messages.reactions[0][0].get("reaction") == "❤"
 
     def test_get_grouped_time_series_data(self, priv_msg_analyzer):
-        grouped = priv_msg_analyzer.stats.get_grouped_time_series_data(period="y")
+        grouped = priv_msg_analyzer._stats.get_grouped_time_series_data(period="y")
         assert len(grouped) == 3
         third_row = grouped.iloc[2]
         assert third_row.mc == 15
@@ -250,17 +250,17 @@ class TestConversationStatsForPrivate:
         assert third_row.wc == 34
         assert third_row.cc == 140
 
-        grouped = priv_msg_analyzer.stats.get_grouped_time_series_data(period="m")
+        grouped = priv_msg_analyzer._stats.get_grouped_time_series_data(period="m")
         assert len(grouped) == 9
 
-        grouped = priv_msg_analyzer.stats.get_grouped_time_series_data(period="d")
+        grouped = priv_msg_analyzer._stats.get_grouped_time_series_data(period="d")
         assert len(grouped) == 16
 
-        grouped = priv_msg_analyzer.stats.get_grouped_time_series_data(period="h")
+        grouped = priv_msg_analyzer._stats.get_grouped_time_series_data(period="h")
         assert len(grouped) == 24
 
     def test_get_grouped_time_series_data_foo_bar(self, priv_msg_analyzer):
-        stats = priv_msg_analyzer.filter(senders="Foo Bar").stats
+        stats = priv_msg_analyzer.filter(participants="Foo Bar")._stats
         grouped = stats.get_grouped_time_series_data("y")
         assert len(grouped) == 1
         first_row = grouped.iloc[0]
@@ -279,7 +279,7 @@ class TestConversationStatsForPrivate:
         assert len(grouped) == 14
 
     def test_stats_per_period(self, priv_msg_analyzer):
-        yearly = priv_msg_analyzer.stats.stat_per_period("y", "mc")
+        yearly = priv_msg_analyzer._stats.stat_per_period("y", "mc")
         assert yearly == {
             2009: 0,
             2010: 0,
@@ -295,7 +295,7 @@ class TestConversationStatsForPrivate:
             2020: 15,
         }
 
-        monthly = priv_msg_analyzer.stats.stat_per_period("m", "mc")
+        monthly = priv_msg_analyzer._stats.stat_per_period("m", "mc")
         assert monthly == {
             "january": 3,
             "february": 10,
@@ -311,7 +311,7 @@ class TestConversationStatsForPrivate:
             "december": 2,
         }
 
-        daily = priv_msg_analyzer.stats.stat_per_period("d", "mc")
+        daily = priv_msg_analyzer._stats.stat_per_period("d", "mc")
         assert daily == {
             "monday": 6,
             "tuesday": 2,
@@ -322,7 +322,7 @@ class TestConversationStatsForPrivate:
             "sunday": 5,
         }
 
-        hourly = priv_msg_analyzer.stats.stat_per_period("h", "mc")
+        hourly = priv_msg_analyzer._stats.stat_per_period("h", "mc")
         assert hourly == {
             0: 1,
             1: 1,
@@ -351,7 +351,7 @@ class TestConversationStatsForPrivate:
         }
 
     def test_stats_per_period_foo_bar(self, priv_msg_analyzer):
-        stats = priv_msg_analyzer.filter(senders="Foo Bar").stats
+        stats = priv_msg_analyzer.filter(participants="Foo Bar")._stats
         yearly = stats.stat_per_period("y", "mc")
         assert yearly == {
             2009: 0,

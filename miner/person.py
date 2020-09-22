@@ -37,3 +37,6 @@ class Person:
             media_dir=self.media_dir if self.media_dir else other.media_dir,
             member_of=self.member_of if self.member_of else other.member_of,
         )
+
+    def __repr__(self):
+        return f"Name: {self.name}, friend: {self.friend}, msg directory: {self.thread_path}"

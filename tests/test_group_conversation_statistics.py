@@ -8,20 +8,20 @@ from miner.message.conversation_stats import ConversationStats
 def group_stats(group_msg_analyzer):
     def _stats(**kwargs):
         if "names" in kwargs:
-            analyzer = group_msg_analyzer.filter(senders=kwargs.get("names"))
+            analyzer = group_msg_analyzer.filter(participants=kwargs.get("names"))
         else:
             analyzer = group_msg_analyzer
         if any([kw in kwargs for kw in ("channel", "subject", "start", "end")]):
-            return analyzer.stats.filter(**kwargs)
+            return analyzer._stats.filter(**kwargs)
         else:
-            return analyzer.stats
+            return analyzer._stats
 
     return _stats
 
 
 class TestGroupStatisticsWithFiltering:
     def test_stats_marathon(self, group_msg_analyzer):
-        stats = group_msg_analyzer.filter(channels="marathon").stats
+        stats = group_msg_analyzer.filter(channels="marathon")._stats
 
         assert isinstance(stats, ConversationStats)
 
@@ -37,7 +37,7 @@ class TestGroupStatisticsWithFiltering:
     def test_stats_biggest_group_filtered(self, group_msg_analyzer):
         group_stats = group_msg_analyzer.filter(
             channels="Tőke Hal, Foo Bar, Donald Duck and 2 others"
-        ).stats
+        )._stats
 
         filtered_stats_me = group_stats.filter(senders="me")
         assert filtered_stats_me.mc == 0

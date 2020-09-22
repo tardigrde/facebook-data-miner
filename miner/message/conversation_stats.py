@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import math
 from typing import Union, List, Dict, Any
 
@@ -23,9 +24,13 @@ class ConversationStats:
         self._stat_sum = self._stats_df.sum()
 
     def __repr__(self) -> str:
-        return f"Stats for: {self.number_of_channels} channels"
+        return f"ConversationStats for {self.number_of_channels} channels"
+
+    def __len__(self):
+        return len(self.df)
 
     def filter(self, df: pd.DataFrame = None, **kwargs) -> ConversationStats:
+        # TODO this does not work if period = 'y'
         if df is None:
             df = self.df
         df = self._get_filtered_df(df, **kwargs)
@@ -37,7 +42,7 @@ class ConversationStats:
 
     @property
     def channels(self) -> List[str]:
-        return list(self.df.partner.unique())
+        return list(self.df.partner.unique()) if "partner" in self.df else []
 
     @property
     def number_of_channels(self) -> int:
@@ -45,7 +50,7 @@ class ConversationStats:
 
     @property
     def contributors(self) -> List[str]:
-        return list(self.df.sender_name.unique())
+        return list(self.df.sender_name.unique()) if "sender_name" in self.df else []
 
     @property
     def number_of_contributors(self) -> int:
@@ -53,37 +58,49 @@ class ConversationStats:
 
     @property
     def creator(self) -> str:
+        if self.number_of_channels < 1:
+            return ""
         if self.number_of_channels > 1:
-            raise utils.TooManyChannelsError("Too many `channels` to calculate this.")
+            logging.warning("Too many `channels` to calculate this.")
+            # raise utils.TooManyChannelsError("Too many `channels` to calculate this.")
+            return ""
         return self.df.iloc[0].sender_name
 
     @property
     def created_by_me(self) -> bool:
-        if self.number_of_channels > 1:
-            raise utils.TooManyChannelsError("Too many `channels` to calculate this.")
         return self.creator == self.config.get("profile").name
 
     @property
     def start(self) -> np.datetime64:
-        return self.df.index[0]
+        return self.df.index[0] if len(self.df) else None
 
     @property
     def end(self) -> np.datetime64:
-        return self.df.index[-1]
+        return self.df.index[-1] if len(self.df) else None
 
     @property
     def messages(self) -> pd.Series:
-        return self.df.content.dropna()
+        # TODO this only gets content not media messages
+        return self.df.content.dropna() if "content" in self.df else pd.Series()
 
     @property
     def text(self) -> pd.Series:
-        return self.df[self.df.content.notna()].content.dropna()
+        return (
+            self.df[self.df.content.notna()].content.dropna()
+            if "content" in self.df
+            else pd.Series()
+        )
 
     @property
     def media(self) -> pd.Series:
-        return self.df[self.df.content.isna()][
-            ["photos", "videos", "audio_files", "gifs", "files"]
-        ]
+        # TODO is this OK?
+        return (
+            self.df[self.df.content.isna()][
+                ["photos", "videos", "audio_files", "gifs", "files"]
+            ]
+            if self.df.get(["photos", "videos", "audio_files", "gifs", "files"])
+            else pd.Series()
+        )
 
     @property
     def words(self) -> pd.Series:
@@ -127,6 +144,25 @@ class ConversationStats:
 
     @property
     def most_used_msgs(self) -> pd.Series:
+        """
+        TODO bad format?
+        (fb) levente@debian:~/projects/facebook-data-miner$ ./miner/app.py analyzer group  - most_used_msgs
+        ,content
+        ok,2
+        what do you test,2
+        test,2
+        basic group messages,2
+        i start today,1
+        blabla,1
+        You named the group marathon.,1
+        yapp yapp :D,1
+        hmmm,1
+        we could go but running is free,1
+        marathon?,1
+        :D,1
+
+        @return:
+        """
         return self.messages.value_counts()
 
     @property
@@ -149,10 +185,12 @@ class ConversationStats:
         return ccs
 
     @property
-    def reacted_messages(self):
-        if not "reactions" in self.df:
-            return pd.Series()
-        return self.df[self.df.reactions.notna()]
+    def reacted_messages(self) -> pd.Series:
+        return (
+            self.df[self.df.reactions.notna()]
+            if "reactions" in self.df
+            else pd.Series()
+        )
 
     @property
     def files(self) -> pd.Series:
@@ -190,11 +228,11 @@ class ConversationStats:
         return map
 
     def media_message_extractor(self, kind: str) -> pd.Series:
-        if kind not in self.df:
-            return pd.Series([])
-        return self.df[kind].dropna()
+        return self.df[kind].dropna() if kind in self.df else pd.Series()
 
     def get_grouped_time_series_data(self, period: str = "y") -> pd.DataFrame:
+        if not len(self._stats_df):
+            return pd.DataFrame()
         grouping_rule = period_manager.PERIOD_MANAGER.get_grouping_rules(
             period, self._stats_df
         )
@@ -209,8 +247,10 @@ class ConversationStats:
 
     @staticmethod
     def _get_words(messages) -> pd.Series:
-        token_list = messages.str.lower().str.split()
         words = []
+        if not len(messages):
+            return pd.Series(words)
+        token_list = messages.str.lower().str.split()
         for tokens in token_list:
             for token in tokens:
                 words.append(token)
@@ -219,6 +259,8 @@ class ConversationStats:
     def _count_stat_for_period(self, df, period, statistic):
         # DOES too much
         periods = {}
+        if not len(df):
+            return periods
         periods = utils.prefill_dict(
             periods,
             utils.get_period_map(self.config.get("profile").registration_timestamp).get(
@@ -263,24 +305,38 @@ class ConversationStats:
             me=self.config.get("profile").name,
         )
         filter_messages.register_command(utils.filter_by_date, **kwargs)
+        # TODO later add this in if needed because this breaks stuff
+        #  basically removes the content column and the exception happens at:
+        #         self._stats_per_participant = self._get_stats_per_participant()
+        #  DataFrame object has no atribute 'content'
+        # maybe precheck if there are messages at all?!
+        filter_messages.register_command(utils.filer_empty_cols)
         return filter_messages(df)
 
 
 class StatsDataframe:
-    def __init__(self,) -> None:
-        self.df = pd.DataFrame()
-
     def __call__(self, df) -> pd.DataFrame:
+        self.df = pd.DataFrame(index=df.index)
+
         # all message count
-        self.df["mc"] = df.content.map(lambda x: 1)
+        self.df["mc"] = pd.Series([1 for _ in range(len(df))]).values if len(df) else 0
+        # self.df["mc"] =  df.content.map(lambda x:1) if 'content' in df else 0
         # text message count
-        self.df["text_mc"] = df.content.map(self.calculate_text_mc)
+        self.df["text_mc"] = (
+            df.content.map(self.calculate_text_mc).values if "content" in df else 0
+        )
         # media message count
-        self.df["media_mc"] = df.content.map(self.calculate_media_mc)
+        self.df["media_mc"] = (
+            df.content.map(self.calculate_media_mc).values if "content" in df else 0
+        )
         # word count
-        self.df["wc"] = df.content.map(self.calculate_wc)
+        self.df["wc"] = (
+            df.content.map(self.calculate_wc).values if "content" in df else 0
+        )
         # cc
-        self.df["cc"] = df.content.map(self.calculate_cc)
+        self.df["cc"] = (
+            df.content.map(self.calculate_cc).values if "content" in df else 0
+        )
         return self.df
 
     @staticmethod

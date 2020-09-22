@@ -1,5 +1,7 @@
 import copy
+import inspect
 import json
+import logging
 import math
 import os
 import re
@@ -26,8 +28,15 @@ class NonExistentChannel(Exception):
     pass
 
 
+def get_properties_of_a_class(class_ref):
+    props = inspect.getmembers(class_ref, lambda o: isinstance(o, property))
+    return [p[0] for p in props]
+
+
 def get_group_convo_map(data):
     group_convo_map = {}
+    if not data:
+        return group_convo_map
     for channel, convo in data.items():
         for participant in convo.metadata.participants:
             group_convo_map = fill_dict(group_convo_map, participant, [channel])
@@ -59,6 +68,46 @@ def read_json(file) -> Union[Dict, List]:
 def dump_to_json(data=None, file=None):
     with open(file, "w", encoding="utf8") as f:
         json.dump(data, f, ensure_ascii=False)
+
+
+def to_stdout(path, data):
+    if path == "json":
+        return data.to_json()
+    return data.to_csv()
+
+
+def basedir_exists(path):
+    if not os.path.isdir(os.path.dirname(path)):
+        return False
+    return True
+
+
+def rewrite(path):
+    if os.path.exists(path):
+        logging.warning("File already exist!")
+        answer = input(f"Overwrite {path}? (y/n)")
+        if answer == "y":
+            return True
+        else:
+            return False
+    return True
+
+
+def df_to_file(path, data):
+    if path is None or path in ("csv", "json"):
+        return to_stdout(path, data)
+
+    if not basedir_exists(path):
+        return f"Directory does not exist: `{os.path.dirname(path)}`"
+
+    if not rewrite(path):
+        return ""
+
+    if path.endswith(".csv"):
+        data.to_csv(path)
+    elif path.endswith(".json"):
+        data.to_json(path)
+    return f"Data was written to {path}"
 
 
 def ts_to_date(date):
@@ -216,7 +265,8 @@ def filter_by_date(df: pd.DataFrame, start=None, end=None, period=None):
     @param period: one of {y|m|d|h}
     @return:
     """
-    now = datetime.now()
+    if not len(df):
+        return df
     if start and end:
         return df.loc[start:end]
     elif start and not end and not period:
@@ -234,13 +284,9 @@ def filter_by_date(df: pd.DataFrame, start=None, end=None, period=None):
 def filter_by_channel(
     df: pd.DataFrame, column: str = "partner", channels: Union[str, List[str]] = None
 ):
-    if not channels:
+    if not channels or not len(df):
         return df
-
-    match = df[df[column].isin(channels)]
-    if match is None or len(match) == 0:
-        raise NonExistentChannel("None of the `channels` you specified exist.")
-    return match
+    return handle_filter_df(df, column, channels)
 
 
 @decorators.column_checker
@@ -251,15 +297,31 @@ def filter_by_sender(
     senders: Union[str, List[str]] = None,
     me: str = None,
 ):
-    if not senders:
+    if not senders or not len(df):
         return df
     if senders == ["me"]:
         return df[df[column] == me]
     elif senders == ["partner"]:
         return df[df[column] != me]
     elif senders:
-        match = df[df[column].isin(senders)]
-        return match
+        return handle_filter_df(df, column, senders)
+
+
+def handle_filter_df(df, column, filter_params):
+    match = df[df[column].isin(filter_params)]
+    if match is None or len(match) == 0:
+        logging.warning(
+            f"None of the filter parameters ({filter_params}) you specified exist in this df's `{column}` column."
+        )
+        return df[0:0]
+    return match
+
+
+def filer_empty_cols(df: pd.DataFrame):
+    empty_cols = [col for col in df.columns if df[col].isnull().all()]
+    if len(df) and len(df.columns):
+        df.drop(empty_cols, axis=1, inplace=True)
+    return df
 
 
 @decorators.start_end_period_checker

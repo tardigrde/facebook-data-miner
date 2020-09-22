@@ -46,7 +46,7 @@ def facebook_data():
 
 @pytest.fixture(scope="session")
 def analyzer(conversations, app):
-    return MessagingAnalyzerManager(conversations, app.config)
+    return MessagingAnalyzerManager(conversations, app._config)
 
 
 @pytest.fixture(scope="session")

@@ -6,14 +6,14 @@ from miner.utils.utils import dt
 @pytest.fixture(scope="session")
 def priv_stats(priv_msg_analyzer):
     def _stats(**kwargs):
-        if "names" in kwargs:
-            analyzer = priv_msg_analyzer.filter(senders=kwargs.get("names"))
+        if "participants" in kwargs:
+            analyzer = priv_msg_analyzer.filter(participants=kwargs.get("names"))
         else:
             analyzer = priv_msg_analyzer
         if any([kw in kwargs for kw in ("channels", "subject", "start", "end")]):
-            return analyzer.stats.filter(**kwargs)
+            return analyzer._stats.filter(**kwargs)
         else:
-            return analyzer.stats
+            return analyzer._stats
 
     return _stats
 

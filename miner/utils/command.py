@@ -1,4 +1,5 @@
 from typing import Any
+import logging
 
 
 class CommandChainCreator:
@@ -7,7 +8,13 @@ class CommandChainCreator:
 
     def __call__(self, data: Any) -> Any:
         for cmd in self.commands:
-            data = cmd(data)
+            try:
+                data = cmd(data)
+            except Exception as e:
+                logging.exception(e)
+                logging.error(
+                    f"The following error happened while executing the command `{cmd}`: {e}"
+                )
         return data
 
     def register_command(self, func, *args, **kwargs):

@@ -58,7 +58,7 @@ class ReportDataAdapter:
         ]
         for name in stat_names:
             readable = const.STAT_MAP.get(name)
-            stat = getattr(self.analyzer.stats, name)
+            stat = getattr(self.analyzer._stats, name)
             yield readable, stat
 
     def get_unique_stats(self):
@@ -68,6 +68,6 @@ class ReportDataAdapter:
     def get_stat_per_period_data(self, stat="mc"):
         for period in ["y", "m", "d", "h"]:
             # for period in ['y',]:
-            data = self.analyzer.stats.stat_per_period(period, statistic=stat)
+            data = self.analyzer._stats.stat_per_period(period, statistic=stat)
             for year, count in data.items():
                 yield year, f"{count:,}"

@@ -13,7 +13,9 @@ class string_kwarg_to_list_converter:
             if not value:
                 return func(*args, **kwargs)
             if isinstance(value, str):
-                kwargs[self.kw_arg] = [value]
+                kwargs[self.kw_arg] = value.split(",") if "," in value else [value]
+            if isinstance(value, tuple):
+                kwargs[self.kw_arg] = list(value)
             if not isinstance(kwargs[self.kw_arg], list):
                 raise ValueError(
                     f"Parameter `{self.kw_arg}` should be type of Union[str, List[str]], got: {type(kwargs[self.kw_arg])}"
@@ -21,6 +23,17 @@ class string_kwarg_to_list_converter:
             return func(*args, **kwargs)
 
         return wrapper
+
+
+def kind_checker(func):
+    def wrapper(*args, **kwargs):
+        if not kwargs.get("kind") in ("private", "group"):
+            raise ValueError(
+                f"{kwargs.get('kind')} has to be either `private` or `group`!"
+            )
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 def column_checker(func):

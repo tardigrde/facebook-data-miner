@@ -20,6 +20,7 @@ class PeriodManager:
 
     @staticmethod
     def get_grouping_rules(period, df):
+
         if period == "y":
             return [df.index.year]
         if period == "m":

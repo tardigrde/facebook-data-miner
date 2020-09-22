@@ -31,15 +31,18 @@ class TestMessagingAnalyzerManager:
 
     def test_all_interactions(self, analyzer):
         private, group = analyzer.all_interactions("Teflon Musk")
-        assert private.stats.channels == ["Teflon Musk"]
-        assert group.stats.channels == ["Foo Bar, John Doe and Teflon Musk", "marathon"]
+        assert private._stats.channels == ["Teflon Musk"]
+        assert group._stats.channels == [
+            "Foo Bar, John Doe and Teflon Musk",
+            "marathon",
+        ]
 
     def test_is_priv_msg_first_then_group(self, analyzer):
         is_priv = analyzer.is_priv_msg_first_then_group("Teflon Musk")
         assert is_priv is True
 
         is_priv = analyzer.is_priv_msg_first_then_group("Benedek Elek")
-        assert is_priv is True
+        assert is_priv is True  # only has private
 
         is_priv = analyzer.is_priv_msg_first_then_group("Foo Bar")
         assert is_priv is True
@@ -56,7 +59,7 @@ class TestMessagingAnalyzerManager:
             "Foo Bar",
         ]
         assert stats.contributors == ["Foo Bar"]
-        assert stats.df.shape == (9, 10,)
+        assert stats.df.shape == (9, 8)
 
 
 class TestMessagingAnalyzerMethodsForGroups:
@@ -65,12 +68,12 @@ class TestMessagingAnalyzerMethodsForGroups:
         assert len(groups) == 3
 
     def test_filter_by_sender(self, group_msg_analyzer):
-        filtered = group_msg_analyzer.filter(senders=["Teflon Musk"])
+        filtered = group_msg_analyzer.filter(participants=["Teflon Musk"])
         assert isinstance(filtered, MessagingAnalyzer)
         assert len(filtered.data) == 2
         assert len(filtered.group_convo_map.get("Teflon Musk")) == 2
 
-        filtered = group_msg_analyzer.filter(senders="Teflon Musk")
+        filtered = group_msg_analyzer.filter(participants="Teflon Musk")
         assert len(filtered.data) == 2
 
     def test_filter_by_channels(self, group_msg_analyzer):
@@ -84,21 +87,21 @@ class TestMessagingAnalyzerMethodsForGroups:
 
     def test_filter_by_channels_and_sender(self, group_msg_analyzer):
         filtered = group_msg_analyzer.filter(
-            channels=["marathon"], senders="Teflon Musk"
+            channels=["marathon"], participants="Teflon Musk"
         )
         assert filtered.data.get("marathon")
         assert len(filtered.data) == 1
         assert len(filtered.group_convo_map) == 4
 
         filtered = group_msg_analyzer.filter(
-            channels=["marathon"], senders="Benedek Elek"
+            channels=["marathon"], participants="Benedek Elek"
         )
 
-        assert filtered is None
+        assert not len(filtered)
 
         filtered = group_msg_analyzer.filter(channels=["gibberish"])
 
-        assert filtered is None
+        assert not len(filtered)
 
     def test_get_stats_per_channel(self, group_msg_analyzer):
         stats_per_channel = group_msg_analyzer._get_stats_per_channel()
@@ -113,7 +116,7 @@ class TestMessagingAnalyzerMethodsForGroups:
         )
 
     def test_get_stats_per_sender(self, group_msg_analyzer):
-        stats_per_partner = group_msg_analyzer._get_stats_per_sender()
+        stats_per_partner = group_msg_analyzer._get_stats_per_participant()
 
         assert len(stats_per_partner) == 8
         assert list(group_msg_analyzer.participants) == sorted(
@@ -149,8 +152,8 @@ class TestMessagingAnalyzerMethodsForGroups:
         assert created_by_me == 2
 
     def test_get_ranking_of_partners_by_convo_stats(self, group_msg_analyzer):
-        ranking, _ = group_msg_analyzer.get_ranking_of_senders_by_convo_stats()
-        assert ranking == {
+        ranking = group_msg_analyzer.get_ranking_of_senders_by_convo_stats()
+        assert ranking.get("count") == {
             "Donald Duck": 6,
             "Levente Csőke": 4,
             "Foo Bar": 3,
@@ -161,32 +164,32 @@ class TestMessagingAnalyzerMethodsForGroups:
             "Tőke Hal": 1,
         }
 
-    def test_portion_of_contribution(self, group_msg_analyzer):
-        contrib = group_msg_analyzer.get_portion_of_contribution()
-        assert isinstance(contrib, dict)
-        assert len(contrib)
-        assert contrib["Foo Bar"] == pytest.approx(16.66, 0.1)
-        assert contrib["Teflon Musk"] == pytest.approx(5.55, 0.1)
-
-        assert group_msg_analyzer.most_contributed == (
-            "Donald Duck",
-            pytest.approx(33.33, 0.1),
-        )
-
-        least_contrib = group_msg_analyzer.least_contributed
-        assert least_contrib[0] in (
-            "Tőke Hal",
-            "John Doe",
-            "Teflon Musk",
-            "Facebook User",
-            "Dér Dénes",
-        )
-        assert least_contrib[1] == pytest.approx(5.55, 0.1)
+    # def test_portion_of_contribution(self, group_msg_analyzer):
+    #     contrib = group_msg_analyzer.get_portion_of_contribution()
+    #     assert isinstance(contrib, dict)
+    #     assert len(contrib)
+    #     assert contrib["Foo Bar"] == pytest.approx(16.66, 0.1)
+    #     assert contrib["Teflon Musk"] == pytest.approx(5.55, 0.1)
+    #
+    #     assert group_msg_analyzer.most_contributed == (
+    #         "Donald Duck",
+    #         pytest.approx(33.33, 0.1),
+    #     )
+    #
+    #     least_contrib = group_msg_analyzer.least_contributed
+    #     assert least_contrib[0] in (
+    #         "Tőke Hal",
+    #         "John Doe",
+    #         "Teflon Musk",
+    #         "Facebook User",
+    #         "Dér Dénes",
+    #     )
+    #     assert least_contrib[1] == pytest.approx(5.55, 0.1)
 
 
 class TestMessagingAnalyzerMethodsForPrivates:
     def test_filter_by_sender(self, priv_msg_analyzer):
-        filtered = priv_msg_analyzer.filter(senders=["Teflon Musk"])
+        filtered = priv_msg_analyzer.filter(participants=["Teflon Musk"])
         assert isinstance(filtered, MessagingAnalyzer)
         assert len(filtered.data) == 1
         assert len(filtered.group_convo_map.get("Teflon Musk")) == 1
@@ -199,20 +202,20 @@ class TestMessagingAnalyzerMethodsForPrivates:
 
     def test_filter_by_channels_and_sender(self, priv_msg_analyzer):
         filtered = priv_msg_analyzer.filter(
-            channels="Teflon Musk", senders="Teflon Musk"
+            channels="Teflon Musk", participants="Teflon Musk"
         )
         assert len(filtered.data) == 1
         assert len(filtered.group_convo_map) == 2
 
         filtered = priv_msg_analyzer.filter(
-            channels=["marathon"], senders="Benedek Elek"
+            channels=["marathon"], participants="Benedek Elek"
         )
 
-        assert filtered is None
+        assert not len(filtered)
 
         filtered = priv_msg_analyzer.filter(channels=["gibberish"])
 
-        assert filtered is None
+        assert not len(filtered)
 
     def test_get_stats_per_channel(self, priv_msg_analyzer):
         stats_per_channel = priv_msg_analyzer._get_stats_per_channel()
@@ -227,7 +230,7 @@ class TestMessagingAnalyzerMethodsForPrivates:
         )
 
     def test_get_stats_per_sender(self, priv_msg_analyzer):
-        stats_per_sender = priv_msg_analyzer._get_stats_per_sender()
+        stats_per_sender = priv_msg_analyzer._get_stats_per_participant()
 
         assert len(stats_per_sender) == 5
         assert list(priv_msg_analyzer.participants) == sorted(
@@ -260,29 +263,29 @@ class TestMessagingAnalyzerMethodsForPrivates:
         assert created_by_me == 4
 
     def test_get_ranking_of_partners_by_convo_stats(self, priv_msg_analyzer):
-        ranking, _ = priv_msg_analyzer.get_ranking_of_senders_by_convo_stats()
-        assert ranking == {
+        ranking = priv_msg_analyzer.get_ranking_of_senders_by_convo_stats()
+        assert ranking.get("count") == {
             "Foo Bar": 15,
             "Tőke Hal": 7,
             "Teflon Musk": 6,
             "Benedek Elek": 3,
         }
 
-    def test_portion_of_contribution(self, priv_msg_analyzer):
-        contrib = priv_msg_analyzer.get_portion_of_contribution()
-        assert isinstance(contrib, dict)
-        assert len(contrib)
-        assert contrib["Foo Bar"] == pytest.approx(48.38, 0.1)
-        assert contrib["Teflon Musk"] == pytest.approx(19.35, 0.1)
-
-        assert priv_msg_analyzer.most_contributed == (
-            "Foo Bar",
-            pytest.approx(48.38, 0.1),
-        )
-
-        least_contrib = priv_msg_analyzer.least_contributed
-        assert least_contrib[0] in ("Benedek Elek",)
-        assert least_contrib[1] == pytest.approx(9.67, 0.1)
+    # def test_portion_of_contribution(self, priv_msg_analyzer):
+    #     contrib = priv_msg_analyzer.get_portion_of_contribution()
+    #     assert isinstance(contrib, dict)
+    #     assert len(contrib)
+    #     assert contrib["Foo Bar"] == pytest.approx(48.38, 0.1)
+    #     assert contrib["Teflon Musk"] == pytest.approx(19.35, 0.1)
+    #
+    #     assert priv_msg_analyzer.most_contributed == (
+    #         "Foo Bar",
+    #         pytest.approx(48.38, 0.1),
+    #     )
+    #
+    #     least_contrib = priv_msg_analyzer.least_contributed
+    #     assert least_contrib[0] in ("Benedek Elek",)
+    #     assert least_contrib[1] == pytest.approx(9.67, 0.1)
 
 
 class TestGetCount:

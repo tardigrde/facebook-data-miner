@@ -8,7 +8,7 @@ HUNDRED_YEARS_IN_SECONDS = 100 * 365 * 24 * 60 * 60
 FACEBOOK_FOUNDATION_DATE = datetime(year=2004, month=2, day=4)
 
 MESSAGE_SUBPATH = "messages/inbox"
-MEDIA_DIRS = ["photos", "gifs", "files", "videos", "audio"]
+MEDIA_DIRS = ["photos", "gifs", "files", "videos", "audio_files"]
 
 MONTHS = [
     "january",
@@ -65,3 +65,5 @@ STAT_MAP = {
     "wc": "Word",
     "cc": "Character",
 }
+
+HUMAN_READABLE_PERIODS = {"y": "Yearly", "m": "Monthly", "d": "Daily", "h": "Hourly"}

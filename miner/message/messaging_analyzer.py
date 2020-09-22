@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import copy
-from typing import List, Dict, Tuple, Any
+from typing import List, Dict, Tuple, Any, Union
 
 import pandas as pd
 
 from miner.message.conversation import Conversation
 from miner.message.conversation_stats import ConversationStats
 from miner.message.conversations import Conversations
-from miner.utils import utils, decorators
+from miner.utils import utils, decorators, command
 
 
 class MessagingAnalyzerManager:
@@ -66,19 +66,21 @@ class MessagingAnalyzerManager:
     ) -> Tuple[ConversationStats, ConversationStats]:
         # NOTE this is only a filterer fnction that can be used
         private = self.private_messaging_analyzer.filter(channels=name)
-        group = self.group_messaging_analyzer.filter(senders=name)
+        group = self.group_messaging_analyzer.filter(participants=name)
         return private, group
 
     def is_priv_msg_first_then_group(self, name: str) -> bool:
         # TODO test
         private = self.private_messaging_analyzer.filter(channels=name)
-        group = self.group_messaging_analyzer.filter(senders=name)
-        if group is None:
+        group = self.group_messaging_analyzer.filter(participants=name)
+        if group is None or not len(group):
             return True
         g_start_times = []
 
         for g in group.data.keys():
             start_time = self.group_messaging_analyzer.filter(channels=g).stats.start
+            if not start_time:
+                continue
             g_start_times.append(start_time)
 
         return any([private.stats.start > group_start for group_start in g_start_times])
@@ -108,9 +110,23 @@ class MessagingAnalyzer:
         self._stats = ConversationStats(self.df, config)
         # TODO maybe rename
         self.group_convo_map = utils.get_group_convo_map(data)  # name to convo map
+        """
+        TODO why I have this much
+        TODO also could be a df. groups as indices
+        (fb) levente@debian:~/projects/facebook-data-miner$ ./miner/app.py analyzer private - group_convo_map
+        Tőke Hal:      ["Tőke Hal"]
+        Levente Csőke: ["Benedek Elek", "Tőke Hal", "Foo Bar", "Teflon Musk"]
+        Foo Bar:       ["Foo Bar"]
+        Teflon Musk:   ["Teflon Musk"]
+        Benedek Elek:  ["Benedek Elek"]
+
+        """
 
         self._stats_per_channel = self._get_stats_per_channel()
-        self._stats_per_sender = self._get_stats_per_sender()
+        self._stats_per_participant = self._get_stats_per_participant()
+
+    def __repr__(self):
+        return f"<{self._kind.capitalize()}-MessagingAnalyzer for {self.__len__()} channels>"
 
     def __len__(self):
         return len(self.data.keys())
@@ -128,8 +144,8 @@ class MessagingAnalyzer:
         return self._get_stats_per_channel()
 
     @property
-    def stats_per_sender(self) -> Dict[str, ConversationStats]:
-        return self._get_stats_per_sender()
+    def stats_per_participant(self) -> Dict[str, ConversationStats]:
+        return self._get_stats_per_participant()
 
     @property
     def participants(self) -> List[str]:
@@ -138,14 +154,6 @@ class MessagingAnalyzer:
         for _, convo in self.data.items():
             participants += convo.metadata.participants
         return sorted(list(set(participants)))
-
-    @property
-    def most_contributed(self) -> str:
-        return list(self.get_portion_of_contribution().items())[0]
-
-    @property
-    def least_contributed(self) -> str:
-        return list(self.get_portion_of_contribution().items())[-1]
 
     @property
     def min_channel_size(self) -> int:
@@ -166,14 +174,6 @@ class MessagingAnalyzer:
     def number_of_convos_created_by_me(self) -> int:
         return sum([stat.created_by_me for stat in self.stats_per_channel.values()])
 
-    def get_portion_of_contribution(
-        self, statistic: str = "mc", top: int = 20
-    ) -> Dict[str, float]:
-        _, ranking_by_percent = self.get_ranking_of_senders_by_convo_stats(
-            statistic=statistic, top=top
-        )
-        return ranking_by_percent
-
     def get_all_channels_for_one_person(self, name) -> List[str]:
         groups = []
         for k, g in self.data.items():
@@ -185,12 +185,15 @@ class MessagingAnalyzer:
         stats = self.stats.filter(**kwargs)
         return getattr(stats, attribute)
 
+    # TODO rename to contributos or participants
+    # TODO have a param what to return : percent or count
+    # TODO break this function up into pieces
     def get_ranking_of_senders_by_convo_stats(
         self, statistic: str = "mc", top: int = 20
-    ) -> Tuple[Dict[str, int], Dict[str, float]]:
+    ) -> Dict[str, Union[Union[dict, dict], Any]]:
         count_dict = {}
         stats_per_people = (
-            self.stats_per_sender if self.is_group else self.stats_per_channel
+            self.stats_per_participant if self.is_group else self.stats_per_channel
         )
 
         if len(stats_per_people) == 1:
@@ -211,24 +214,22 @@ class MessagingAnalyzer:
             count_dict = {k: count_dict[k] for k in list(count_dict.keys())[:top]}
             percent_dict = {k: percent_dict[k] for k in list(percent_dict.keys())[:top]}
 
-        return count_dict, percent_dict
+        return {"count": count_dict, "percent": percent_dict}
 
-    # TODO myabe move this to a filterer class?!?!?!
-    @decorators.string_kwarg_to_list_converter("senders")
     @decorators.string_kwarg_to_list_converter("channels")
-    def filter(self, channels=None, senders=None):
-        # TODO test if can pipe filters like this or not by filtering for both channels and senders
-        # see how it behaves with private as well
-        if senders is None and channels is None:
+    @decorators.string_kwarg_to_list_converter("participants")
+    def filter(self, channels=None, participants=None):
+        if participants is None and channels is None:
             return self
         data = copy.copy(self.data)
-        # TODO filter by channels first maybe?
-        if senders is not None:
-            data = self._filter_by_sender(data, senders)
-        if channels is not None:
-            data = self._filter_by_channel(data, channels)
-        if not data:
-            return None
+
+        filter_messages = command.CommandChainCreator()
+        filter_messages.register_command(self._filter_by_channels, channels=channels)
+        # this is useless if this is private messaging analyzer
+        filter_messages.register_command(
+            self._filter_by_participants, participants=participants,
+        )
+        data = filter_messages(data)
         return MessagingAnalyzer(data, self.config, self._kind)
 
     def _get_stats_per_channel(self) -> Dict[str, ConversationStats]:
@@ -237,7 +238,7 @@ class MessagingAnalyzer:
             for channel, convo in self.data.items()
         }
 
-    def _get_stats_per_sender(self) -> Dict[str, ConversationStats]:
+    def _get_stats_per_participant(self) -> Dict[str, ConversationStats]:
         stat_per_participant = {}
         for name in self.participants:
             stat_per_participant[name] = self.stats.filter(senders=name)
@@ -245,27 +246,36 @@ class MessagingAnalyzer:
 
     @staticmethod
     def _get_df(convos) -> pd.DataFrame:
+        if not convos:
+            return pd.DataFrame()
         return utils.stack_dfs(*[convo.data for convo in convos.values()])
 
     @staticmethod
-    def _filter_by_sender(
-        data: Dict[str, Conversation], names: List[str]
+    def _filter_by_channels(
+        data: Dict[str, Conversation], channels: List[str] = None
     ) -> Dict[str, Conversation]:
-        new_data = {}
-        for key, g in data.items():
-            if list(set(g.metadata.participants) & set(names)):
-                new_data[key] = g
-        return new_data
-
-    @staticmethod
-    def _filter_by_channel(
-        data: Dict[str, Conversation], groups: List[str]
-    ) -> Dict[str, Conversation]:
+        # TODO do we need all these conditions
+        if not channels or (isinstance(channels, list) and not channels[0]):
+            return data
         try:
-            new_data = {name: data[name] for name in groups}
+
+            new_data = {name: data[name] for name in channels}
             return new_data
         except KeyError:
             return {}
+
+    @staticmethod
+    def _filter_by_participants(
+        data: Dict[str, Conversation], participants: List[str] = None
+    ) -> Dict[str, Conversation]:
+        # TODO do we need all these conditions
+        if not participants or (isinstance(participants, list) and not participants[0]):
+            return data
+        new_data = {}
+        for key, g in data.items():
+            if list(set(g.metadata.participants) & set(participants)):
+                new_data[key] = g
+        return new_data
 
     @staticmethod
     def _get_channels_size(data) -> Dict[str, int]:
