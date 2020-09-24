@@ -1,15 +1,8 @@
-import argparse
-import os
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
 from miner.visualizer.adapters import PlotDataAdapter
-
-
-DATA_PATH = f"{os.getcwd()}/tests/test_data"
-# DATA_PATH = f"{os.getcwd()}/data"
 
 
 class Plotter:
@@ -33,9 +26,7 @@ class Plotter:
             stat=stat,
             **kwargs,
         )
-        df = pd.DataFrame({"date": index, "me": me, "partner": partner}).set_index(
-            "date"
-        )
+        df = pd.DataFrame({"date": index, "me": me, "partner": partner}).set_index("date")
 
         self._plot_time_series_data(
             df,

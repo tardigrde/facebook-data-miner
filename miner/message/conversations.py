@@ -6,8 +6,6 @@ from typing import List, Dict, Callable
 from miner.message.conversation import Conversation
 from miner.utils import utils, const, decorators
 
-DATA_PATH = f"{os.getcwd()}/data"
-
 
 class Conversations:
     """
@@ -56,9 +54,7 @@ class Conversations:
         )
         if not filtered_channels:
             return f"Could not filter for these channels: {channels}. Please double-check the channel names."
-        res = utils.stack_dfs(
-            *[data.get(channel).data for channel in filtered_channels]
-        )
+        res = utils.stack_dfs(*[data.get(channel).data for channel in filtered_channels])
         filtered_cols = (
             list(res.columns)
             if cols is None

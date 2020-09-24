@@ -1,12 +1,7 @@
-from datetime import datetime
-import tempfile
 import pytest
-import os
-
-from miner.utils import utils, command
 from helpers import lower_string, add_string, split_string, tempfile_tree
 
-TEST_DATA_PATH = f"{os.getcwd()}/test_data"
+from miner.utils import utils, command
 
 
 @pytest.fixture(scope="session")
@@ -63,13 +58,9 @@ class TestUtils:
         unsorted = utils.fill_dict(unsorted, "c", 4)
         unsorted = utils.fill_dict(unsorted, "a", 3)
         assert unsorted == {"b": 3, "a": 5, "c": 4}
-        sorted_desc = utils.sort_dict(
-            unsorted, func=lambda item: item[1], reverse=False
-        )
+        sorted_desc = utils.sort_dict(unsorted, func=lambda item: item[1], reverse=False)
         assert sorted_desc == {"b": 3, "c": 4, "a": 5}
-        sorted_asc = utils.sort_dict(
-            sorted_desc, func=lambda item: item[1], reverse=True
-        )
+        sorted_asc = utils.sort_dict(sorted_desc, func=lambda item: item[1], reverse=True)
         assert sorted_asc == {"a": 5, "c": 4, "b": 3}
 
 

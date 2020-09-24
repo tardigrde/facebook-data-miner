@@ -1,10 +1,5 @@
-import pytest
-import os
 import pandas as pd
-
-from miner.utils import utils
-
-TEST_DATA_PATH = f"{os.getcwd()}/test_data"
+import pytest
 
 
 # NOTE we don't know yet what happens when two friends have same name...

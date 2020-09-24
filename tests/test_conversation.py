@@ -1,17 +1,15 @@
-import pandas as pd
-import pytest
 import os
 
-from miner.message.conversation import Conversation
-from miner.utils import utils
+import pandas as pd
+import pytest
 
-TEST_DATA_PATH = f"{os.getcwd()}/test_data"
+from miner.message.conversation import Conversation
 
 
 @pytest.fixture(scope="session")
 def convo():
     return Conversation(
-        path=f"{TEST_DATA_PATH}/messages/inbox/tokehal_sdf7fs9d876/message_1.json"
+        path=f"{os.getcwd()}/test_data/messages/inbox/tokehal_sdf7fs9d876/message_1.json"
     )
 
 

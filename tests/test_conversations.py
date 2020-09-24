@@ -1,11 +1,4 @@
-import pytest
-from miner.message.conversations import Conversations
 from miner.message.conversation import Conversation
-from miner.utils import utils
-
-import os
-
-TEST_DATA_PATH = f"{os.getcwd()}/test_data"
 
 
 def test_if_convos_has_correct_length(conversations):

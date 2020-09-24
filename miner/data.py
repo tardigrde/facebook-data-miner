@@ -1,11 +1,8 @@
-import os
 from typing import List, Dict, Callable, Any, NamedTuple
 
 import pandas as pd
 
 from miner.utils import utils, command
-
-DATA_PATH = f"{os.getcwd()}/data"
 
 
 class FacebookData:
