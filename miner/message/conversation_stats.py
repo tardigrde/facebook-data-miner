@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import math
 from typing import Union, List, Dict, Any
 
@@ -7,8 +8,11 @@ import numpy as np
 import pandas as pd
 import polyglot
 from polyglot.detect import Detector
+from polyglot.detect.base import logger as polyglot_logger
 
-from miner.utils import utils, period_manager, command
+from miner.utils import utils, period_manager, command, const
+
+polyglot_logger.setLevel("ERROR")
 
 
 class ConversationStats:
@@ -23,7 +27,10 @@ class ConversationStats:
         self._stat_sum = self._stats_df.sum()
 
     def __repr__(self) -> str:
-        return f"Stats for: {self.number_of_channels} channels"
+        return f"ConversationStats for {self.number_of_channels} channels"
+
+    def __len__(self):
+        return len(self.df)
 
     def filter(self, df: pd.DataFrame = None, **kwargs) -> ConversationStats:
         if df is None:
@@ -37,7 +44,7 @@ class ConversationStats:
 
     @property
     def channels(self) -> List[str]:
-        return list(self.df.partner.unique())
+        return list(self.df.partner.unique()) if "partner" in self.df else []
 
     @property
     def number_of_channels(self) -> int:
@@ -45,7 +52,7 @@ class ConversationStats:
 
     @property
     def contributors(self) -> List[str]:
-        return list(self.df.sender_name.unique())
+        return list(self.df.sender_name.unique()) if "sender_name" in self.df else []
 
     @property
     def number_of_contributors(self) -> int:
@@ -53,41 +60,49 @@ class ConversationStats:
 
     @property
     def creator(self) -> str:
+        if self.number_of_channels < 1:
+            return ""
         if self.number_of_channels > 1:
-            raise utils.TooManyChannelsError("Too many `channels` to calculate this.")
+            logging.warning("Too many `channels` to calculate this.")
+            # raise utils.TooManyChannelsError("Too many `channels` to calculate this.")
+            return ""
         return self.df.iloc[0].sender_name
 
     @property
     def created_by_me(self) -> bool:
-        if self.number_of_channels > 1:
-            raise utils.TooManyChannelsError("Too many `channels` to calculate this.")
         return self.creator == self.config.get("profile").name
 
     @property
     def start(self) -> np.datetime64:
-        return self.df.index[0]
+        return self.df.index[0] if len(self.df) else None
 
     @property
     def end(self) -> np.datetime64:
-        return self.df.index[-1]
+        return self.df.index[-1] if len(self.df) else None
 
     @property
-    def messages(self) -> pd.Series:
-        return self.df.content.dropna()
+    def messages(self) -> pd.DataFrame:
+        # return self.df.content.dropna() if "content" in self.df else pd.Series()
+        return self.df
 
     @property
     def text(self) -> pd.Series:
-        return self.df[self.df.content.notna()].content.dropna()
+        return (
+            self.df[self.df.content.notna()].content.dropna()
+            if "content" in self.df
+            else pd.Series()
+        )
 
     @property
     def media(self) -> pd.Series:
-        return self.df[self.df.content.isna()][
-            ["photos", "videos", "audio_files", "gifs", "files"]
-        ]
+        if any([item in self.df.columns for item in const.MEDIA_DIRS]):
+            return self.df[self.df.content.isna()][const.MEDIA_DIRS]
+        else:
+            return pd.Series()
 
     @property
     def words(self) -> pd.Series:
-        return self._get_words(self.messages)
+        return self._get_words(self.text)
 
     @property
     def mc(self) -> int:
@@ -111,7 +126,7 @@ class ConversationStats:
 
     @property
     def unique_mc(self) -> int:
-        return len(self.messages.unique())
+        return len(self.text.unique())
 
     @property
     def unique_wc(self) -> int:
@@ -127,16 +142,28 @@ class ConversationStats:
 
     @property
     def most_used_msgs(self) -> pd.Series:
-        return self.messages.value_counts()
+        """
+
+        @return:
+        """
+        return (
+            self.text.value_counts()
+            .rename_axis("unique_values")
+            .reset_index(name="counts")
+        )
 
     @property
     def most_used_words(self) -> pd.Series:
-        return self.words.value_counts()
+        return (
+            self.words.value_counts()
+            .rename_axis("unique_values")
+            .reset_index(name="counts")
+        )
 
     @property
     def wc_in_messages(self):
         wcs = []
-        for msg in self.messages:
+        for msg in self.text:
             length = len(msg.split())
             wcs.append(length)
         return wcs
@@ -144,15 +171,21 @@ class ConversationStats:
     @property
     def cc_in_messages(self):
         ccs = []
-        for msg in self.messages:
+        for msg in self.text:
             ccs.append(len(msg))
         return ccs
 
     @property
-    def reacted_messages(self):
-        if not "reactions" in self.df:
-            return pd.Series()
-        return self.df[self.df.reactions.notna()]
+    def reacted_messages(self) -> pd.Series:
+        return (
+            self.df[self.df.reactions.notna()]
+            if "reactions" in self.df
+            else pd.Series()
+        )
+
+    @property
+    def portion_of_reacted(self):
+        return len(self.reacted_messages) * 100 / self.__len__()
 
     @property
     def files(self) -> pd.Series:
@@ -182,35 +215,60 @@ class ConversationStats:
     @property
     def message_language_map(self):
         map = {}
-        for msg in self.messages:
+        for msg in self.text:
             try:
-                map[msg] = Detector(msg)
+                detect = Detector(msg)
+                map[msg] = {
+                    "lang": detect.language.name,
+                    "confidence": detect.language.confidence,
+                }
             except polyglot.detect.base.UnknownLanguage:
                 map[msg] = None
         return map
 
-    def media_message_extractor(self, kind: str) -> pd.Series:
-        if kind not in self.df:
-            return pd.Series([])
-        return self.df[kind].dropna()
+    @property
+    def message_language_ratio(self):
+        count_dict = {}
+        for v in self.message_language_map.values():
+            if not v:
+                utils.fill_dict(count_dict, "Not detected", 1)
+                continue
+            count_dict = utils.fill_dict(count_dict, v.get("lang"), 1)
+        count_dict = utils.sort_dict(
+            count_dict, func=lambda item: item[1], reverse=True
+        )
+        percent_dict = utils.get_percent_dict(count_dict)
+        # NOTE top is 100 languages
+        count_dict, percent_dict = utils.get_top_N_people(count_dict, percent_dict, 100)
 
-    def get_grouped_time_series_data(self, period: str = "y") -> pd.DataFrame:
+        return {"count": count_dict, "percent": percent_dict}
+
+    def media_message_extractor(self, kind: str) -> pd.Series:
+        return self.df[kind].dropna() if kind in self.df else pd.Series()
+
+    def get_grouped_time_series_data(self, timeframe: str = "y") -> pd.DataFrame:
+        if not len(self._stats_df):
+            return pd.DataFrame()
         grouping_rule = period_manager.PERIOD_MANAGER.get_grouping_rules(
-            period, self._stats_df
+            timeframe, self._stats_df
         )
         groups_df = self._stats_df.groupby(grouping_rule).sum()
         return period_manager.PERIOD_MANAGER.set_df_grouping_indices_to_datetime(
-            groups_df, period=period
+            groups_df, timeframe=timeframe
         )
 
-    def stat_per_period(self, period: str, statistic: str = "mc") -> Dict:
-        interval_stats = self.get_grouped_time_series_data(period=period)
-        return self._count_stat_for_period(interval_stats, period, statistic=statistic)
+    def stats_per_timeframe(self, timeframe: str, statistic: str = "mc") -> Dict:
+        interval_stats = self.get_grouped_time_series_data(timeframe=timeframe)
+        return self._count_stat_for_period(
+            interval_stats, timeframe, statistic=statistic
+        )
 
     @staticmethod
     def _get_words(messages) -> pd.Series:
-        token_list = messages.str.lower().str.split()
         words = []
+        if not len(messages):
+            return pd.Series(words)
+        token_list = messages.str.lower().str.split()
         for tokens in token_list:
             for token in tokens:
                 words.append(token)
@@ -219,6 +277,8 @@ class ConversationStats:
     def _count_stat_for_period(self, df, period, statistic):
         # DOES too much
         periods = {}
+        if not len(df):
+            return periods
         periods = utils.prefill_dict(
             periods,
             utils.get_period_map(self.config.get("profile").registration_timestamp).get(
@@ -263,24 +323,33 @@ class ConversationStats:
             me=self.config.get("profile").name,
         )
         filter_messages.register_command(utils.filter_by_date, **kwargs)
+        filter_messages.register_command(utils.filter_empty_cols)
         return filter_messages(df)
 
 
 class StatsDataframe:
-    def __init__(self,) -> None:
-        self.df = pd.DataFrame()
-
     def __call__(self, df) -> pd.DataFrame:
+        self.df = pd.DataFrame(index=df.index)
+
         # all message count
-        self.df["mc"] = df.content.map(lambda x: 1)
+        self.df["mc"] = pd.Series([1 for _ in range(len(df))]).values if len(df) else 0
+
         # text message count
-        self.df["text_mc"] = df.content.map(self.calculate_text_mc)
+        self.df["text_mc"] = (
+            df.content.map(self.calculate_text_mc).values if "content" in df else 0
+        )
         # media message count
-        self.df["media_mc"] = df.content.map(self.calculate_media_mc)
+        self.df["media_mc"] = (
+            df.content.map(self.calculate_media_mc).values if "content" in df else 0
+        )
         # word count
-        self.df["wc"] = df.content.map(self.calculate_wc)
+        self.df["wc"] = (
+            df.content.map(self.calculate_wc).values if "content" in df else 0
+        )
         # cc
-        self.df["cc"] = df.content.map(self.calculate_cc)
+        self.df["cc"] = (
+            df.content.map(self.calculate_cc).values if "content" in df else 0
+        )
         return self.df
 
     @staticmethod

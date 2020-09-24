@@ -42,19 +42,19 @@ class TestUtils:
         expected_date = utils.dt(y=2020, m=8, d=21, h=23, minute=50, second=30)
         assert expected_date == utils.ts_to_date(date)
 
-    def test_walk_directory_and_search_dirs_that_contain_(self):
-        # TODO needs better testing
-        parent = utils.walk_directory_and_search(
-            "/tmp", utils.get_parent_directory_of_file, ".json", ""
-        )
-        assert "/tmp" in list(parent)
-
     def test_walk_directory_and_search_jsons(self, tempfiles):
         jsons_found = utils.walk_directory_and_search(
             "/tmp", utils.get_all_jsons, ".json", ""
         )
         assert len(tempfiles) == 5
+
         assert len(list(set(tempfiles) & set(jsons_found))) == 5
+
+    def test_walk_directory_and_search_dirs_that_contain_(self):
+        parent = utils.walk_directory_and_search(
+            "/tmp", utils.get_parent_directory_of_file_with_extension, ".json", ""
+        )
+        assert "/tmp" in list(parent)
 
     def test_fill_dict_and_sort_dict(self):
         unsorted = {}

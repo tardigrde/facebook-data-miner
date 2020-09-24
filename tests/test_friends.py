@@ -7,7 +7,7 @@ from miner.utils import utils
 TEST_DATA_PATH = f"{os.getcwd()}/test_data"
 
 
-# TODO what happens when two friends have same name??
+# NOTE we don't know yet what happens when two friends have same name...
 @pytest.fixture()
 def expected_friends():
     return {
@@ -44,7 +44,7 @@ def test_has_metadata(friends):
 
 
 def test_metadata_len(friends):
-    assert friends.metadata.length is 9
+    assert friends.metadata.length == 9
 
 
 def test_metadata_path(friends):

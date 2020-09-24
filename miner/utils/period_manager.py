@@ -5,14 +5,13 @@ from dateutil.relativedelta import relativedelta
 from miner.utils import const
 
 
+# NOTE this class is a little bit to verbose
 class PeriodManager:
-    # TODO clear this class up
-    #  maybe subclasses? do we need it?
     @staticmethod
-    def set_df_grouping_indices_to_datetime(df, period):
+    def set_df_grouping_indices_to_datetime(df, timeframe):
         datetimes = []
         for index, row in df.iterrows():
-            key = PERIOD_MANAGER.ordinal_to_datetime(period, index)
+            key = PERIOD_MANAGER.ordinal_to_datetime(timeframe, index)
             datetimes.append(key)
 
         df["timestamp"] = datetimes
@@ -20,6 +19,7 @@ class PeriodManager:
 
     @staticmethod
     def get_grouping_rules(period, df):
+
         if period == "y":
             return [df.index.year]
         if period == "m":

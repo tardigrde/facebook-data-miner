@@ -45,7 +45,7 @@ def test_title(convo):
 
 
 def test_participants(convo, app):
-    assert convo.metadata.participants == ["Tőke Hal", app.config.get("profile").name]
+    assert convo.metadata.participants == ["Tőke Hal", app._config.get("profile").name]
 
 
 def test_thread_path(convo):

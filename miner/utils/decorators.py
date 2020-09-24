@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from miner.utils import const
+from miner.utils import const, utils
 
 
 class string_kwarg_to_list_converter:
@@ -13,7 +13,9 @@ class string_kwarg_to_list_converter:
             if not value:
                 return func(*args, **kwargs)
             if isinstance(value, str):
-                kwargs[self.kw_arg] = [value]
+                kwargs[self.kw_arg] = value.split(";!;") if ";!;" in value else [value]
+            if isinstance(value, tuple):
+                kwargs[self.kw_arg] = list(value)
             if not isinstance(kwargs[self.kw_arg], list):
                 raise ValueError(
                     f"Parameter `{self.kw_arg}` should be type of Union[str, List[str]], got: {type(kwargs[self.kw_arg])}"
@@ -21,6 +23,27 @@ class string_kwarg_to_list_converter:
             return func(*args, **kwargs)
 
         return wrapper
+
+
+def outputter(func):
+    def wrapper(*args, **kwargs):
+        res = func(*args, **kwargs)
+        if not len(res):
+            return
+        return utils.df_to_file(kwargs.get("output"), res)
+
+    return wrapper
+
+
+def kind_checker(func):
+    def wrapper(*args, **kwargs):
+        if not kwargs.get("kind") in ("private", "group"):
+            raise ValueError(
+                f"{kwargs.get('kind')} has to be either `private` or `group`!"
+            )
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 def column_checker(func):
@@ -55,13 +78,11 @@ def attribute_checker(func):
 
 def start_end_period_checker(func):
     def wrapper(*args, **kwargs):
-        if (
-            kwargs.get("start") is None
-            and kwargs.get("end") is None
-            and kwargs.get("period") is None
-        ):
+        if kwargs.get("start") is None and kwargs.get("end") is None:
             kwargs["start"] = const.FACEBOOK_FOUNDATION_DATE
             kwargs["end"] = datetime.now()
+            return func(*args, **kwargs)
+
         if kwargs.get("start") and isinstance(kwargs.get("start"), str):
             kwargs["start"] = datetime.strptime(kwargs.get("start"), const.DATE_FORMAT)
         if kwargs.get("end") and isinstance(kwargs.get("end"), str):

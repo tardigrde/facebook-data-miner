@@ -1,5 +1,7 @@
 import copy
+import inspect
 import json
+import logging
 import math
 import os
 import re
@@ -7,7 +9,7 @@ import time
 import zipfile
 from datetime import datetime
 from itertools import islice
-from typing import Union, List, Dict, Callable
+from typing import Union, List, Dict, Callable, Tuple
 
 import pandas as pd
 
@@ -26,8 +28,15 @@ class NonExistentChannel(Exception):
     pass
 
 
-def get_group_convo_map(data):
+def get_properties_of_a_class(class_ref):
+    props = inspect.getmembers(class_ref, lambda o: isinstance(o, property))
+    return [p[0] for p in props]
+
+
+def get_participant_to_channel_mapping(data):
     group_convo_map = {}
+    if not data:
+        return group_convo_map
     for channel, convo in data.items():
         for participant in convo.metadata.participants:
             group_convo_map = fill_dict(group_convo_map, participant, [channel])
@@ -59,6 +68,46 @@ def read_json(file) -> Union[Dict, List]:
 def dump_to_json(data=None, file=None):
     with open(file, "w", encoding="utf8") as f:
         json.dump(data, f, ensure_ascii=False)
+
+
+def to_stdout(path, data):
+    if path == "json":
+        return data.to_json()
+    return data.to_csv()
+
+
+def basedir_exists(path):
+    if not os.path.isdir(os.path.dirname(path)):
+        return False
+    return True
+
+
+def rewrite(path):
+    if os.path.exists(path):
+        logging.warning("File already exist!")
+        answer = input(f"Overwrite {path}? (y/n)")
+        if answer == "y":
+            return True
+        else:
+            return False
+    return True
+
+
+def df_to_file(path, data):
+    if path is None or path in ("csv", "json"):
+        return to_stdout(path, data)
+
+    if not basedir_exists(path):
+        return f"Directory does not exist: `{os.path.dirname(path)}`"
+
+    if not rewrite(path):
+        return ""
+
+    if path.endswith(".csv"):
+        data.to_csv(path)
+    elif path.endswith(".json"):
+        data.to_json(path)
+    return f"Data was written to {path}"
 
 
 def ts_to_date(date):
@@ -119,7 +168,9 @@ def unify_dict_keys(first, second):
     return first, second
 
 
-def get_parent_directory_of_file(root, files, extension, contains_string) -> str:
+def get_parent_directory_of_file_with_extension(
+    root, files, extension, contains_string
+) -> str:
     for file_name in files:
         if (
             file_name.endswith(extension)
@@ -216,7 +267,8 @@ def filter_by_date(df: pd.DataFrame, start=None, end=None, period=None):
     @param period: one of {y|m|d|h}
     @return:
     """
-    now = datetime.now()
+    if not len(df):
+        return df
     if start and end:
         return df.loc[start:end]
     elif start and not end and not period:
@@ -234,13 +286,9 @@ def filter_by_date(df: pd.DataFrame, start=None, end=None, period=None):
 def filter_by_channel(
     df: pd.DataFrame, column: str = "partner", channels: Union[str, List[str]] = None
 ):
-    if not channels:
+    if not channels or not len(df):
         return df
-
-    match = df[df[column].isin(channels)]
-    if match is None or len(match) == 0:
-        raise NonExistentChannel("None of the `channels` you specified exist.")
-    return match
+    return handle_filter_df(df, column, channels)
 
 
 @decorators.column_checker
@@ -251,15 +299,31 @@ def filter_by_sender(
     senders: Union[str, List[str]] = None,
     me: str = None,
 ):
-    if not senders:
+    if not senders or not len(df):
         return df
     if senders == ["me"]:
         return df[df[column] == me]
     elif senders == ["partner"]:
         return df[df[column] != me]
     elif senders:
-        match = df[df[column].isin(senders)]
-        return match
+        return handle_filter_df(df, column, senders)
+
+
+def handle_filter_df(df, column, filter_params):
+    match = df[df[column].isin(filter_params)]
+    if match is None or len(match) == 0:
+        logging.debug(
+            f"None of the filter parameters ({filter_params}) you specified exist in this df's `{column}` column."
+        )
+        return df[0:0]
+    return match
+
+
+def filter_empty_cols(df: pd.DataFrame):
+    non_null_columns = [col for col in df.columns if df.loc[:, col].notna().any()]
+    if len(df) or len(df.columns):
+        df = df[non_null_columns]
+    return df
 
 
 @decorators.start_end_period_checker
@@ -273,3 +337,24 @@ def generate_date_series(join_date, period="y", start=None, end=None):
         dates.append(intermediate)
         intermediate = intermediate + const.DELTA_MAP.get(period)
     return dates
+
+
+def get_count_dict(dict, statistic) -> Dict[str, int]:
+    count_dict = {}
+    for name, stats in dict.items():
+        count_dict = fill_dict(count_dict, name, getattr(stats, statistic))
+    count_dict = sort_dict(count_dict, func=lambda item: item[1], reverse=True)
+    return count_dict
+
+
+def get_percent_dict(count_dict) -> Dict[str, float]:
+    hundred = sum(list(count_dict.values()))
+    return {name: value * 100 / hundred for name, value in count_dict.items()}
+
+
+def get_top_N_people(
+    count_dict, percent_dict, top
+) -> Tuple[Dict[str, int], Dict[str, float]]:
+    count_dict = {k: count_dict[k] for k in list(count_dict.keys())[:top]}
+    percent_dict = {k: percent_dict[k] for k in list(percent_dict.keys())[:top]}
+    return count_dict, percent_dict
