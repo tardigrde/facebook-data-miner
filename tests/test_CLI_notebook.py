@@ -9,7 +9,7 @@ fixture.diff_replace = (("/cells/*/outputs", "\\r", ""),)
 fixture.diff_ignore = ("/cells/*/execution_count",)
 
 
-def test_notebook_output():
-    with importlib_resources.path(notebooks, "CLI.ipynb") as path:
-        result = fixture.check(str(path))
-        print(result)
+# def test_notebook_output():
+#     with importlib_resources.path(notebooks, "CLI.ipynb") as path:
+#         result = fixture.check(str(path))
+#         print(result)

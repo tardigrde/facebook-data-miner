@@ -83,7 +83,10 @@ class People:
     def _convert_conversation_partners_to_persons(
         conversations: Conversations,
     ) -> Dict[str, Person]:
-        group_convo_map = utils.get_group_convo_map(conversations.group)
+        participant_to_channel_map = utils.get_participant_to_channel_mapping(
+            conversations.group
+        )
+
         persons = {}
         # looping over private message participants
         for name, convo in conversations.private.items():
@@ -92,12 +95,14 @@ class People:
                 messages=convo.data,
                 thread_path=convo.metadata.thread_path,
                 media_dir=convo.metadata.media_dir,
-                member_of=group_convo_map.get(name) or [],
+                member_of=participant_to_channel_map.get(name) or [],
             )
         # looping over group message participants
-        for name, convos in group_convo_map.items():
+        for name, convos in participant_to_channel_map.items():
             if not persons.get(name):
-                persons[name] = Person(name=name, member_of=group_convo_map[name])
+                persons[name] = Person(
+                    name=name, member_of=participant_to_channel_map[name]
+                )
         return persons
 
 

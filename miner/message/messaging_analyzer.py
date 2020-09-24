@@ -10,6 +10,8 @@ from miner.message.conversation_stats import ConversationStats
 from miner.message.conversations import Conversations
 from miner.utils import utils, decorators, command
 
+pd.set_option("mode.chained_assignment", "raise")
+
 
 class MessagingAnalyzerManager:
     def __init__(self, conversations: Conversations, config: Dict[str, Any]) -> None:
@@ -18,7 +20,6 @@ class MessagingAnalyzerManager:
         self.private_messaging_analyzer = MessagingAnalyzer(
             conversations.private, config, "private"
         )
-        # TODO maybe move group_convo_map creation to here, not conversations
         self.group_messaging_analyzer = MessagingAnalyzer(
             conversations.group, config, "group"
         )
@@ -37,7 +38,7 @@ class MessagingAnalyzerManager:
 
     @property
     def people_i_have_group_convo_with(self) -> List[str]:
-        return list(self.group_messaging_analyzer.group_convo_map.keys())
+        return list(self.group_messaging_analyzer.participant_to_channel_map.keys())
 
     def get_who_i_have_private_convo_with_from_a_group(
         self, group_name: str
@@ -69,21 +70,23 @@ class MessagingAnalyzerManager:
         group = self.group_messaging_analyzer.filter(participants=name)
         return private, group
 
-    def is_priv_msg_first_then_group(self, name: str) -> bool:
-        # TODO test
+    def is_private_convo_first_then_group(self, name: str) -> bool:
         private = self.private_messaging_analyzer.filter(channels=name)
         group = self.group_messaging_analyzer.filter(participants=name)
+
         if group is None or not len(group):
             return True
-        g_start_times = []
 
+        group_start_times = []
         for g in group.data.keys():
             start_time = self.group_messaging_analyzer.filter(channels=g).stats.start
             if not start_time:
                 continue
-            g_start_times.append(start_time)
+            group_start_times.append(start_time)
 
-        return any([private.stats.start > group_start for group_start in g_start_times])
+        return any(
+            [private.stats.start > group_start for group_start in group_start_times]
+        )
 
     def get_stats_together(self, name: str) -> ConversationStats:
         private, group = self.all_interactions(name=name)
@@ -108,19 +111,8 @@ class MessagingAnalyzer:
         self.df: pd.DataFrame = self._get_df(self.data)
 
         self._stats = ConversationStats(self.df, config)
-        # TODO maybe rename
-        self.group_convo_map = utils.get_group_convo_map(data)  # name to convo map
-        """
-        TODO why I have this much
-        TODO also could be a df. groups as indices
-        (fb) levente@debian:~/projects/facebook-data-miner$ ./miner/app.py analyzer private - group_convo_map
-        Tőke Hal:      ["Tőke Hal"]
-        Levente Csőke: ["Benedek Elek", "Tőke Hal", "Foo Bar", "Teflon Musk"]
-        Foo Bar:       ["Foo Bar"]
-        Teflon Musk:   ["Teflon Musk"]
-        Benedek Elek:  ["Benedek Elek"]
 
-        """
+        self.participant_to_channel_map = utils.get_participant_to_channel_mapping(data)
 
         self._stats_per_channel = self._get_stats_per_channel()
         self._stats_per_participant = self._get_stats_per_participant()
@@ -185,36 +177,30 @@ class MessagingAnalyzer:
         stats = self.stats.filter(**kwargs)
         return getattr(stats, attribute)
 
-    # TODO rename to contributos or participants
-    # TODO have a param what to return : percent or count
-    # TODO break this function up into pieces
-    def get_ranking_of_senders_by_convo_stats(
+    def get_ranking_of_people_by_convo_stats(
         self, statistic: str = "mc", top: int = 20
-    ) -> Dict[str, Union[Union[dict, dict], Any]]:
-        count_dict = {}
-        stats_per_people = (
-            self.stats_per_participant if self.is_group else self.stats_per_channel
-        )
+    ) -> Dict[str, Union[Dict[str, int], Dict[str, float]]]:
+
+        stats_per_people = self.get_stats_per_people()
 
         if len(stats_per_people) == 1:
             raise utils.TooFewPeopleError("Can't rank one person.")
 
-        for name, stats in stats_per_people.items():
-            count_dict = utils.fill_dict(count_dict, name, getattr(stats, statistic))
-            count_dict = utils.sort_dict(
-                count_dict, func=lambda item: item[1], reverse=True
-            )
-
-        hundred = sum(list(count_dict.values()))
-        percent_dict = {
-            name: value * 100 / hundred for name, value in count_dict.items()
-        }
+        count_dict = utils.get_count_dict(stats_per_people, statistic)
+        percent_dict = utils.get_percent_dict(count_dict)
 
         if top:
-            count_dict = {k: count_dict[k] for k in list(count_dict.keys())[:top]}
-            percent_dict = {k: percent_dict[k] for k in list(percent_dict.keys())[:top]}
+            count_dict, percent_dict = utils.get_top_N_people(
+                count_dict, percent_dict, top
+            )
 
         return {"count": count_dict, "percent": percent_dict}
+
+    def get_stats_per_people(self):
+        stats_per_people = (
+            self.stats_per_participant if self.is_group else self.stats_per_channel
+        )
+        return stats_per_people
 
     @decorators.string_kwarg_to_list_converter("channels")
     @decorators.string_kwarg_to_list_converter("participants")
@@ -254,11 +240,9 @@ class MessagingAnalyzer:
     def _filter_by_channels(
         data: Dict[str, Conversation], channels: List[str] = None
     ) -> Dict[str, Conversation]:
-        # TODO do we need all these conditions
-        if not channels or (isinstance(channels, list) and not channels[0]):
+        if not channels:
             return data
         try:
-
             new_data = {name: data[name] for name in channels}
             return new_data
         except KeyError:
@@ -268,8 +252,7 @@ class MessagingAnalyzer:
     def _filter_by_participants(
         data: Dict[str, Conversation], participants: List[str] = None
     ) -> Dict[str, Conversation]:
-        # TODO do we need all these conditions
-        if not participants or (isinstance(participants, list) and not participants[0]):
+        if not participants:
             return data
         new_data = {}
         for key, g in data.items():

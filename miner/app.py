@@ -41,7 +41,6 @@ class App:
         self._people = self._get_people()
 
     def friends(self, sort="date", dates=True, output=None):
-        # TODO move most of this to friends
         """
         Mi van
 
@@ -75,9 +74,9 @@ class App:
     def analyzer(
         self,
         kind: str = None,
-        channels: str = "",
-        participants: str = "",
-        senders: str = "",
+        channels: str = None,
+        participants: str = None,
+        senders: str = None,
         start: Union[str, datetime] = None,
         end: Union[str, datetime] = None,
         period: str = None,
@@ -99,7 +98,7 @@ class App:
         return TableCreator(self._analyzer, self._config)
 
     def plot(self) -> Plotter:
-        # TODO LATER save fig to outpout
+        # NOTE saving images to output is yet to be implemented
         return Plotter(self._analyzer, self._config)
 
     def people(self):
@@ -129,13 +128,10 @@ class App:
 
 
 if __name__ == "__main__":
-    # main(DATA_PATH)
-    # TODO
-    # app = Fire(App, name='Facebook Data Miner')
     app = App(DATA_PATH)
-    Fire(app, name="Facebook-Data-Miner")
-    # try:
-    #     Fire(app, name='Facebook-Data-Miner')
-    # except Exception as e:
-    #     traceback.print_tb(e.__traceback__)
-    #     logging.error(f"An exception has happened:\n{e}")
+    # Fire(app, name="Facebook-Data-Miner")
+    try:
+        Fire(app, name="Facebook-Data-Miner")
+    except Exception as e:
+        traceback.print_tb(e.__traceback__)
+        logging.error(f"An exception has happened:\n{e}")

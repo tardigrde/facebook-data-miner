@@ -5,12 +5,12 @@ from miner.message.conversation_stats import ConversationStats
 
 
 @pytest.fixture(scope="session")
-def group_stats(group_msg_analyzer):
+def group_stats(ganalyzer):
     def _stats(**kwargs):
         if "names" in kwargs:
-            analyzer = group_msg_analyzer.filter(participants=kwargs.get("names"))
+            analyzer = ganalyzer.filter(participants=kwargs.get("names"))
         else:
-            analyzer = group_msg_analyzer
+            analyzer = ganalyzer
         if any([kw in kwargs for kw in ("channel", "subject", "start", "end")]):
             return analyzer._stats.filter(**kwargs)
         else:
@@ -20,8 +20,8 @@ def group_stats(group_msg_analyzer):
 
 
 class TestGroupStatisticsWithFiltering:
-    def test_stats_marathon(self, group_msg_analyzer):
-        stats = group_msg_analyzer.filter(channels="marathon")._stats
+    def test_stats_marathon(self, ganalyzer):
+        stats = ganalyzer.filter(channels="marathon")._stats
 
         assert isinstance(stats, ConversationStats)
 
@@ -34,8 +34,8 @@ class TestGroupStatisticsWithFiltering:
         assert stats.unique_mc == 7
         assert stats.unique_wc == 19
 
-    def test_stats_biggest_group_filtered(self, group_msg_analyzer):
-        group_stats = group_msg_analyzer.filter(
+    def test_stats_biggest_group_filtered(self, ganalyzer):
+        group_stats = ganalyzer.filter(
             channels="Tőke Hal, Foo Bar, Donald Duck and 2 others"
         )._stats
 

@@ -16,15 +16,15 @@ class TableCreator:
         table = self._get_table(fields)
         return self._add_content(table, stats)
 
-    def stats_per_period(self, kind: str = "private", period: str = "y"):
-        fields, stats_mc = self._data.get_stat_per_period_data(
-            kind=kind, period=period, stat="mc"
+    def stats_per_timeframe(self, kind: str = "private", timeframe: str = "y"):
+        fields, stats_mc = self._data.get_stat_per_timeframe_data(
+            kind=kind, timeframe=timeframe, stat="mc"
         )
-        _, stats_wc = self._data.get_stat_per_period_data(
-            kind=kind, period=period, stat="wc"
+        _, stats_wc = self._data.get_stat_per_timeframe_data(
+            kind=kind, timeframe=timeframe, stat="wc"
         )
-        _, stats_cc = self._data.get_stat_per_period_data(
-            kind=kind, period=period, stat="cc"
+        _, stats_cc = self._data.get_stat_per_timeframe_data(
+            kind=kind, timeframe=timeframe, stat="cc"
         )
 
         # title = f"{const.HUMAN_READABLE_PERIODS.get(period)} statistics"

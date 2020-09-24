@@ -74,7 +74,7 @@ class Conversation(FacebookData):
             logging.warning("WARNING! Missing thread_path for messages or media.")
 
     def _split_media_column(self, data: pd.DataFrame) -> pd.DataFrame:
-        # TODO not yet used but can b
+        # NOTE: THIS DOES NOTHING ATM; later can be used to prettify media output
         # 2020-03-09 11:48:48.047,"[{'uri': 'messages/inbox/FooBar_n5fd6gG50h/audio/audioclip15905232600004598_2621787141481389.mp4', 'creation_timestamp': 1583750927}]"
         # if intersection := list(set(data) & set(const.MEDIA_DIRS)):
         #     media_cols = data.get(intersection)

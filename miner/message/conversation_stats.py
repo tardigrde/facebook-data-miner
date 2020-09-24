@@ -8,8 +8,11 @@ import numpy as np
 import pandas as pd
 import polyglot
 from polyglot.detect import Detector
+from polyglot.detect.base import logger as polyglot_logger
 
-from miner.utils import utils, period_manager, command
+from miner.utils import utils, period_manager, command, const
+
+polyglot_logger.setLevel("ERROR")
 
 
 class ConversationStats:
@@ -30,7 +33,6 @@ class ConversationStats:
         return len(self.df)
 
     def filter(self, df: pd.DataFrame = None, **kwargs) -> ConversationStats:
-        # TODO this does not work if period = 'y'
         if df is None:
             df = self.df
         df = self._get_filtered_df(df, **kwargs)
@@ -79,9 +81,9 @@ class ConversationStats:
         return self.df.index[-1] if len(self.df) else None
 
     @property
-    def messages(self) -> pd.Series:
-        # TODO this only gets content not media messages
-        return self.df.content.dropna() if "content" in self.df else pd.Series()
+    def messages(self) -> pd.DataFrame:
+        # return self.df.content.dropna() if "content" in self.df else pd.Series()
+        return self.df
 
     @property
     def text(self) -> pd.Series:
@@ -93,18 +95,14 @@ class ConversationStats:
 
     @property
     def media(self) -> pd.Series:
-        # TODO is this OK?
-        return (
-            self.df[self.df.content.isna()][
-                ["photos", "videos", "audio_files", "gifs", "files"]
-            ]
-            if self.df.get(["photos", "videos", "audio_files", "gifs", "files"])
-            else pd.Series()
-        )
+        if any([item in self.df.columns for item in const.MEDIA_DIRS]):
+            return self.df[self.df.content.isna()][const.MEDIA_DIRS]
+        else:
+            return pd.Series()
 
     @property
     def words(self) -> pd.Series:
-        return self._get_words(self.messages)
+        return self._get_words(self.text)
 
     @property
     def mc(self) -> int:
@@ -128,7 +126,7 @@ class ConversationStats:
 
     @property
     def unique_mc(self) -> int:
-        return len(self.messages.unique())
+        return len(self.text.unique())
 
     @property
     def unique_wc(self) -> int:
@@ -145,34 +143,27 @@ class ConversationStats:
     @property
     def most_used_msgs(self) -> pd.Series:
         """
-        TODO bad format?
-        (fb) levente@debian:~/projects/facebook-data-miner$ ./miner/app.py analyzer group  - most_used_msgs
-        ,content
-        ok,2
-        what do you test,2
-        test,2
-        basic group messages,2
-        i start today,1
-        blabla,1
-        You named the group marathon.,1
-        yapp yapp :D,1
-        hmmm,1
-        we could go but running is free,1
-        marathon?,1
-        :D,1
 
         @return:
         """
-        return self.messages.value_counts()
+        return (
+            self.text.value_counts()
+            .rename_axis("unique_values")
+            .reset_index(name="counts")
+        )
 
     @property
     def most_used_words(self) -> pd.Series:
-        return self.words.value_counts()
+        return (
+            self.words.value_counts()
+            .rename_axis("unique_values")
+            .reset_index(name="counts")
+        )
 
     @property
     def wc_in_messages(self):
         wcs = []
-        for msg in self.messages:
+        for msg in self.text:
             length = len(msg.split())
             wcs.append(length)
         return wcs
@@ -180,7 +171,7 @@ class ConversationStats:
     @property
     def cc_in_messages(self):
         ccs = []
-        for msg in self.messages:
+        for msg in self.text:
             ccs.append(len(msg))
         return ccs
 
@@ -191,6 +182,10 @@ class ConversationStats:
             if "reactions" in self.df
             else pd.Series()
         )
+
+    @property
+    def portion_of_reacted(self):
+        return len(self.reacted_messages) * 100 / self.__len__()
 
     @property
     def files(self) -> pd.Series:
@@ -220,30 +215,53 @@ class ConversationStats:
     @property
     def message_language_map(self):
         map = {}
-        for msg in self.messages:
+        for msg in self.text:
             try:
-                map[msg] = Detector(msg)
+                detect = Detector(msg)
+                map[msg] = {
+                    "lang": detect.language.name,
+                    "confidence": detect.language.confidence,
+                }
             except polyglot.detect.base.UnknownLanguage:
                 map[msg] = None
         return map
 
+    @property
+    def message_language_ratio(self):
+        count_dict = {}
+        for v in self.message_language_map.values():
+            if not v:
+                utils.fill_dict(count_dict, "Not detected", 1)
+                continue
+            count_dict = utils.fill_dict(count_dict, v.get("lang"), 1)
+        count_dict = utils.sort_dict(
+            count_dict, func=lambda item: item[1], reverse=True
+        )
+        percent_dict = utils.get_percent_dict(count_dict)
+        # NOTE top is 100 languages
+        count_dict, percent_dict = utils.get_top_N_people(count_dict, percent_dict, 100)
+
+        return {"count": count_dict, "percent": percent_dict}
+
     def media_message_extractor(self, kind: str) -> pd.Series:
         return self.df[kind].dropna() if kind in self.df else pd.Series()
 
-    def get_grouped_time_series_data(self, period: str = "y") -> pd.DataFrame:
+    def get_grouped_time_series_data(self, timeframe: str = "y") -> pd.DataFrame:
         if not len(self._stats_df):
             return pd.DataFrame()
         grouping_rule = period_manager.PERIOD_MANAGER.get_grouping_rules(
-            period, self._stats_df
+            timeframe, self._stats_df
         )
         groups_df = self._stats_df.groupby(grouping_rule).sum()
         return period_manager.PERIOD_MANAGER.set_df_grouping_indices_to_datetime(
-            groups_df, period=period
+            groups_df, timeframe=timeframe
         )
 
-    def stat_per_period(self, period: str, statistic: str = "mc") -> Dict:
-        interval_stats = self.get_grouped_time_series_data(period=period)
-        return self._count_stat_for_period(interval_stats, period, statistic=statistic)
+    def stats_per_timeframe(self, timeframe: str, statistic: str = "mc") -> Dict:
+        interval_stats = self.get_grouped_time_series_data(timeframe=timeframe)
+        return self._count_stat_for_period(
+            interval_stats, timeframe, statistic=statistic
+        )
 
     @staticmethod
     def _get_words(messages) -> pd.Series:
@@ -305,12 +323,7 @@ class ConversationStats:
             me=self.config.get("profile").name,
         )
         filter_messages.register_command(utils.filter_by_date, **kwargs)
-        # TODO later add this in if needed because this breaks stuff
-        #  basically removes the content column and the exception happens at:
-        #         self._stats_per_participant = self._get_stats_per_participant()
-        #  DataFrame object has no atribute 'content'
-        # maybe precheck if there are messages at all?!
-        filter_messages.register_command(utils.filer_empty_cols)
+        filter_messages.register_command(utils.filter_empty_cols)
         return filter_messages(df)
 
 
@@ -320,7 +333,7 @@ class StatsDataframe:
 
         # all message count
         self.df["mc"] = pd.Series([1 for _ in range(len(df))]).values if len(df) else 0
-        # self.df["mc"] =  df.content.map(lambda x:1) if 'content' in df else 0
+
         # text message count
         self.df["text_mc"] = (
             df.content.map(self.calculate_text_mc).values if "content" in df else 0

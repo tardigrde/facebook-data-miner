@@ -1,22 +1,9 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict
 
 import numpy as np
 import pandas as pd
 
-from miner.message.conversation_stats import ConversationStats
 from miner.utils import utils, const, decorators
-
-
-# TODO make this somehow more generic
-def outputter(func):
-    def wrapper(*args, **kwargs):
-        res = func(*args, **kwargs)
-
-        if not len(res):
-            return
-        return utils.df_to_file(kwargs.get("output"), res)
-
-    return wrapper
 
 
 class GenericAnalyzerFacade:
@@ -47,7 +34,7 @@ class GenericAnalyzerFacade:
         )
 
     def is_priv_msg_first_then_group(self, name: str) -> bool:
-        return self._analyzer.is_priv_msg_first_then_group(name=name)
+        return self._analyzer.is_private_convo_first_then_group(name=name)
 
 
 class AnalyzerFacade:
@@ -56,9 +43,9 @@ class AnalyzerFacade:
         self,
         analyzer,
         kind: str = "private",
-        channels="",
-        participants="",
-        senders="",
+        channels=None,
+        participants=None,
+        senders=None,
         start=None,
         end=None,
         period=None,
@@ -84,8 +71,8 @@ class AnalyzerFacade:
     def is_group(self) -> bool:
         return self._analyzer.is_group
 
-    def group_convo_map(self) -> Dict[str, List[str]]:
-        return self._analyzer.group_convo_map
+    def participant_to_channel_map(self) -> Dict[str, List[str]]:
+        return self._analyzer.participant_to_channel_map
 
     def number_of_convos_created_by_me(self) -> int:
         return self._analyzer.number_of_convos_created_by_me
@@ -115,7 +102,7 @@ class AnalyzerFacade:
     def ranking_by_statistic(
         self, by="mc", ranking="percent", top=20
     ) -> Dict[str, float]:
-        return self._analyzer.get_ranking_of_senders_by_convo_stats(
+        return self._analyzer.get_ranking_of_people_by_convo_stats(
             statistic=by, top=top
         ).get(ranking)
 
@@ -148,19 +135,19 @@ class AnalyzerFacade:
     def end(self) -> np.datetime64:
         return self._stats.end
 
-    @outputter
+    @decorators.outputter
     def messages(self, output: str = None) -> pd.Series:
         return self._stats.messages
 
-    @outputter
+    @decorators.outputter
     def text(self, output: str = None) -> pd.Series:
-        return self._stats.text  # TODO
+        return self._stats.text
 
-    @outputter
+    @decorators.outputter
     def media(self, output: str = None) -> pd.Series:
         return self._stats.media
 
-    @outputter
+    @decorators.outputter
     def words(self, output: str = None) -> pd.Series:
         return self._stats.words
 
@@ -191,35 +178,35 @@ class AnalyzerFacade:
     def percentage_of_media_messages(self) -> float:
         return self._stats.percentage_of_media_messages
 
-    @outputter
+    @decorators.outputter
     def most_used_msgs(self, output: str = None) -> pd.Series:
         return self._stats.most_used_msgs
 
-    @outputter
+    @decorators.outputter
     def most_used_words(self, output: str = None) -> pd.Series:
         return self._stats.most_used_words
 
-    @outputter
+    @decorators.outputter
     def reacted_messages(self, output: str = None) -> pd.DataFrame:
         return self._stats.reacted_messages
 
-    @outputter
+    @decorators.outputter
     def files(self, output: str = None) -> pd.Series:
         return self._stats.files
 
-    @outputter
+    @decorators.outputter
     def photos(self, output: str = None) -> pd.Series:
         return self._stats.photos
 
-    @outputter
+    @decorators.outputter
     def videos(self, output: str = None) -> pd.Series:
         return self._stats.videos
 
-    @outputter
+    @decorators.outputter
     def audios(self, output: str = None) -> pd.Series:
         return self._stats.audios
 
-    @outputter
+    @decorators.outputter
     def gifs(self, output: str = None) -> pd.Series:
         return self._stats.gifs
 
@@ -228,46 +215,25 @@ class AnalyzerFacade:
 
     def message_language_map(self):
         """
-        TODO better error handling
-        TODO better
-        WARNING:polyglot.detect.base:Detector is not able to detect the language reliably.
-        WARNING:polyglot.detect.base:Detector is not able to detect the language reliably.
-        WARNING:polyglot.detect.base:Detector is not able to detect the language reliably.
-        WARNING:polyglot.detect.base:Detector is not able to detect the language reliably.
-        WARNING:polyglot.detect.base:Detector is not able to detect the language reliably.
-        WARNING:polyglot.detect.base:Detector is not able to detect the language reliably.
-        WARNING:polyglot.detect.base:Detector is not able to detect the language reliably.
-        test:                            Prediction is reliable: False Language 1: name: English     code: en       confidence:  83.0 read bytes:  1228 Language 2: name: un          code: un       confidence:   0.0 read bytes:     0 Language 3: name: un          code: un       confidence:   0.0 read bytes:     0
-        what do you test:                Prediction is reliable: True Language 1: name: English     code: en       confidence:  94.0 read bytes:  2048 Language 2: name: un          code: un       confidence:   0.0 read bytes:     0 Language 3: name: un          code: un       confidence:   0.0 read bytes:     0
-        basic group messages:            Prediction is reliable: True Language 1: name: English     code: en       confidence:  95.0 read bytes:  1511 Language 2: name: un          code: un       confidence:   0.0 read bytes:     0 Language 3: name: un          code: un       confidence:   0.0 read bytes:     0
-        blabla:                          Prediction is reliable: False Language 1: name: French      code: fr       confidence:  87.0 read bytes:  1462 Language 2: name: un          code: un       confidence:   0.0 read bytes:     0 Language 3: name: un          code: un       confidence:   0.0 read bytes:     0
-        ok:                              null
-        marathon?:                       Prediction is reliable: False Language 1: name: Hungarian   code: hu       confidence:  90.0 read bytes:   455 Language 2: name: un          code: un       confidence:   0.0 read bytes:     0 Language 3: name: un          code: un       confidence:   0.0 read bytes:     0
-        yapp yapp :D:                    Prediction is reliable: False Language 1: name: Wolof       code: wo       confidence:  92.0 read bytes:   341 Language 2: name: un          code: un       confidence:   0.0 read bytes:     0 Language 3: name: un          code: un       confidence:   0.0 read bytes:     0
-        You named the group marathon.:   Prediction is reliable: True Language 1: name: English     code: en       confidence:  96.0 read bytes:  1412 Language 2: name: un          code: un       confidence:   0.0 read bytes:     0 Language 3: name: un          code: un       confidence:   0.0 read bytes:     0
-        i start today:                   Prediction is reliable: False Language 1: name: English     code: en       confidence:  93.0 read bytes:  1389 Language 2: name: un          code: un       confidence:   0.0 read bytes:     0 Language 3: name: un          code: un       confidence:   0.0 read bytes:     0
-        we could go but running is free: Prediction is reliable: True Language 1: name: English     code: en       confidence:  96.0 read bytes:  1504 Language 2: name: un          code: un       confidence:   0.0 read bytes:     0 Language 3: name: un          code: un       confidence:   0.0 read bytes:     0
-        hmmm:                            Prediction is reliable: False Language 1: name: English     code: en       confidence:  83.0 read bytes:   204 Language 2: name: un          code: un       confidence:   0.0 read bytes:     0 Language 3: name: un          code: un       confidence:   0.0 read bytes:     0
-        :D:
+
         @return:
         """
-        # TODO expose a higher level function here. like calculate the ratios
         return self._stats.message_language_map
 
-    # TODO portion of reacted
-    @outputter
-    def media_message_extractor(self, media_type: str, output: str = None) -> pd.Series:
-        # TODO do we need this????? we have them separately
-        return self._stats.media_message_extractor(media_type)
+    def message_language_ratio(self):
+        return self._stats.message_language_ratio
 
-    @outputter
+    def portion_of_reacted(self):
+        return self._stats.portion_of_reacted
+
+    @decorators.outputter
     def get_grouped_time_series_data(
-        self, period: str = "y", output: str = None
+        self, timeframe: str = "y", output: str = None
     ) -> pd.DataFrame:
-        return self._stats.get_grouped_time_series_data(period=period)
+        return self._stats.get_grouped_time_series_data(timeframe=timeframe)
 
-    def stat_per_period(self, period: str, statistic: str = "mc") -> Dict:
-        return self._stats.stat_per_period(period, statistic=statistic)
+    def stats_per_timeframe(self, timeframe: str, statistic: str = "mc") -> Dict:
+        return self._stats.stats_per_timeframe(timeframe, statistic=statistic)
 
 
 class DataAdapter:
@@ -322,12 +288,12 @@ class TableDataAdapter(DataAdapter):
             [analyzer.stats.unique_mc, analyzer.stats.unique_wc,],
         )
 
-    def get_stat_per_period_data(
-        self, kind: str = "private", period: str = "y", stat: str = "mc"
+    def get_stat_per_timeframe_data(
+        self, kind: str = "private", timeframe: str = "y", stat: str = "mc"
     ):
         dates, counts = [""], [const.STAT_MAP.get(stat)]
-        data = getattr(self.analyzer, kind).stats.stat_per_period(
-            period, statistic=stat
+        data = getattr(self.analyzer, kind).stats.stats_per_timeframe(
+            timeframe, statistic=stat
         )
         for date, count in data.items():
             dates.append(date)
@@ -343,39 +309,54 @@ class PlotDataAdapter(DataAdapter):
     def __init__(self, analyzer, config):
         super().__init__(analyzer, config)
 
-    def set_up_time_series_data(self, period, stat="text_mc", **kwargs):
+    def set_up_time_series_data(self, timeframe, stat="text_mc", **kwargs):
         stats = self.analyzer.stats.filter(**kwargs)
-        return stats.get_grouped_time_series_data(period)[stat]
+        return stats.get_grouped_time_series_data(timeframe)[stat]
 
     def get_time_series_data(
-        self, kind: str = "private", period: str = "y", stat=None, **kwargs
+        self, kind: str = "private", timeframe: str = "y", stat=None, **kwargs
     ):
         index, me, partner = self.get_stat_per_time_data(
-            kind=kind, period=period, stat=stat, **kwargs
+            kind=kind, timeframe=timeframe, stat=stat, **kwargs
         )
         utils.generate_date_series(
             self.config.get("profile").registration_timestamp,
-            period,
+            timeframe,
             start=index[0],
             end=index[-1],
         )
 
     def get_stat_per_time_data(
-        self, kind: str = "private", period: str = "y", stat: str = "mc", **kwargs
+        self,
+        kind: str = "private",
+        timeframe: str = "y",
+        stat: str = "mc",
+        channels: str = None,
+        participants: str = None,
+        **kwargs
     ):
-        # TODO correct filtering
-        analyzer = getattr(self.analyzer, kind)
-        me_stat = analyzer.stats.filter(senders="me", **kwargs).stat_per_period(
-            period, statistic=stat
+        analyzer = getattr(self.analyzer, kind).filter(
+            channels=channels, participants=participants
+        )
+        me_stat = analyzer.stats.filter(senders="me", **kwargs).stats_per_timeframe(
+            timeframe, statistic=stat
         )
         partner_stat = analyzer.stats.filter(
             senders="partner", **kwargs
-        ).stat_per_period(period, statistic=stat)
+        ).stats_per_timeframe(timeframe, statistic=stat)
         return list(me_stat.keys()), list(me_stat.values()), list(partner_stat.values())
 
-    def get_ranking_of_friends_by_message_stats(self, kind: str = "private", stat="mc"):
-        analyzer = getattr(self.analyzer, kind)
-        ranking = analyzer.get_ranking_of_senders_by_convo_stats(statistic=stat)
+    def get_ranking_of_friends_by_message_stats(
+        self,
+        kind: str = "private",
+        stat="mc",
+        channels: str = None,
+        participants: str = None,
+    ):
+        analyzer = getattr(self.analyzer, kind).filter(
+            channels=channels, participants=participants
+        )
+        ranking = analyzer.get_ranking_of_people_by_convo_stats(statistic=stat)
         sorted_dict = utils.sort_dict(
             ranking.get("count"), func=lambda item: item[1], reverse=True,
         )

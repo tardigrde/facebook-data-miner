@@ -66,8 +66,8 @@ class ReportDataAdapter:
         yield "Unique word", self.analyzer.priv_stats.unique_wc
 
     def get_stat_per_period_data(self, stat="mc"):
-        for period in ["y", "m", "d", "h"]:
+        for timeframe in ["y", "m", "d", "h"]:
             # for period in ['y',]:
-            data = self.analyzer._stats.stat_per_period(period, statistic=stat)
+            data = self.analyzer._stats.stats_per_timeframe(timeframe, statistic=stat)
             for year, count in data.items():
                 yield year, f"{count:,}"

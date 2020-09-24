@@ -9,7 +9,7 @@ import time
 import zipfile
 from datetime import datetime
 from itertools import islice
-from typing import Union, List, Dict, Callable
+from typing import Union, List, Dict, Callable, Tuple
 
 import pandas as pd
 
@@ -33,7 +33,7 @@ def get_properties_of_a_class(class_ref):
     return [p[0] for p in props]
 
 
-def get_group_convo_map(data):
+def get_participant_to_channel_mapping(data):
     group_convo_map = {}
     if not data:
         return group_convo_map
@@ -168,7 +168,9 @@ def unify_dict_keys(first, second):
     return first, second
 
 
-def get_parent_directory_of_file(root, files, extension, contains_string) -> str:
+def get_parent_directory_of_file_with_extension(
+    root, files, extension, contains_string
+) -> str:
     for file_name in files:
         if (
             file_name.endswith(extension)
@@ -310,17 +312,17 @@ def filter_by_sender(
 def handle_filter_df(df, column, filter_params):
     match = df[df[column].isin(filter_params)]
     if match is None or len(match) == 0:
-        logging.warning(
+        logging.debug(
             f"None of the filter parameters ({filter_params}) you specified exist in this df's `{column}` column."
         )
         return df[0:0]
     return match
 
 
-def filer_empty_cols(df: pd.DataFrame):
-    empty_cols = [col for col in df.columns if df[col].isnull().all()]
-    if len(df) and len(df.columns):
-        df.drop(empty_cols, axis=1, inplace=True)
+def filter_empty_cols(df: pd.DataFrame):
+    non_null_columns = [col for col in df.columns if df.loc[:, col].notna().any()]
+    if len(df) or len(df.columns):
+        df = df[non_null_columns]
     return df
 
 
@@ -335,3 +337,24 @@ def generate_date_series(join_date, period="y", start=None, end=None):
         dates.append(intermediate)
         intermediate = intermediate + const.DELTA_MAP.get(period)
     return dates
+
+
+def get_count_dict(dict, statistic) -> Dict[str, int]:
+    count_dict = {}
+    for name, stats in dict.items():
+        count_dict = fill_dict(count_dict, name, getattr(stats, statistic))
+    count_dict = sort_dict(count_dict, func=lambda item: item[1], reverse=True)
+    return count_dict
+
+
+def get_percent_dict(count_dict) -> Dict[str, float]:
+    hundred = sum(list(count_dict.values()))
+    return {name: value * 100 / hundred for name, value in count_dict.items()}
+
+
+def get_top_N_people(
+    count_dict, percent_dict, top
+) -> Tuple[Dict[str, int], Dict[str, float]]:
+    count_dict = {k: count_dict[k] for k in list(count_dict.keys())[:top]}
+    percent_dict = {k: percent_dict[k] for k in list(percent_dict.keys())[:top]}
+    return count_dict, percent_dict

@@ -30,8 +30,8 @@ class TestAnalyzerStatsFiltering:
         assert len(afc) == len(afp)
         assert len(afc.participants) == len(afp.participants)
         assert afc.number_of_convos_created_by_me == afp.number_of_convos_created_by_me
-        assert len(afc.get_ranking_of_senders_by_convo_stats().get("count")) == len(
-            afp.get_ranking_of_senders_by_convo_stats().get("count")
+        assert len(afc.get_ranking_of_people_by_convo_stats().get("count")) == len(
+            afp.get_ranking_of_people_by_convo_stats().get("count")
         )
 
     def test_group_analyzer_filter(self, analyzer):
@@ -44,12 +44,8 @@ class TestAnalyzerStatsFiltering:
     def test_group_analyzer_filter_switched_kwargs(self, analyzer, caplog):
         afc = analyzer.group.filter(channels="Teflon Musk")
         afp = analyzer.group.filter(participants="marathon")
-        assert any(
-            [
-                "The following error happened while executing the command" in msg
-                for msg in caplog.messages
-            ]
-        )
+        assert len(afc) == 0
+        assert len(afp) == 0
 
     def test_filter_me_as_participant(self, analyzer):
         afcpm = analyzer.private.filter(
@@ -65,8 +61,8 @@ class TestAnalyzerStatsFiltering:
         )
         with pytest.raises(utils.TooFewPeopleError):
             assert len(
-                afcpm.get_ranking_of_senders_by_convo_stats().get("count")
-            ) == len(afcp.get_ranking_of_senders_by_convo_stats().get("count"))
+                afcpm.get_ranking_of_people_by_convo_stats().get("count")
+            ) == len(afcp.get_ranking_of_people_by_convo_stats().get("count"))
 
     def test_group_analyzer_filter_channels_participants(self, analyzer):
         afc = analyzer.group.filter(channels=["marathon"])
@@ -74,8 +70,8 @@ class TestAnalyzerStatsFiltering:
         assert len(afp) != len(afc)
         assert len(afp.participants) != len(afc.participants)
         assert afp.number_of_convos_created_by_me != afc.number_of_convos_created_by_me
-        assert len(afp.get_ranking_of_senders_by_convo_stats().get("count")) != len(
-            afc.get_ranking_of_senders_by_convo_stats().get("count")
+        assert len(afp.get_ranking_of_people_by_convo_stats().get("count")) != len(
+            afc.get_ranking_of_people_by_convo_stats().get("count")
         )
 
     def test_private_analyzer_stats_filter(self, analyzer):
@@ -160,8 +156,6 @@ class TestAnalyzerStatsFiltering:
         assert len(afc.participants) > len(sfp.contributors)
         assert afc.number_of_convos_created_by_me == 2
         assert not sfp.created_by_me
-
-    # TODO whats is not tested??
 
     def test_anaylzer_filter_returns_none(self, analyzer):
         afc = analyzer.group.filter(channels="Teflon Musk")

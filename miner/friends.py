@@ -2,10 +2,10 @@ from collections import namedtuple
 from typing import List, Dict, Callable
 
 from miner.data import FacebookData
-from miner.utils import utils, decorators
+from miner.utils import utils
 
 
-# TODO rate of making friends
+# NOTE stats per making friends yet to be implemented
 class Friends(FacebookData):
     def __init__(
         self, path: str, reader: Callable = None, processors: List[Callable] = None

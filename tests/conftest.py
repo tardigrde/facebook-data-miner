@@ -23,7 +23,9 @@ def friends():
 
 @pytest.fixture(scope="session")
 def conversations():
-    return Conversations(f"{TEST_DATA_PATH}")
+    yield Conversations(f"{TEST_DATA_PATH}")
+    os.remove(f"{TEST_DATA_PATH}/messages/inbox/private_messages.json")
+    os.remove(f"{TEST_DATA_PATH}/messages/inbox/group_messages.json")
 
 
 @pytest.fixture(scope="session")
@@ -50,10 +52,10 @@ def analyzer(conversations, app):
 
 
 @pytest.fixture(scope="session")
-def priv_msg_analyzer(analyzer):
+def panalyzer(analyzer):
     return analyzer.private
 
 
 @pytest.fixture(scope="session")
-def group_msg_analyzer(analyzer):
+def ganalyzer(analyzer):
     return analyzer.group

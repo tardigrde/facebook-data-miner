@@ -27,8 +27,6 @@ class Conversations:
             directories=paths_factory.get_dirs(ctype="group"),
             dir_lister=self._get_json_paths,
         )
-        # TODO
-        # self.group_convo_map = self.add_group_convo_participation()
 
     @property
     def private(self) -> Dict[str, Conversation]:
@@ -161,7 +159,7 @@ class ConversationsPaths:
 
         return utils.walk_directory_and_search(
             path,
-            utils.get_parent_directory_of_file,
+            utils.get_parent_directory_of_file_with_extension,
             extension=".json",
             contains_string="message_1",
         )

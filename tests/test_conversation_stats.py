@@ -1,22 +1,20 @@
-import pytest
 from datetime import datetime
-import numpy as np
-import pandas as pd
 
-from miner.message.messaging_analyzer import MessagingAnalyzerManager
-from miner.message.conversations import Conversations
+import pandas as pd
+import pytest
+
 from miner.message.conversation_stats import ConversationStats
 from miner.utils import utils
 
 
 @pytest.fixture
-def priv_stats(priv_msg_analyzer):
-    return priv_msg_analyzer._stats
+def priv_stats(panalyzer):
+    return panalyzer._stats
 
 
 @pytest.fixture(scope="module")
-def group_stats(group_msg_analyzer):
-    return group_msg_analyzer._stats
+def group_stats(ganalyzer):
+    return ganalyzer._stats
 
 
 class TestConversationStatsForGroups:
@@ -35,7 +33,8 @@ class TestConversationStatsForGroups:
         assert filtered.number_of_channels == 1
         assert filtered.contributors == ["Levente Csőke", "Foo Bar", "Donald Duck"]
         assert filtered.created_by_me is True
-        assert filtered.most_used_words.index[0] in ("yapp", ":d")
+        assert filtered.most_used_words.iloc[0]["unique_values"] in ("yapp", ":d")
+        assert filtered.most_used_words.iloc[0]["counts"] == 2
         assert filtered.mc == 9
 
     def test_filter_sender(self, group_stats):
@@ -81,7 +80,7 @@ class TestConversationStatsForGroups:
     def test_contributors(self, group_stats):
         contributors = group_stats.contributors
         assert "Foo Bar" in contributors
-        assert "Facebook User" in contributors  # TODO??
+        assert "Facebook User" in contributors  # what about Facebook Users
 
         assert group_stats.number_of_contributors == 8
 
@@ -103,16 +102,15 @@ class TestConversationStatsForGroups:
 
     def test_message_language_map(self, group_stats):
         msg_lang = group_stats.message_language_map
-        assert msg_lang["test"].language.code == "en"
-        assert msg_lang["marathon?"].language.code == "hu"
-        assert msg_lang["blabla"].reliable == False
+        assert msg_lang["test"].get("lang") == "English"
+        assert msg_lang["marathon?"].get("lang") == "Hungarian"
 
     def test_reacted_messages(self, group_stats):
         reacted_messages = group_stats.reacted_messages
         assert len(reacted_messages) == 0
 
     def test_get_grouped_time_series_data(self, group_stats):
-        time_series = group_stats.get_grouped_time_series_data(period="y")
+        time_series = group_stats.get_grouped_time_series_data(timeframe="y")
 
         assert isinstance(time_series, pd.DataFrame)
         assert time_series.shape == (2, 5,)
@@ -124,7 +122,7 @@ class TestConversationStatsForGroups:
         assert time_series.index.date[1].day == 1
 
     def test_stat_per_period(self, group_stats):
-        stats_per_period = group_stats.stat_per_period(period="y")
+        stats_per_period = group_stats.stats_per_timeframe(timeframe="y")
         assert stats_per_period == {
             2009: 0,
             2010: 0,
@@ -139,7 +137,7 @@ class TestConversationStatsForGroups:
             2019: 0,
             2020: 0,
         }
-        stats_per_period = group_stats.stat_per_period(period="m")
+        stats_per_period = group_stats.stats_per_timeframe(timeframe="m")
         assert stats_per_period == {
             "january": 0,
             "february": 0,
@@ -180,12 +178,8 @@ class TestConversationStatsForPrivate:
         assert filtered.cc == 56
         assert filtered.df.shape == (6, 8)
 
-    def test_filter_subject(self):
-        # TODO should be the same as filter for sender
-        pass
-
-    def test_stats_are_in_df(self, priv_msg_analyzer):
-        stats_df = priv_msg_analyzer.filter(
+    def test_stats_are_in_df(self, panalyzer):
+        stats_df = panalyzer.filter(
             participants="Teflon Musk"
         )._stats._get_convos_in_numbers()
 
@@ -195,8 +189,8 @@ class TestConversationStatsForPrivate:
         assert "wc" in stats_df
         assert "cc" in stats_df
 
-    def test_stats_index_can_be_grouped(self, priv_msg_analyzer):
-        stats = priv_msg_analyzer.filter(participants="Teflon Musk")._stats
+    def test_stats_index_can_be_grouped(self, panalyzer):
+        stats = panalyzer.filter(participants="Teflon Musk")._stats
         assert stats.df.index[0].year == 2014
         assert stats.df.index[0].month == 9
         assert stats.df.index[0].day == 24
@@ -225,13 +219,10 @@ class TestConversationStatsForPrivate:
     def test_message_language_map(self, priv_stats):
         txt = "yo Legyen az, hogy most megprobalok ekezet nelkul irni. Seems pretty easy. I need some english words in here. Right? A magyar szavak felismereset probalom tesztelni ezzekkel a mondatokkal."
         msg_lang = priv_stats.message_language_map
-        assert msg_lang["are you the real teflon musk?"].language.code == "en"
-        assert msg_lang["Excepteur...laborum. :D"].language.code == "la"
+        assert msg_lang["are you the real teflon musk?"].get("lang") == "English"
+        assert msg_lang["Excepteur...laborum. :D"].get("lang") == "Latin"
 
-        assert msg_lang[txt].reliable == True
-        assert msg_lang[txt].language.code == "en"
-        assert msg_lang[txt].languages[0].code == "en"
-        assert msg_lang[txt].languages[1].code == "hu"
+        assert msg_lang[txt].get("lang") == "English"
 
     def test_reacted_messages(self, priv_stats):
         reacted_messages = priv_stats.reacted_messages
@@ -241,8 +232,8 @@ class TestConversationStatsForPrivate:
 
         assert reacted_messages.reactions[0][0].get("reaction") == "❤"
 
-    def test_get_grouped_time_series_data(self, priv_msg_analyzer):
-        grouped = priv_msg_analyzer._stats.get_grouped_time_series_data(period="y")
+    def test_get_grouped_time_series_data(self, panalyzer):
+        grouped = panalyzer._stats.get_grouped_time_series_data(timeframe="y")
         assert len(grouped) == 3
         third_row = grouped.iloc[2]
         assert third_row.mc == 15
@@ -250,17 +241,17 @@ class TestConversationStatsForPrivate:
         assert third_row.wc == 34
         assert third_row.cc == 140
 
-        grouped = priv_msg_analyzer._stats.get_grouped_time_series_data(period="m")
+        grouped = panalyzer._stats.get_grouped_time_series_data(timeframe="m")
         assert len(grouped) == 9
 
-        grouped = priv_msg_analyzer._stats.get_grouped_time_series_data(period="d")
+        grouped = panalyzer._stats.get_grouped_time_series_data(timeframe="d")
         assert len(grouped) == 16
 
-        grouped = priv_msg_analyzer._stats.get_grouped_time_series_data(period="h")
+        grouped = panalyzer._stats.get_grouped_time_series_data(timeframe="h")
         assert len(grouped) == 24
 
-    def test_get_grouped_time_series_data_foo_bar(self, priv_msg_analyzer):
-        stats = priv_msg_analyzer.filter(participants="Foo Bar")._stats
+    def test_get_grouped_time_series_data_foo_bar(self, panalyzer):
+        stats = panalyzer.filter(participants="Foo Bar")._stats
         grouped = stats.get_grouped_time_series_data("y")
         assert len(grouped) == 1
         first_row = grouped.iloc[0]
@@ -278,8 +269,8 @@ class TestConversationStatsForPrivate:
         grouped = stats.get_grouped_time_series_data("h")
         assert len(grouped) == 14
 
-    def test_stats_per_period(self, priv_msg_analyzer):
-        yearly = priv_msg_analyzer._stats.stat_per_period("y", "mc")
+    def test_stats_per_period(self, panalyzer):
+        yearly = panalyzer._stats.stats_per_timeframe("y", "mc")
         assert yearly == {
             2009: 0,
             2010: 0,
@@ -295,7 +286,7 @@ class TestConversationStatsForPrivate:
             2020: 15,
         }
 
-        monthly = priv_msg_analyzer._stats.stat_per_period("m", "mc")
+        monthly = panalyzer._stats.stats_per_timeframe("m", "mc")
         assert monthly == {
             "january": 3,
             "february": 10,
@@ -311,7 +302,7 @@ class TestConversationStatsForPrivate:
             "december": 2,
         }
 
-        daily = priv_msg_analyzer._stats.stat_per_period("d", "mc")
+        daily = panalyzer._stats.stats_per_timeframe("d", "mc")
         assert daily == {
             "monday": 6,
             "tuesday": 2,
@@ -322,7 +313,7 @@ class TestConversationStatsForPrivate:
             "sunday": 5,
         }
 
-        hourly = priv_msg_analyzer._stats.stat_per_period("h", "mc")
+        hourly = panalyzer._stats.stats_per_timeframe("h", "mc")
         assert hourly == {
             0: 1,
             1: 1,
@@ -350,9 +341,9 @@ class TestConversationStatsForPrivate:
             23: 3,
         }
 
-    def test_stats_per_period_foo_bar(self, priv_msg_analyzer):
-        stats = priv_msg_analyzer.filter(participants="Foo Bar")._stats
-        yearly = stats.stat_per_period("y", "mc")
+    def test_stats_per_period_foo_bar(self, panalyzer):
+        stats = panalyzer.filter(participants="Foo Bar")._stats
+        yearly = stats.stats_per_timeframe("y", "mc")
         assert yearly == {
             2009: 0,
             2010: 0,
@@ -368,7 +359,7 @@ class TestConversationStatsForPrivate:
             2020: 15,
         }
 
-        monthly = stats.stat_per_period("m", "mc")
+        monthly = stats.stats_per_timeframe("m", "mc")
         assert monthly == {
             "january": 0,
             "february": 10,
@@ -384,7 +375,7 @@ class TestConversationStatsForPrivate:
             "december": 0,
         }
 
-        daily = stats.stat_per_period("d", "mc")
+        daily = stats.stats_per_timeframe("d", "mc")
         assert daily == {
             "monday": 1,
             "tuesday": 2,
@@ -394,7 +385,7 @@ class TestConversationStatsForPrivate:
             "saturday": 2,
             "sunday": 1,
         }
-        hourly = stats.stat_per_period("h", "mc")
+        hourly = stats.stats_per_timeframe("h", "mc")
         assert hourly == {
             0: 1,
             1: 1,
