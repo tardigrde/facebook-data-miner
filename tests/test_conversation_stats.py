@@ -161,7 +161,7 @@ class TestConversationStatsForPrivate:
         assert priv_stats.wc == 91
         assert "Bugs Bunny" in list(priv_stats.channels)
         assert isinstance(priv_stats.start, datetime)
-        assert priv_stats.portion_of_reacted == pytest.approx(9.67, 0.01)
+        assert priv_stats.percentage_of_reacted_messages == pytest.approx(9.67, 0.01)
 
     def test_media(self, priv_stats):
         assert isinstance(priv_stats.media, pd.DataFrame)

@@ -38,5 +38,5 @@ class Person:
             member_of=self.member_of if self.member_of else other.member_of,
         )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Name: {self.name}, friend: {self.friend}, msg directory: {self.thread_path}"

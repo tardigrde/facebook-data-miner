@@ -1,4 +1,4 @@
-from typing import List, Dict, Callable, Any, NamedTuple
+from typing import List, Dict, Callable, Any, NamedTuple, Union
 
 import pandas as pd
 
@@ -6,6 +6,10 @@ from miner.utils import utils, command
 
 
 class FacebookData:
+    """
+    Super class for reading, processing and storing tabular Facebook Data.
+    """
+
     def __init__(
         self, path: str, reader: Callable = None, processors: List[Callable] = None
     ) -> None:
@@ -29,18 +33,20 @@ class FacebookData:
         return self._metadata
 
     @property
-    def reader(self):
+    def reader(self) -> Union[Dict, List]:
         return utils.read_json if self._reader is None else self._reader
 
     @property
-    def preprocessor(self):
+    def preprocessor(self) -> command.CommandChainCreator:
         return self._preprocessor
 
     def _get_data(self) -> Any:
         raw_data = self._read_data(self.reader, self.path)
         return self.preprocessor(raw_data)
 
-    def _get_preprocessor(self, processors):
+    def _get_preprocessor(
+        self, processors: List[Callable]
+    ) -> command.CommandChainCreator:
         preprocessor = command.CommandChainCreator()
         if processors is None:
             self._register_processors(preprocessor)
@@ -54,7 +60,7 @@ class FacebookData:
         return reader(path)
 
     @staticmethod
-    def _get_dataframe(data, field=None, **kwargs):
+    def _get_dataframe(data, field: str = None, **kwargs) -> pd.DataFrame:
         data = data.get(field) if field else data
         return pd.DataFrame(data, **kwargs)
 

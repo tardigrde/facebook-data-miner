@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from typing import List, Dict, Callable
+from typing import List, Dict, Callable, Union
 
 from miner.message.conversation import Conversation
 from miner.utils import utils, const, decorators
@@ -44,10 +44,18 @@ class Conversations:
     def get(
         self,
         kind: str = "private",
-        channels: List[str] = None,
+        channels: Union[str, List[str]] = None,
         cols: List[str] = None,
         output: str = "csv",
     ):
+        """
+
+        @param kind: one of private or group, depending on which messaging do you want to analyze.
+        @param channels: channel names you want to filter for.
+        @param cols: column names you want to include in the output.
+        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @return: either the data formatted as csv or json, or a success message about where was the data saved.
+        """
         data = getattr(self, kind)
         filtered_channels = (
             data.keys() if channels is None else list(set(data.keys()) & set(channels))
