@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import List, Dict, Callable, Any
 
 import pandas as pd
@@ -10,18 +12,24 @@ from miner.utils import utils
 
 class People:
     """
-    Class that manages and represents people from different kind of interactions.
+    Class that manages and represents people from different kind of Facebook interactions.
     """
 
     def __init__(self, **kwargs) -> None:
         self.source_map = self._get_source_map()
         self._data: Dict[str, Person] = self._get_data_from_source(**kwargs)
 
-    def __iter__(self):
+    def __iter__(self) -> Any:
         # NOTE: not sure if this is needed. Wanted to try out object as its own iterator.
         return PeopleIterator(self)
 
-    def get(self, output: str = None):
+    def get(self, output: str = None) -> str:
+        """
+        Exposed function for getting data on people.
+
+        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @return: either the data formatted as csv or json, or a success message about where was the data saved.
+        """
         name = [person.name for person in self.data.values()]
         friend = [person.friend for person in self.data.values()]
         message_dir = [person.thread_path for person in self.data.values()]
@@ -61,7 +69,9 @@ class People:
         return data
 
     @staticmethod
-    def _unify_people(this, other) -> Dict[str, Any]:
+    def _unify_people(
+        this: Dict[str, Person], other: Dict[str, Person]
+    ) -> Dict[str, Person]:
         for name, person in this.items():
             if not other.get(name):
                 other[name] = person
@@ -83,7 +93,6 @@ class People:
         participant_to_channel_map = utils.get_participant_to_channel_mapping(
             conversations.group
         )
-
         persons = {}
         # looping over private message participants
         for name, convo in conversations.private.items():
@@ -104,16 +113,16 @@ class People:
 
 
 class PeopleIterator:
-    def __init__(self, container):
+    def __init__(self, container) -> None:
         self.container = container
         self.n = -1
         self.max = len(self.container.names)
 
-    def __next__(self):
+    def __next__(self) -> People:
         self.n += 1
         if self.n > self.max:
             raise StopIteration
         return self.container.data[self.container.names[self.n]]
 
-    def __iter__(self):
+    def __iter__(self) -> PeopleIterator:
         return self

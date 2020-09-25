@@ -1,9 +1,6 @@
 import pandas as pd
 
 from miner.utils import utils, const
-import pandas as pd
-
-from miner.utils import utils, const
 
 
 class DataAdapter:

@@ -26,7 +26,9 @@ class Plotter:
             stat=stat,
             **kwargs,
         )
-        df = pd.DataFrame({"date": index, "me": me, "partner": partner}).set_index("date")
+        df = pd.DataFrame({"date": index, "me": me, "partner": partner}).set_index(
+            "date"
+        )
 
         self._plot_time_series_data(
             df,

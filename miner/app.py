@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Dict
 
 from miner.friends import Friends
 from miner.message.conversations import Conversations
@@ -16,7 +17,7 @@ DATA_PATH = f"{os.path.dirname(os.path.dirname(__file__))}/tests/test_data"
 
 class App:
     """
-    Entrypoint.
+    Entrypoint for miner package.
     """
 
     def __init__(self, path: str = None):
@@ -39,44 +40,44 @@ class App:
         self._people = self._get_people()
 
     @property
-    def friends(self):
+    def friends(self) -> Friends:
         return self._friends
 
     @property
-    def conversations(self):
+    def conversations(self) -> Conversations:
         return self._conversations
 
     @property
-    def analyzer(self):
+    def analyzer(self) -> MessagingAnalyzerManager:
         return self._analyzer
 
     @property
-    def people(self):
+    def people(self) -> People:
         return self._people
 
     @property
-    def config(self):
+    def config(self) -> Dict[str, str]:
         return self._config
 
     @property
-    def profile_information(self):
+    def profile_information(self) -> Dict[str, str]:
         return ProfileInformation(self._path)
 
-    def _get_friends(self):
+    def _get_friends(self) -> Friends:
         return Friends(f"{self._path}/friends/friends.json")
 
-    def _get_conversations(self):
+    def _get_conversations(self) -> Conversations:
         return Conversations(self._path)
 
-    def _get_people(self):
-        return People(friends=self._friends, conversations=self._conversations)
-
-    def _get_analyzer(self):
+    def _get_analyzer(self) -> MessagingAnalyzerManager:
         return MessagingAnalyzerManager(self._conversations, self._config)
 
-    def _build_config(self):
+    def _get_people(self) -> People:
+        return People(friends=self._friends, conversations=self._conversations)
+
+    def _build_config(self) -> Dict[str, str]:
         return {"profile": self.profile_information}
 
     @staticmethod
-    def _configure_logger():
+    def _configure_logger() -> None:
         logging.basicConfig(level=logging.WARNING)

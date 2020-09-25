@@ -14,6 +14,10 @@ pd.set_option("mode.chained_assignment", "raise")
 
 
 class MessagingAnalyzerManager:
+    """
+    Class that analyzes both private ang group conversations.
+    """
+
     def __init__(self, conversations: Conversations, config: Dict[str, Any]) -> None:
         self.conversations = conversations
         self.config = config
@@ -65,7 +69,7 @@ class MessagingAnalyzerManager:
     def all_interactions(
         self, name: str
     ) -> Tuple[ConversationStats, ConversationStats]:
-        # NOTE this is only a filterer fnction that can be used
+        # NOTE this is only a filterer function
         private = self.private_messaging_analyzer.filter(channels=name)
         group = self.group_messaging_analyzer.filter(participants=name)
         return private, group
@@ -99,6 +103,10 @@ class MessagingAnalyzerManager:
 
 
 class MessagingAnalyzer:
+    """
+    Class for analyzing data and metadata of conversations.
+    """
+
     def __init__(
         self,
         data: Dict[str, Conversation],
@@ -112,35 +120,66 @@ class MessagingAnalyzer:
 
         self._stats = ConversationStats(self.df, config)
 
-        self.participant_to_channel_map = utils.get_participant_to_channel_mapping(data)
+        self._participant_to_channel_map = utils.get_participant_to_channel_mapping(
+            data
+        )
 
         self._stats_per_channel = self._get_stats_per_channel()
         self._stats_per_participant = self._get_stats_per_participant()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self._kind.capitalize()}-MessagingAnalyzer for {self.__len__()} channels>"
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data.keys())
 
     @property
     def is_group(self) -> bool:
+        """
+
+        @return: returns True if we are analyzing group messages, False otherwise.
+        """
         return self._kind == "group"
 
     @property
     def stats(self) -> ConversationStats:
+        """
+
+        @return: ConversationStats object containing stats on the current self.df.
+        """
         return self._stats
 
     @property
     def stats_per_channel(self) -> Dict[str, ConversationStats]:
+        """
+
+        @return: a dict that contains a ConversationStats object for every channel in self.data.
+        """
         return self._get_stats_per_channel()
 
     @property
     def stats_per_participant(self) -> Dict[str, ConversationStats]:
+        """
+
+        @return: a dict that contains a ConversationStats object for every participant in self.data.
+        """
         return self._get_stats_per_participant()
 
     @property
+    def participant_to_channel_map(self):
+        """
+        Makes more sense for groups.
+
+        @return: map for every participant to any channels they are in.
+        """
+        return self._participant_to_channel_map
+
+    @property
     def participants(self) -> List[str]:
+        """
+
+        @return: list of participants in self.data.
+        """
         # super set of self.stats.contributors
         participants = []
         for _, convo in self.data.items():
@@ -148,25 +187,50 @@ class MessagingAnalyzer:
         return sorted(list(set(participants)))
 
     @property
+    def number_of_convos_created_by_me(self) -> int:
+        """
+
+        @return: number of conversations started by the user.
+        """
+        return sum([stat.created_by_me for stat in self.stats_per_channel.values()])
+
+    @property
     def min_channel_size(self) -> int:
+        """
+        Makes more sense for groups.
+
+        @return: smallest group size.
+        """
         sizes = self._get_channels_size(self.data)
         return min(sizes.values())
 
     @property
     def max_channel_size(self) -> int:
+        """
+        Makes more sense for groups.
+
+        @return: largest group size.
+        """
         sizes = self._get_channels_size(self.data)
         return max(sizes.values())
 
     @property
     def mean_channel_size(self) -> float:
+        """
+        Makes more sense for groups.
+
+        @return: mean group size.
+        """
         sizes = self._get_channels_size(self.data)
         return sum(sizes.values()) / len(sizes.values())
 
-    @property
-    def number_of_convos_created_by_me(self) -> int:
-        return sum([stat.created_by_me for stat in self.stats_per_channel.values()])
-
     def get_all_channels_for_one_person(self, name) -> List[str]:
+        """
+
+        @param name: name of the subject we are interested in.
+        Anyone who is a participant in at least one conversation.
+        @return: all the channels (max 1 private, and any number of group conversations) the subject is in.
+        """
         groups = []
         for k, g in self.data.items():
             if name in g.metadata.participants:
@@ -174,14 +238,28 @@ class MessagingAnalyzer:
         return list(set(groups))
 
     def get_stat_count(self, attribute: str = "mc", **kwargs) -> int:
+        """
+
+        @param attribute: attribute we are interested in.
+        Can be any of the ConversationStats properties.
+        @param kwargs: filtering parameters.
+        @return: the statistic one queried for.
+        """
         stats = self.stats.filter(**kwargs)
         return getattr(stats, attribute)
 
     def get_ranking_of_people_by_convo_stats(
         self, statistic: str = "mc", top: int = 20
     ) -> Dict[str, Union[Dict[str, int], Dict[str, float]]]:
+        """
 
-        stats_per_people = self.get_stats_per_people()
+        @param statistic: attribute we are interested in.
+        Can be any of the ConversationStats properties, but it has to be numeric.
+        @param top: used to limit the number of results for better readability.
+        @return: dictionary containing ranking both in percent and absolute values.
+        """
+
+        stats_per_people = self._get_stats_per_people()
 
         if len(stats_per_people) == 1:
             raise utils.TooFewPeopleError("Can't rank one person.")
@@ -196,15 +274,15 @@ class MessagingAnalyzer:
 
         return {"count": count_dict, "percent": percent_dict}
 
-    def get_stats_per_people(self):
-        stats_per_people = (
-            self.stats_per_participant if self.is_group else self.stats_per_channel
-        )
-        return stats_per_people
-
     @decorators.string_kwarg_to_list_converter("channels")
     @decorators.string_kwarg_to_list_converter("participants")
     def filter(self, channels=None, participants=None):
+        """
+
+        @param channels:
+        @param participants:
+        @return:
+        """
         if participants is None and channels is None:
             return self
         data = copy.copy(self.data)
@@ -217,6 +295,12 @@ class MessagingAnalyzer:
         )
         data = filter_messages(data)
         return MessagingAnalyzer(data, self.config, self._kind)
+
+    def _get_stats_per_people(self):
+        stats_per_people = (
+            self.stats_per_participant if self.is_group else self.stats_per_channel
+        )
+        return stats_per_people
 
     def _get_stats_per_channel(self) -> Dict[str, ConversationStats]:
         return {

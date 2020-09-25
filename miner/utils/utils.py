@@ -1,4 +1,3 @@
-from yaml import dump, Dumper, load, FullLoader
 import copy
 import json
 import logging
@@ -10,6 +9,7 @@ from datetime import datetime
 from typing import Union, List, Dict, Callable, Tuple
 
 import pandas as pd
+from yaml import load, FullLoader
 
 from miner.utils import const, decorators
 
@@ -204,7 +204,7 @@ def utf8_decoder(string):
 
 def decode_data(
     obj: Union[str, List, Dict], decoder: Callable,
-):
+) -> Union[str, List, Dict]:
     if isinstance(obj, str):
         return decoder(obj)
 

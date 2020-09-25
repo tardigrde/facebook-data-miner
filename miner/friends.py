@@ -2,17 +2,29 @@ from collections import namedtuple
 from typing import List, Dict, Callable
 
 from miner.data import FacebookData
-from miner.utils import utils
+from miner.utils import utils, command
 
 
 # NOTE stats per making friends yet to be implemented
 class Friends(FacebookData):
+    """
+    Class for reading in and storing data about our Facebook friends.
+    """
+
     def __init__(
         self, path: str, reader: Callable = None, processors: List[Callable] = None
     ) -> None:
         super().__init__(path, reader=reader, processors=processors)
 
-    def get(self, sort="date", dates=True, output=None):
+    def get(self, sort="date", dates: bool = True, output: str = None) -> str:
+        """
+        Exposed function for getting data on our Facebook friends.
+
+        @param sort: the column we want to sort by. Can be either of {date|name}. Default is `dates`.
+        @param dates: boolean flag on do we want the dates column. Default is `True`.
+        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @return: either the data formatted as csv or json, or a success message about where was the data saved.
+        """
         data = self.data
         if sort == "name":
             data = data.sort_values(by="name")
@@ -21,7 +33,9 @@ class Friends(FacebookData):
 
         return utils.df_to_file(output, data)
 
-    def _register_processors(self, preprocessor):
+    def _register_processors(
+        self, preprocessor: command.CommandChainCreator
+    ) -> command.CommandChainCreator:
         preprocessor.register_command(utils.decode_data, utils.utf8_decoder)
         preprocessor.register_command(self._set_metadata)
         preprocessor.register_command(
@@ -30,7 +44,7 @@ class Friends(FacebookData):
         preprocessor.register_command(self._set_date_as_index, column="timestamp")
         return preprocessor
 
-    def _set_metadata(self, data: Dict) -> Dict:
+    def _set_metadata(self, data: Dict) -> namedtuple:
         metadata = namedtuple("metadata", ["length", "path"])
         self._metadata = metadata(length=len(data.get("friends")), path=self.path)
         return data

@@ -13,7 +13,7 @@ from miner.utils import utils, const
 
 class Conversation(FacebookData):
     """
-    Class for representing data of all the messages with a user or a group
+    Class for representing data of all the messages with a user or a group.
     """
 
     def __init__(

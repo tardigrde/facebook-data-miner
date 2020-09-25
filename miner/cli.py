@@ -8,7 +8,7 @@ from typing import List, Union
 from fire import Fire
 
 from miner.app import App
-from miner.cli_adapters import AnalyzerFacade, GenericAnalyzerFacade
+from miner.cli_adapters import MessagingAnalyzerFacade, MessagingAnalyzerManagerFacade
 from miner.visualizer.plotter import Plotter
 from miner.visualizer.table_creator import TableCreator
 
@@ -16,18 +16,21 @@ DATA_PATH = None
 
 
 class CLI:
+    """
+    Entrypoint for the Command-Line Interface.
+    """
+
     def __init__(self, app):
         self._app = app
 
     def friends(self, sort="date", dates=True, output=None):
         """
+        Exposed function for getting data on our Facebook friends.
 
-
-        @param sort: a
-        @param dates: b
-        @param output: c
-        @return: list of friends, sorted by @sort, with dates of making friend if @dates is True,
-        saved in a csv or json file if @output is a valid path.
+        @param sort: the column we want to sort by. Can be either of {date|name}. Default is `dates`.
+        @param dates: boolean flag on do we want the dates column. Default is `True`.
+        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @return: either the data formatted as csv or json, or a success message about where was the data saved.
         """
         return self._app.friends.get(sort=sort, dates=dates, output=output)
 
@@ -40,11 +43,11 @@ class CLI:
     ):
         """
 
-        @param kind:
-        @param channels:
-        @param cols:
-        @param output:
-        @return:
+        @param kind: one of private or group, depending on which messaging do you want to analyze.
+        @param channels: channel names you want to filter for.
+        @param cols: column names you want to include in the output.
+        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @return: either the data formatted as csv or json, or a success message about where was the data saved.
         """
         return self._app.conversations.get(
             kind=kind, channels=channels, cols=cols, output=output
@@ -57,10 +60,19 @@ class CLI:
         participants: str = None,
         senders: str = None,
         **kwargs,
-    ) -> Union[GenericAnalyzerFacade, AnalyzerFacade]:
+    ) -> Union[MessagingAnalyzerManagerFacade, MessagingAnalyzerFacade]:
+        """
+
+        @param kind: one of private or group, depending on which messaging do you want to analyze.
+        @param channels: channel names you want to filter for.
+        @param participants: participant names you want to filter for.
+        @param senders: sender names you want to filter for.
+        @param kwargs: further filtering parameters, can be start, end and/or period.
+        @return: one of {MessagingAnalyzerManagerFacade|MessagingAnalyzerFacade} with the exposed functions.
+        """
         if kind is None:
-            return GenericAnalyzerFacade(self._app.analyzer)
-        return AnalyzerFacade(
+            return MessagingAnalyzerManagerFacade(self._app.analyzer)
+        return MessagingAnalyzerFacade(
             self._app.analyzer,
             kind=kind,
             channels=channels,
@@ -70,22 +82,28 @@ class CLI:
         )
 
     def people(self):
+        """
+        Exposed function for getting data on people.
+
+        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @return: either the data formatted as csv or json, or a success message about where was the data saved.
+        """
         return self._app.people.get()
 
     def report(self) -> TableCreator:
+        """
+
+        @return: a TableCreator instance's exposed methods.
+        """
         return TableCreator(self._app.analyzer, self._app.config)
 
     def plot(self) -> Plotter:
+        """
+
+        @return: a Plotter instance's exposed methods.
+        """
         # NOTE saving images to output is yet to be implemented
         return Plotter(self._app.analyzer, self._app.config)
-
-
-def main(path: str = DATA_PATH):
-    global DATA_PATH
-    DATA_PATH = path
-
-    if not DATA_PATH:
-        return "You need to provide a path variable."
 
 
 if __name__ == "__main__":
