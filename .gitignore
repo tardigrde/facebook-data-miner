@@ -251,3 +251,5 @@ tests/test_data/messages/inbox/group_messages.json
 
 tests/.pytest_cache
 .pytest_cache
+
+configuration.yml

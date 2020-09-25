@@ -7,39 +7,41 @@ from miner.message.conversation_stats import ConversationStats
 from miner.utils import utils
 
 
-@pytest.fixture
-def priv_stats(panalyzer):
-    return panalyzer._stats
-
-
-@pytest.fixture(scope="module")
-def group_stats(ganalyzer):
-    return ganalyzer._stats
-
-
 class TestConversationStatsForGroups:
-    def test_general_stats_again(self, group_stats):
+    def test_general_properties(self, group_stats):
         assert isinstance(group_stats, ConversationStats)
+        assert repr(group_stats) == f"ConversationStats for 3 channels"
+        assert isinstance(group_stats.messages, pd.DataFrame)
+        assert group_stats.messages.shape == (18, 6,)
+        assert group_stats.number_of_channels == 3
 
+    def test_some_stats(self, group_stats):
         assert group_stats.mc == 18
         assert group_stats.media_mc == 2
         assert group_stats.wc == 40
         assert group_stats.cc == 166
         assert "marathon" in list(group_stats.channels)
-        assert isinstance(group_stats.start, datetime)
 
-    def test_filter_channel(self, group_stats):
+    def test_too_many_channels(self, group_stats, caplog):
+        assert group_stats.creator == ""
+        assert caplog.messages[0] == "Too many `channels` to calculate this."
+
+    def test_start_end(self, group_stats):
+        assert isinstance(group_stats.start, datetime)
+        assert isinstance(group_stats.end, datetime)
+
+    def test_filter_channels(self, group_stats):
         filtered = group_stats.filter(channels="marathon")
         assert filtered.number_of_channels == 1
-        assert filtered.contributors == ["Levente Csőke", "Foo Bar", "Donald Duck"]
+        assert filtered.contributors == ["Jenő Rejtő", "Foo Bar", "Donald Duck"]
         assert filtered.created_by_me is True
         assert filtered.most_used_words.iloc[0]["unique_values"] in ("yapp", ":d")
         assert filtered.most_used_words.iloc[0]["counts"] == 2
         assert filtered.mc == 9
 
-    def test_filter_sender(self, group_stats):
-        filtered = group_stats.filter(senders="Teflon Musk")
-        assert filtered.contributors == ["Teflon Musk"]
+    def test_filter_senders(self, group_stats):
+        filtered = group_stats.filter(senders="Bugs Bunny")
+        assert filtered.contributors == ["Bugs Bunny"]
         assert filtered.wc == 3
         assert filtered.cc == 18
         assert filtered.df.shape == (1, 4,)
@@ -61,7 +63,7 @@ class TestConversationStatsForGroups:
         assert len(filtered.contributors) == 7
 
     def test_filter_subject_by_name(self, group_stats):
-        filtered = group_stats.filter(senders="Teflon Musk")
+        filtered = group_stats.filter(senders="Bugs Bunny")
         assert filtered.number_of_channels == 1
         assert filtered.df.shape == (1, 4)
         assert filtered.text_mc == 1
@@ -74,14 +76,10 @@ class TestConversationStatsForGroups:
         assert filtered.start.year == 2018
         assert filtered.start.month == 4
 
-    def test_number_of_channels_in_stats(self, group_stats):
-        assert group_stats.number_of_channels == 3
-
     def test_contributors(self, group_stats):
         contributors = group_stats.contributors
         assert "Foo Bar" in contributors
-        assert "Facebook User" in contributors  # what about Facebook Users
-
+        assert "Facebook User" in contributors
         assert group_stats.number_of_contributors == 8
 
     def test_average_word_length(self, group_stats):
@@ -155,14 +153,23 @@ class TestConversationStatsForGroups:
 
 
 class TestConversationStatsForPrivate:
-    def test_general_stats_again(self, priv_stats):
+    def test_some_stats(self, priv_stats):
         assert isinstance(priv_stats, ConversationStats)
 
         assert priv_stats.mc == 31
         assert priv_stats.media_mc == 9
         assert priv_stats.wc == 91
-        assert "Teflon Musk" in list(priv_stats.channels)
+        assert "Bugs Bunny" in list(priv_stats.channels)
         assert isinstance(priv_stats.start, datetime)
+        assert priv_stats.portion_of_reacted == pytest.approx(9.67, 0.01)
+
+    def test_media(self, priv_stats):
+        assert isinstance(priv_stats.media, pd.DataFrame)
+        assert len(priv_stats.files) == 2
+        assert len(priv_stats.photos) == 3
+        assert len(priv_stats.videos) == 1
+        assert len(priv_stats.audios) == 1
+        assert len(priv_stats.gifs) == 2
 
     def test_filter_channels(self, priv_stats):
         filtered = priv_stats.filter(channels="Foo Bar")
@@ -180,7 +187,7 @@ class TestConversationStatsForPrivate:
 
     def test_stats_are_in_df(self, panalyzer):
         stats_df = panalyzer.filter(
-            participants="Teflon Musk"
+            participants="Bugs Bunny"
         )._stats._get_convos_in_numbers()
 
         assert "mc" in stats_df
@@ -190,7 +197,7 @@ class TestConversationStatsForPrivate:
         assert "cc" in stats_df
 
     def test_stats_index_can_be_grouped(self, panalyzer):
-        stats = panalyzer.filter(participants="Teflon Musk")._stats
+        stats = panalyzer.filter(participants="Bugs Bunny")._stats
         assert stats.df.index[0].year == 2014
         assert stats.df.index[0].month == 9
         assert stats.df.index[0].day == 24
@@ -217,9 +224,14 @@ class TestConversationStatsForPrivate:
         assert sum(ccs) / len(ccs) == pytest.approx(21.72, 0.01)
 
     def test_message_language_map(self, priv_stats):
-        txt = "yo Legyen az, hogy most megprobalok ekezet nelkul irni. Seems pretty easy. I need some english words in here. Right? A magyar szavak felismereset probalom tesztelni ezzekkel a mondatokkal."
+        txt = (
+            "yo Legyen az, hogy most megprobalok ekezet nelkul irni. "
+            "Seems pretty easy. "
+            "I need some english words in here. Right? "
+            "A magyar szavak felismereset probalom tesztelni ezzekkel a mondatokkal."
+        )
         msg_lang = priv_stats.message_language_map
-        assert msg_lang["are you the real teflon musk?"].get("lang") == "English"
+        assert msg_lang["are you the real Bugs Bunny?"].get("lang") == "English"
         assert msg_lang["Excepteur...laborum. :D"].get("lang") == "Latin"
 
         assert msg_lang[txt].get("lang") == "English"
@@ -341,7 +353,7 @@ class TestConversationStatsForPrivate:
             23: 3,
         }
 
-    def test_stats_per_period_foo_bar(self, panalyzer):
+    def test_stats_per_period_ifiltered_for_foo_bar(self, panalyzer):
         stats = panalyzer.filter(participants="Foo Bar")._stats
         yearly = stats.stats_per_timeframe("y", "mc")
         assert yearly == {

@@ -1,14 +1,12 @@
+from yaml import dump, Dumper, load, FullLoader
 import copy
-import inspect
 import json
 import logging
 import math
 import os
-import re
 import time
 import zipfile
 from datetime import datetime
-from itertools import islice
 from typing import Union, List, Dict, Callable, Tuple
 
 import pandas as pd
@@ -26,11 +24,6 @@ class TooManyChannelsError(Exception):
 
 class NonExistentChannel(Exception):
     pass
-
-
-def get_properties_of_a_class(class_ref):
-    props = inspect.getmembers(class_ref, lambda o: isinstance(o, property))
-    return [p[0] for p in props]
 
 
 def get_participant_to_channel_mapping(data):
@@ -51,6 +44,7 @@ def get_period_map(join_date):
     return const.PERIOD_MAP
 
 
+@decorators.path_exists
 def unzip(path):
     if not path.endswith(".zip"):
         return path
@@ -60,20 +54,21 @@ def unzip(path):
         return new_path
 
 
+@decorators.path_exists
 def read_json(file) -> Union[Dict, List]:
     with open(file) as f:
         return json.load(f)
 
 
-def dump_to_json(data=None, file=None):
+def dump_to_json(file, data=None):
     with open(file, "w", encoding="utf8") as f:
         json.dump(data, f, ensure_ascii=False)
 
 
-def to_stdout(path, data):
-    if path == "json":
-        return data.to_json()
-    return data.to_csv()
+def df_to_str(kind, df):
+    if kind == "json":
+        return df.to_json()
+    return df.to_csv()
 
 
 def basedir_exists(path):
@@ -82,7 +77,7 @@ def basedir_exists(path):
     return True
 
 
-def rewrite(path):
+def do_rewrite(path):
     if os.path.exists(path):
         logging.warning("File already exist!")
         answer = input(f"Overwrite {path}? (y/n)")
@@ -93,20 +88,20 @@ def rewrite(path):
     return True
 
 
-def df_to_file(path, data):
-    if path is None or path in ("csv", "json"):
-        return to_stdout(path, data)
+def df_to_file(path, df):
+    if path in ("csv", "json", None):
+        return df_to_str(path, df)
 
     if not basedir_exists(path):
         return f"Directory does not exist: `{os.path.dirname(path)}`"
 
-    if not rewrite(path):
+    if not do_rewrite(path):
         return ""
 
     if path.endswith(".csv"):
-        data.to_csv(path)
+        df.to_csv(path)
     elif path.endswith(".json"):
-        data.to_json(path)
+        df.to_json(path)
     return f"Data was written to {path}"
 
 
@@ -154,40 +149,28 @@ def remove_items_where_value_is_falsible(dictionary):
     return {k: v for k, v in dictionary.items() if v}
 
 
-def slice_dict(dictionary, n):
-    return dict(islice(dictionary.items(), n))
-
-
-def unify_dict_keys(first, second):
-    for key in first.keys():
-        if second.get(key) is None:
-            second[key] = 0
-    for key in second.keys():
-        if first.get(key) is None:
-            first[key] = 0
-    return first, second
+def endswith_and_contains_str(file_name, extension, contains_string):
+    if (
+        file_name.endswith(extension)
+        and contains_string is not None
+        and contains_string in file_name
+    ):
+        return True
+    return False
 
 
 def get_parent_directory_of_file_with_extension(
     root, files, extension, contains_string
 ) -> str:
     for file_name in files:
-        if (
-            file_name.endswith(extension)
-            and contains_string is not None
-            and contains_string in file_name
-        ):
+        if endswith_and_contains_str(file_name, extension, contains_string):
             return root
 
 
 def get_all_jsons(root, files, extension, contains_string) -> List[str]:
     paths = []
     for file_name in files:
-        if (
-            file_name.endswith(extension)
-            and contains_string is not None
-            and contains_string in file_name
-        ):
+        if endswith_and_contains_str(file_name, extension, contains_string):
             paths.append(os.path.join(root, file_name))
     return paths
 
@@ -204,25 +187,8 @@ def walk_directory_and_search(path, func, extension, contains_string=""):
         yield path
 
 
-def dir_stripped(obj):
-    return [x for x in dir(obj) if not x.startswith("_")]
-
-
 def is_nan(value) -> bool:
     return not isinstance(value, str) and math.isnan(value)
-
-
-def emoji_matcher(text):
-    regex_pattern = re.compile(
-        pattern="["
-        "\U0001F600-\U0001F64F"  # emoticons
-        "\U0001F300-\U0001F5FF"  # symbols & pictographs
-        "\U0001F680-\U0001F6FF"  # transport & map symbols
-        "\U0001F1E0-\U0001F1FF"  # flags (iOS)
-        "]+",
-        flags=re.UNICODE,
-    )
-    return re.findall(regex_pattern, text)
 
 
 def replace_accents(string):
@@ -358,3 +324,9 @@ def get_top_N_people(
     count_dict = {k: count_dict[k] for k in list(count_dict.keys())[:top]}
     percent_dict = {k: percent_dict[k] for k in list(percent_dict.keys())[:top]}
     return count_dict, percent_dict
+
+
+@decorators.path_exists
+def read_yaml(file):
+    with open(file) as yaml:
+        return load(yaml, Loader=FullLoader)

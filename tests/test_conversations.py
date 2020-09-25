@@ -13,16 +13,16 @@ def test_private_has_conversation_instances(conversations):
         assert isinstance(convo, Conversation)
 
 
-def test_specific_people_has_got_media(conversations):
+def test_specific_people_has_got_media_dir(conversations):
     assert (
-        conversations.private.get("Teflon Musk").metadata.media_dir
+        conversations.private.get("Bugs Bunny").metadata.media_dir
         == "TeflonMusk_fSD454F"
     )
 
 
 def test_get_all_people_from_private_messages(conversations):
     people = list(conversations.private.keys())
-    expected = ["Foo Bar", "Teflon Musk", "Benedek Elek", "Tőke Hal"]
+    expected = ["Foo Bar", "Bugs Bunny", "Benedek Elek", "Tőke Hal"]
     assert sorted(people) == sorted(expected)
 
 
@@ -42,8 +42,8 @@ def test_get_all_people_from_convo(conversations):
         "Facebook User",
         "Foo Bar",
         "John Doe",
-        "Levente Csőke",
-        "Teflon Musk",
+        "Jenő Rejtő",
+        "Bugs Bunny",
         "Benedek Elek",
         "Donald Duck",
         "Tőke Hal",

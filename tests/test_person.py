@@ -16,4 +16,4 @@ def testadd_two_person_with_different_name():
     one = Person("Test Test", compact_name="testtest")
     two = Person("This gets ignored", friend=True)
     with pytest.raises(ValueError):
-        onetwo = one + two
+        one += two

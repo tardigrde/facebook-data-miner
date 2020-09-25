@@ -36,9 +36,6 @@ class FacebookData:
     def preprocessor(self):
         return self._preprocessor
 
-    def _register_processors(self, preprocessor):
-        raise NotImplementedError()
-
     def _get_data(self) -> Any:
         raw_data = self._read_data(self.reader, self.path)
         return self.preprocessor(raw_data)

@@ -1,22 +1,5 @@
-import pytest
-
-from miner.utils.utils import dt
 from miner.message.conversation_stats import ConversationStats
-
-
-@pytest.fixture(scope="session")
-def group_stats(ganalyzer):
-    def _stats(**kwargs):
-        if "names" in kwargs:
-            analyzer = ganalyzer.filter(participants=kwargs.get("names"))
-        else:
-            analyzer = ganalyzer
-        if any([kw in kwargs for kw in ("channel", "subject", "start", "end")]):
-            return analyzer._stats.filter(**kwargs)
-        else:
-            return analyzer._stats
-
-    return _stats
+from miner.utils.utils import dt
 
 
 class TestGroupStatisticsWithFiltering:

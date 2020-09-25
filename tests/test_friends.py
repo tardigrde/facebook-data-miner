@@ -12,7 +12,7 @@ def expected_friends():
         "Foo Bar": {"compact_name": "foobar"},
         "Tőke Hal": {"compact_name": "tokehal"},
         "Dér Dénes": {"compact_name": "derdenes"},
-        "Teflon Musk": {"compact_name": "teflonmusk"},
+        "Bugs Bunny": {"compact_name": "teflonmusk"},
         "Daisy Duck": {"compact_name": "daisyduck"},
         "Guy Fawkes": {"compact_name": "guyfawkes"},
     }
