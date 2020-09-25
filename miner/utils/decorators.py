@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import os
 from miner.utils import const, utils
 
 
@@ -23,6 +23,18 @@ class string_kwarg_to_list_converter:
             return func(*args, **kwargs)
 
         return wrapper
+
+
+def path_exists(func):
+    def wrapper(*args):
+        path = args[0]
+        if not os.path.exists(path):
+            raise FileNotFoundError(
+                f"`{path}` doe snot exist. You must specify a valid path."
+            )
+        return func(*args)
+
+    return wrapper
 
 
 def outputter(func):
@@ -50,7 +62,7 @@ def column_checker(func):
     def wrapper(*args, **kwargs):
         if not kwargs.get("column") or not isinstance(kwargs.get("column"), str):
             raise ValueError(
-                f'Parameter `column` should be type of pd.Series, got: {type(kwargs["column"])}'
+                f'Parameter `column` should be type of str, got: {type(kwargs["column"])}'
             )
         return func(*args, **kwargs)
 
@@ -59,7 +71,10 @@ def column_checker(func):
 
 def period_checker(func):
     def wrapper(*args, **kwargs):
-        if not kwargs.get("period") or const.DELTA_MAP[kwargs.get("period")] is None:
+        if (
+            not kwargs.get("period")
+            or const.DELTA_MAP.get(kwargs.get("period")) is None
+        ):
             raise ValueError("Parameter `period` should be one of {y, m, d, h}")
         return func(*args, **kwargs)
 

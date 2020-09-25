@@ -94,11 +94,11 @@ class ConversationStats:
         )
 
     @property
-    def media(self) -> pd.Series:
+    def media(self) -> pd.DataFrame:
         if any([item in self.df.columns for item in const.MEDIA_DIRS]):
             return self.df[self.df.content.isna()][const.MEDIA_DIRS]
         else:
-            return pd.Series()
+            return pd.DataFrame()
 
     @property
     def words(self) -> pd.Series:

@@ -54,7 +54,9 @@ class Conversations:
         )
         if not filtered_channels:
             return f"Could not filter for these channels: {channels}. Please double-check the channel names."
-        res = utils.stack_dfs(*[data.get(channel).data for channel in filtered_channels])
+        res = utils.stack_dfs(
+            *[data.get(channel).data for channel in filtered_channels]
+        )
         filtered_cols = (
             list(res.columns)
             if cols is None
@@ -145,7 +147,7 @@ class ConversationsPaths:
 
     def register_paths(self) -> None:
         # Question: what if later I want to write this in a database?
-        utils.dump_to_json(self.directories, self.paths_json)
+        utils.dump_to_json(self.paths_json, self.directories)
 
     def read_paths(self) -> None:
         self._directories = utils.read_json(self.paths_json)

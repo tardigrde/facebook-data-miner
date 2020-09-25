@@ -1,10 +1,10 @@
 {
   "participants": [
     {
-      "name": "Teflon Musk"
+      "name": "Bugs Bunny"
     },
     {
-      "name": "Levente Cs\u00c5\u0091ke"
+      "name": "Jen\u00c5\u0091 Rejt\u00c5\u0091"
     },
     {
       "name": "John Doe"
@@ -21,7 +21,7 @@
       "type": "Generic"
     },
     {
-      "sender_name": "Teflon Musk",
+      "sender_name": "Bugs Bunny",
       "timestamp_ms": 1310907632012,
       "content": "basic group messages",
       "type": "Generic"
@@ -33,13 +33,13 @@
       "type": "Generic"
     },
     {
-      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1310907608580,
       "content": "test",
       "type": "Generic"
     }
   ],
-  "title": "Foo Bar, John Doe and Teflon Musk",
+  "title": "Foo Bar, John Doe and Bugs Bunny",
   "is_still_participant": true,
   "thread_type": "RegularGroup",
   "thread_path": "inbox/teflonmuskfoobarandjohndoe_sf5d4f56sd_gf"

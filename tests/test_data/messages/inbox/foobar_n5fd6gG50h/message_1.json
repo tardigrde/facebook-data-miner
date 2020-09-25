@@ -4,12 +4,12 @@
       "name": "Foo Bar"
     },
     {
-      "name": "Levente Cs\u00c5\u0091ke"
+      "name": "Jen\u00c5\u0091 Rejt\u00c5\u0091"
     }
   ],
   "messages": [
     {
-      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1596910928321,
       "content": "OUT! \u00e2\u009d\u00a4",
       "type": "Generic"
@@ -21,7 +21,7 @@
       "type": "Generic"
     },
     {
-      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1587850928047,
       "videos": [
         {
@@ -35,7 +35,7 @@
       "type": "Generic"
     },
     {
-      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1585850928047,
       "content": "Whet? Check this! :P",
       "type": "Generic"
@@ -52,7 +52,7 @@
       "type": "Generic"
     },
     {
-      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1582720928145,
       "photos": [
         {
@@ -72,19 +72,19 @@
       "reactions": [
         {
           "reaction": "\u00e2\u009d\u00a4",
-          "actor": "Levente Cs\u00c5\u0091ke"
+          "actor": "Jen\u00c5\u0091 Rejt\u00c5\u0091"
         }
       ],
       "type": "Generic"
     },
     {
-      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1581980928047,
       "content": "What the hack? xdddddd :D",
       "type": "Generic"
     },
     {
-      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1581700928145,
       "gifs": [
         {
@@ -106,7 +106,7 @@
       "type": "Generic"
     },
     {
-      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1581680928047,
       "content": "Duis duia .. ! xdddddd :D",
       "type": "Generic"
@@ -122,7 +122,7 @@
       "type": "Generic"
     },
     {
-      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1581640928145,
       "photos": [
         {
@@ -138,13 +138,13 @@
       "reactions": [
         {
           "reaction": "\u00e2\u009d\u00a4",
-          "actor": "Levente Cs\u00c5\u0091ke"
+          "actor": "Jen\u00c5\u0091 Rejt\u00c5\u0091"
         }
       ],
       "type": "Generic"
     },
     {
-      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1581570928715,
       "content": "Lorem lorim.. foo bar \u00f0\u009f\u0098\u00a1\u00f0\u009f\u0098\u00a1\u00f0\u009f\u0098\u00a1",
       "type": "Generic"

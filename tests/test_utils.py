@@ -1,3 +1,8 @@
+import json
+import os
+import tempfile
+
+import pandas as pd
 import pytest
 from helpers import lower_string, add_string, split_string, tempfile_tree
 
@@ -58,10 +63,70 @@ class TestUtils:
         unsorted = utils.fill_dict(unsorted, "c", 4)
         unsorted = utils.fill_dict(unsorted, "a", 3)
         assert unsorted == {"b": 3, "a": 5, "c": 4}
-        sorted_desc = utils.sort_dict(unsorted, func=lambda item: item[1], reverse=False)
+        sorted_desc = utils.sort_dict(
+            unsorted, func=lambda item: item[1], reverse=False
+        )
         assert sorted_desc == {"b": 3, "c": 4, "a": 5}
-        sorted_asc = utils.sort_dict(sorted_desc, func=lambda item: item[1], reverse=True)
+        sorted_asc = utils.sort_dict(
+            sorted_desc, func=lambda item: item[1], reverse=True
+        )
         assert sorted_asc == {"a": 5, "c": 4, "b": 3}
+
+    def test_unzip(self):
+        f = tempfile.NamedTemporaryFile()
+        path = utils.unzip(f.name)
+        assert path == f.name
+
+        # Won't test ZipFile code
+
+    def test_basedir_exists(self):
+        res = utils.basedir_exists(os.path.realpath(__file__))
+        assert res
+
+        res = utils.basedir_exists("/home/whatever/a/gibberish")
+        assert not res
+
+    def test_df_to_file(self):
+        path = f"{os.path.dirname(os.path.realpath(__file__))}/test.csv"
+        df = pd.DataFrame(
+            {"num_legs": [2, 4,], "num_wings": [2, 0,]}, index=["falcon", "dog",]
+        )
+        res = utils.df_to_file(path, df)
+        assert res == f"Data was written to {path}"
+        os.unlink(path)
+
+        path = f"{os.path.dirname(os.path.realpath(__file__))}/test.json"
+        res = utils.df_to_file(path, df)
+        assert res == f"Data was written to {path}"
+        os.unlink(path)
+
+        path = "csv"
+        res = utils.df_to_file(path, df)
+        assert isinstance(res, str)
+
+        path = "json"
+        res = utils.df_to_file(path, df)
+        assert isinstance(res, str)
+        assert isinstance(json.loads(res), dict)
+
+        res = utils.df_to_file("/home/whatever/a/gibberish", df)
+        assert res == "Directory does not exist: `/home/whatever/a`"
+
+    def test_get_start_based_on_period(self):
+        res = utils.get_start_based_on_period(utils.dt(2014, 2, 2), "y")
+        assert res == utils.dt(2014, 1, 1)
+
+        res = utils.get_start_based_on_period(utils.dt(2014, 2, 2), "m")
+        assert res == utils.dt(2014, 2, 1)
+
+    def test_remove_items_where_value_is_falsible(self):
+        res = utils.remove_items_where_value_is_falsible({1: 0, 2: 1, 3: 2})
+        assert res == {2: 1, 3: 2}
+
+    def test_generate_date_series(self):
+        res = utils.generate_date_series(utils.dt(2010, 10, 10))
+        expected = [utils.dt(i, 2, 4) for i in range(2004, 2021)]
+        assert res == expected
 
 
 class TestDataFrameUtils:
@@ -78,3 +143,16 @@ class TestDataFrameUtils:
 
         filtered = utils.filter_by_date(df, start="2020-03-01", end="2020-04-30")
         assert len(filtered) == 3
+
+    def test_df_to_str(self):
+        df = pd.DataFrame(
+            {"num_legs": [2, 4,], "num_wings": [2, 0,]}, index=["falcon", "dog",]
+        )
+
+        res = utils.df_to_str("csv", df)
+        assert isinstance(res, str)
+        assert ",num_legs,num_wings" in res
+
+        res = utils.df_to_str("json", df)
+        assert isinstance(res, str)
+        assert isinstance(json.loads(res), dict)

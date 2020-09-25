@@ -1,19 +1,19 @@
-import pytest
 import os
 
-from miner.message.messaging_analyzer import MessagingAnalyzerManager
-from miner.message.conversations import Conversations
-from miner.app import App
-from miner.people import People
-from miner.data import FacebookData
-from miner.friends import Friends
+import pytest
 
-TEST_DATA_PATH = f"{os.getcwd()}/test_data"
+from miner.app import App
+from miner.friends import Friends
+from miner.message.conversations import Conversations
+from miner.message.messaging_analyzer import MessagingAnalyzerManager
+from miner.people import People
+
+TEST_DATA_PATH = f"{os.path.dirname(os.path.realpath(__file__))}/test_data"
 
 
 @pytest.fixture(scope="session")
 def app():
-    return App(TEST_DATA_PATH)
+    return App()
 
 
 @pytest.fixture(scope="session")
@@ -24,26 +24,19 @@ def friends():
 @pytest.fixture(scope="session")
 def conversations():
     yield Conversations(f"{TEST_DATA_PATH}")
+    # tear-down
     os.remove(f"{TEST_DATA_PATH}/messages/inbox/private_messages.json")
     os.remove(f"{TEST_DATA_PATH}/messages/inbox/group_messages.json")
 
 
 @pytest.fixture(scope="session")
-def get_people(
+def people(
     friends, conversations,
 ):
     def _get_people(name=None):
         return People(friends=friends, conversations=conversations)
 
-    return _get_people
-
-
-@pytest.fixture(scope="function")
-def facebook_data():
-    def _facebook_data(sub_path=""):
-        return FacebookData(path=TEST_DATA_PATH + sub_path)
-
-    return _facebook_data
+    return _get_people()
 
 
 @pytest.fixture(scope="session")
@@ -59,3 +52,13 @@ def panalyzer(analyzer):
 @pytest.fixture(scope="session")
 def ganalyzer(analyzer):
     return analyzer.group
+
+
+@pytest.fixture(scope="session")
+def priv_stats(panalyzer):
+    return panalyzer._stats
+
+
+@pytest.fixture(scope="session")
+def group_stats(ganalyzer):
+    return ganalyzer._stats
