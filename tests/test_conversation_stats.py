@@ -10,7 +10,7 @@ from miner.utils import utils
 class TestConversationStatsForGroups:
     def test_general_properties(self, group_stats):
         assert isinstance(group_stats, ConversationStats)
-        assert repr(group_stats) == f"ConversationStats for 3 channels"
+        assert repr(group_stats) == "ConversationStats for 3 channels"
         assert isinstance(group_stats.messages, pd.DataFrame)
         assert group_stats.messages.shape == (18, 6,)
         assert group_stats.number_of_channels == 3
@@ -33,9 +33,16 @@ class TestConversationStatsForGroups:
     def test_filter_channels(self, group_stats):
         filtered = group_stats.filter(channels="marathon")
         assert filtered.number_of_channels == 1
-        assert filtered.contributors == ["Jenő Rejtő", "Foo Bar", "Donald Duck"]
+        assert filtered.contributors == [
+            "Jenő Rejtő",
+            "Foo Bar",
+            "Donald Duck",
+        ]
         assert filtered.created_by_me is True
-        assert filtered.most_used_words.iloc[0]["unique_values"] in ("yapp", ":d")
+        assert filtered.most_used_words.iloc[0]["unique_values"] in (
+            "yapp",
+            ":d",
+        )
         assert filtered.most_used_words.iloc[0]["counts"] == 2
         assert filtered.mc == 9
 
@@ -48,7 +55,8 @@ class TestConversationStatsForGroups:
 
     def test_filter_me(self, group_stats):
         filtered = group_stats.filter(senders="me")
-        # NOTE filters out the one group where I'm not a contributor, only a participant
+        # NOTE filters out the one group where I'm not a contributor,
+        # only a participant
         assert filtered.number_of_channels == 2
         assert filtered.df.shape == (4, 4)
         assert filtered.text_mc == 4
@@ -59,7 +67,9 @@ class TestConversationStatsForGroups:
         assert filtered.number_of_channels == 3
         assert filtered.df.shape == (14, 6)
         assert filtered.text_mc == 12
-        assert filtered.percentage_of_media_messages == pytest.approx(14.28, 0.1)
+        assert filtered.percentage_of_media_messages == pytest.approx(
+            14.28, 0.1
+        )
         assert len(filtered.contributors) == 7
 
     def test_filter_subject_by_name(self, group_stats):
@@ -161,7 +171,9 @@ class TestConversationStatsForPrivate:
         assert priv_stats.wc == 91
         assert "Bugs Bunny" in list(priv_stats.channels)
         assert isinstance(priv_stats.start, datetime)
-        assert priv_stats.percentage_of_reacted_messages == pytest.approx(9.67, 0.01)
+        assert priv_stats.percentage_of_reacted_messages == pytest.approx(
+            9.67, 0.01
+        )
 
     def test_media(self, priv_stats):
         assert isinstance(priv_stats.media, pd.DataFrame)
@@ -228,10 +240,13 @@ class TestConversationStatsForPrivate:
             "yo Legyen az, hogy most megprobalok ekezet nelkul irni. "
             "Seems pretty easy. "
             "I need some english words in here. Right? "
-            "A magyar szavak felismereset probalom tesztelni ezzekkel a mondatokkal."
+            "A magyar szavak felismereset probalom tesztelni "
+            "ezzekkel a mondatokkal."
         )
         msg_lang = priv_stats.message_language_map
-        assert msg_lang["are you the real Bugs Bunny?"].get("lang") == "English"
+        assert (
+            msg_lang["are you the real Bugs Bunny?"].get("lang") == "English"
+        )
         assert msg_lang["Excepteur...laborum. :D"].get("lang") == "Latin"
 
         assert msg_lang[txt].get("lang") == "English"

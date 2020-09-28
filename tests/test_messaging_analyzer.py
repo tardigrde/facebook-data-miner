@@ -1,7 +1,10 @@
 import pytest
 
 from miner.message.conversation_stats import ConversationStats
-from miner.message.messaging_analyzer import MessagingAnalyzerManager, MessagingAnalyzer
+from miner.message.messaging_analyzer import (
+    MessagingAnalyzerManager,
+    MessagingAnalyzer,
+)
 
 
 class TestMessagingAnalyzerManager:
@@ -15,11 +18,15 @@ class TestMessagingAnalyzerManager:
         assert len(analyzer.people_i_have_group_convo_with) == 8
 
     def test_get_who_i_have_private_convo_with_from_a_group(self, analyzer):
-        have = analyzer.get_who_i_have_private_convo_with_from_a_group("marathon")
+        have = analyzer.get_who_i_have_private_convo_with_from_a_group(
+            "marathon"
+        )
         assert have == ["Bugs Bunny", "Foo Bar"]
 
     def test_how_much_i_speak_in_private_with_group_members(self, analyzer):
-        spoke = analyzer.how_much_i_speak_in_private_with_group_members("marathon")
+        spoke = analyzer.how_much_i_speak_in_private_with_group_members(
+            "marathon"
+        )
         assert spoke == {"Foo Bar": 15, "Bugs Bunny": 6}
 
     def test_all_interactions(self, analyzer):
@@ -79,12 +86,16 @@ class TestMessagingAnalyzerMethodsForGroups:
         assert len(filtered.data) == 1
 
     def test_filter_by_channels_and_participants(self, ganalyzer):
-        filtered = ganalyzer.filter(channels=["marathon"], participants="Bugs Bunny")
+        filtered = ganalyzer.filter(
+            channels=["marathon"], participants="Bugs Bunny"
+        )
         assert filtered.data.get("marathon")
         assert len(filtered.data) == 1
         assert len(filtered.participant_to_channel_map) == 4
 
-        filtered = ganalyzer.filter(channels=["marathon"], participants="Benedek Elek")
+        filtered = ganalyzer.filter(
+            channels=["marathon"], participants="Benedek Elek"
+        )
 
         assert not len(filtered)
 
@@ -108,7 +119,9 @@ class TestMessagingAnalyzerMethodsForGroups:
         stats_per_partner = ganalyzer._get_stats_per_participant()
 
         assert len(stats_per_partner) == 8
-        assert list(ganalyzer.participants) == sorted(list(stats_per_partner.keys()))
+        assert list(ganalyzer.participants) == sorted(
+            list(stats_per_partner.keys())
+        )
         assert all(
             [
                 isinstance(stats, ConversationStats)
@@ -117,7 +130,9 @@ class TestMessagingAnalyzerMethodsForGroups:
         )
 
     def test_get_all_channels_for_one_person(self, ganalyzer):
-        list_of_groups = ganalyzer.get_all_channels_for_one_person("Bugs Bunny")
+        list_of_groups = ganalyzer.get_all_channels_for_one_person(
+            "Bugs Bunny"
+        )
         assert len(list_of_groups) == 2
 
     def test_min_group_size(self, ganalyzer):
@@ -164,11 +179,15 @@ class TestMessagingAnalyzerMethodsForPrivates:
         assert len(filtered.participant_to_channel_map) == 2
 
     def test_filter_by_channels_and_participants(self, panalyzer):
-        filtered = panalyzer.filter(channels="Bugs Bunny", participants="Bugs Bunny")
+        filtered = panalyzer.filter(
+            channels="Bugs Bunny", participants="Bugs Bunny"
+        )
         assert len(filtered.data) == 1
         assert len(filtered.participant_to_channel_map) == 2
 
-        filtered = panalyzer.filter(channels=["marathon"], participants="Benedek Elek")
+        filtered = panalyzer.filter(
+            channels=["marathon"], participants="Benedek Elek"
+        )
 
         assert not len(filtered)
 
@@ -192,7 +211,9 @@ class TestMessagingAnalyzerMethodsForPrivates:
         stats_per_sender = panalyzer._get_stats_per_participant()
 
         assert len(stats_per_sender) == 5
-        assert list(panalyzer.participants) == sorted(list(stats_per_sender.keys()))
+        assert list(panalyzer.participants) == sorted(
+            list(stats_per_sender.keys())
+        )
         assert all(
             [
                 isinstance(stats, ConversationStats)
@@ -201,7 +222,9 @@ class TestMessagingAnalyzerMethodsForPrivates:
         )
 
     def test_get_all_channels_for_one_person(self, panalyzer):
-        list_of_groups = panalyzer.get_all_channels_for_one_person("Bugs Bunny")
+        list_of_groups = panalyzer.get_all_channels_for_one_person(
+            "Bugs Bunny"
+        )
         assert len(list_of_groups) == 1
 
     def test_group_size(self, panalyzer):

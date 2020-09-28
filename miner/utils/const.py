@@ -66,4 +66,9 @@ STAT_MAP = {
     "cc": "Character",
 }
 
-HUMAN_READABLE_PERIODS = {"y": "Yearly", "m": "Monthly", "d": "Daily", "h": "Hourly"}
+HUMAN_READABLE_PERIODS = {
+    "y": "Yearly",
+    "m": "Monthly",
+    "d": "Daily",
+    "h": "Hourly",
+}

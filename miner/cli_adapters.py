@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Union
+from typing import Any, Dict, List, Union
 
 import numpy as np
 import pandas as pd
@@ -9,7 +9,7 @@ from miner.utils import decorators
 
 
 class MessagingAnalyzerManagerFacade:
-    def __init__(self, analyzer) -> None:
+    def __init__(self, analyzer: MessagingAnalyzerManager) -> None:
         self._analyzer = analyzer
         self._private = self._analyzer.private
         self._group = self._analyzer.group
@@ -42,12 +42,12 @@ class MessagingAnalyzerFacade:
     @decorators.kind_checker
     def __init__(
         self,
-        analyzer,
+        analyzer: MessagingAnalyzerManager,
         kind: str = "private",
-        channels: str = None,
-        participants: str = None,
-        senders: str = None,
-        **kwargs
+        channels: Union[str, None] = None,
+        participants: Union[str, None] = None,
+        senders: Union[str, None] = None,
+        **kwargs: Any,
     ) -> None:
         self.__analyzer = getattr(analyzer, kind).filter(
             channels=channels, participants=participants
@@ -67,14 +67,16 @@ class MessagingAnalyzerFacade:
     def _stats(self) -> ConversationStats:
         """
 
-        @return: ConversationStats object containing stats on the current self.df.
+        @return: ConversationStats object containing stats
+        on the current self.df.
         """
         return self.__stats
 
     def is_group(self) -> bool:
         """
 
-        @return: returns True if we are analyzing group messages, False otherwise.
+        @return: returns True if we are analyzing group messages,
+        False otherwise.
         """
         return self._analyzer.is_group
 
@@ -124,27 +126,30 @@ class MessagingAnalyzerFacade:
         """
         return self._analyzer.mean_channel_size
 
-    def all_channels(self, name: str = None) -> List[str]:
+    def all_channels(self, name: Union[str, None] = None) -> List[str]:
         """
 
         @param name: name of the subject we are interested in.
         Anyone who is a participant in at least one conversation.
-        @return: all the channels (max 1 private, and any number of group conversations) the subject is in.
+        @return: all the channels (max 1 private, and any number of
+        group conversations) the subject is in.
         """
         if not name:
             return self.channels()
         return self._analyzer.get_all_channels_for_one_person(name)
 
     def ranking_by_statistic(
-        self, by="mc", ranking="percent", top=20
+        self, by: str = "mc", ranking: str = "percent", top: int = 20
     ) -> Dict[str, float]:
         """
 
         @param by: attribute we are interested in.
-        Can be any of the ConversationStats properties, but it has to be numeric.
+        Can be any of the ConversationStats properties,
+        but it has to be numeric.
         @param ranking: format of return value. Any of percent or absolute.
         @param top: used to limit the number of results for better readability.
-        @return: dictionary containing ranking in any of percent or absolute values.
+        @return: dictionary containing ranking in any of percent
+        or absolute values.
         """
         return self._analyzer.get_ranking_of_people_by_convo_stats(
             statistic=by, top=top
@@ -169,7 +174,8 @@ class MessagingAnalyzerFacade:
     def contributors(self) -> List[str]:
         """
 
-        @return: all the participants who sent a message in any channels at least once.
+        @return: all the participants who sent a message in any channels
+        at least once.
         """
         return self._stats.contributors
 
@@ -209,37 +215,41 @@ class MessagingAnalyzerFacade:
         return self._stats.end
 
     @decorators.outputter
-    def messages(self, output: str = None) -> pd.Series:
+    def messages(self, output: Union[str, None] = None) -> pd.Series:
         """
 
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @param output: where do we want to write the return value,
+        can be any of: {csv|json|/some/path.{json|csv}}.
         @return: returns self.df, that is all the messages in this object.
         """
         return self._stats.messages
 
     @decorators.outputter
-    def text(self, output: str = None) -> pd.Series:
+    def text(self, output: Union[str, None] = None) -> pd.Series:
         """
 
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @param output: where do we want to write the return value,
+        can be any of: {csv|json|/some/path.{json|csv}}.
         @return: returns only the text messages in this object.
         """
         return self._stats.text
 
     @decorators.outputter
-    def media(self, output: str = None) -> pd.Series:
+    def media(self, output: Union[str, None] = None) -> pd.Series:
         """
 
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @param output: where do we want to write the return value,
+        can be any of: {csv|json|/some/path.{json|csv}}.
         @return: returns only the media messages in this object.
         """
         return self._stats.media
 
     @decorators.outputter
-    def words(self, output: str = None) -> pd.Series:
+    def words(self, output: Union[str, None] = None) -> pd.Series:
         """
 
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @param output: where do we want to write the return value,
+        can be any of: {csv|json|/some/path.{json|csv}}.
         @return: returns all the words in all the messages.
         """
         return self._stats.words
@@ -308,28 +318,33 @@ class MessagingAnalyzerFacade:
         return self._stats.percentage_of_media_messages
 
     @decorators.outputter
-    def most_used_msgs(self, output: str = None) -> pd.Series:
+    def most_used_msgs(self, output: Union[str, None] = None) -> pd.Series:
         """
 
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @param output: where do we want to write the return value,
+        can be any of: {csv|json|/some/path.{json|csv}}.
         @return: most occurring messages in descending order.
         """
         return self._stats.most_used_msgs
 
     @decorators.outputter
-    def most_used_words(self, output: str = None) -> pd.Series:
+    def most_used_words(self, output: Union[str, None] = None) -> pd.Series:
         """
 
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @param output: where do we want to write the return value,
+        can be any of: {csv|json|/some/path.{json|csv}}.
         @return: most occurring words in descending order.
         """
         return self._stats.most_used_words
 
     @decorators.outputter
-    def reacted_messages(self, output: str = None) -> pd.DataFrame:
+    def reacted_messages(
+        self, output: Union[str, None] = None
+    ) -> pd.DataFrame:
         """
 
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @param output: where do we want to write the return value,
+        can be any of: {csv|json|/some/path.{json|csv}}.
         @return: all the messages with a reaction.
         """
         return self._stats.reacted_messages
@@ -343,46 +358,51 @@ class MessagingAnalyzerFacade:
         return self._stats.percentage_of_reacted_messages
 
     @decorators.outputter
-    def files(self, output: str = None) -> pd.Series:
+    def files(self, output: Union[str, None] = None) -> pd.Series:
         """
 
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @param output: where do we want to write the return value,
+        can be any of: {csv|json|/some/path.{json|csv}}.
         @return: all the messages which are files sent.
         """
         return self._stats.files
 
     @decorators.outputter
-    def photos(self, output: str = None) -> pd.Series:
+    def photos(self, output: Union[str, None] = None) -> pd.Series:
         """
 
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @param output: where do we want to write the return value,
+        can be any of: {csv|json|/some/path.{json|csv}}.
         @return: all the messages which are photos sent.
         """
         return self._stats.photos
 
     @decorators.outputter
-    def videos(self, output: str = None) -> pd.Series:
+    def videos(self, output: Union[str, None] = None) -> pd.Series:
         """
 
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @param output: where do we want to write the return value,
+        can be any of: {csv|json|/some/path.{json|csv}}.
         @return: all the messages which are videos sent.
         """
         return self._stats.videos
 
     @decorators.outputter
-    def audios(self, output: str = None) -> pd.Series:
+    def audios(self, output: Union[str, None] = None) -> pd.Series:
         """
 
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @param output: where do we want to write the return value,
+        can be any of: {csv|json|/some/path.{json|csv}}.
         @return: all the messages which are audio files sent.
         """
         return self._stats.audios
 
     @decorators.outputter
-    def gifs(self, output: str = None) -> pd.Series:
+    def gifs(self, output: Union[str, None] = None) -> pd.Series:
         """
 
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
+        @param output: where do we want to write the return value,
+        can be any of: {csv|json|/some/path.{json|csv}}.
         @return: all the messages which are gifs sent.
         """
         return self._stats.gifs
@@ -406,26 +426,33 @@ class MessagingAnalyzerFacade:
     ) -> Dict[str, Union[Dict[str, int], Dict[str, float]]]:
         """
 
-         @return: detected (with polyglot library) language ratio.
-         """
+        @return: detected (with polyglot library) language ratio.
+        """
         return self._stats.message_language_ratio
 
     @decorators.outputter
     def get_grouped_time_series_data(
-        self, timeframe: str = "y", output: str = None
+        self, timeframe: str = "y", output: Union[str, None] = None
     ) -> pd.DataFrame:
         """
 
-        @return: numeric statistics like message, word, char, etc. count grouped by datetime according the timeframes.
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
-        @return: numeric statistics like message, word, character, etc. count grouped by timeframe.
+        @return: numeric statistics like message, word, char, etc.
+        count grouped by datetime according the timeframes.
+        @param output: where do we want to write the return value, c
+        an be any of: {csv|json|/some/path.{json|csv}}.
+        @return: numeric statistics like message, word, character, etc.
+        count grouped by timeframe.
         """
         return self._stats.get_grouped_time_series_data(timeframe=timeframe)
 
-    def stats_per_timeframe(self, timeframe: str, statistic: str = "mc") -> Dict:
+    def stats_per_timeframe(
+        self, timeframe: str, statistic: str = "mc"
+    ) -> Dict:
         """
 
-        @param timeframe: in which timeframe you want to group the messages. One of {y|m|d|h}.
-        @return: numeric statistics like message, word, character, etc. broken down to the timeframe.
+        @param timeframe: in which timeframe you want to group the messages.
+        One of {y|m|d|h}.
+        @return: numeric statistics like message, word, character, etc.
+        broken down to the timeframe.
         """
         return self._stats.stats_per_timeframe(timeframe, statistic=statistic)

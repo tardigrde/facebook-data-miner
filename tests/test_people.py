@@ -37,7 +37,10 @@ def test_some_convos_are_with_friends(people):
 
 def test_messages_are_df(people):
     assert all(
-        [isinstance(person.messages, pd.DataFrame) for person in people.data.values()]
+        [
+            isinstance(person.messages, pd.DataFrame)
+            for person in people.data.values()
+        ]
     )
 
 
@@ -70,7 +73,8 @@ def test_some_as_media_dir(people):
 
 def test_media_has_one_folder_of_possibles(people):
     listed_dir = os.listdir(
-        f"{os.getcwd()}/test_data/{const.MESSAGE_SUBPATH}/{people.data.get('Bugs Bunny').media_dir}"
+        f"{os.getcwd()}/tests/test_data/{const.MESSAGE_SUBPATH}/"
+        f"{people.data.get('Bugs Bunny').media_dir}"
     )
     assert "files" in listed_dir
     assert "photos" in listed_dir

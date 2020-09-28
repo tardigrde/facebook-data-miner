@@ -1,8 +1,8 @@
-from typing import List, Dict, Callable, Any, NamedTuple, Union
+from typing import Any, Callable, Dict, List, NamedTuple, Union
 
 import pandas as pd
 
-from miner.utils import utils, command
+from miner.utils import command, utils
 
 
 class FacebookData:
@@ -11,14 +11,19 @@ class FacebookData:
     """
 
     def __init__(
-        self, path: str, reader: Callable = None, processors: List[Callable] = None
+        self,
+        path: str,
+        reader: Union[None, Callable] = None,
+        processors: Union[None, List[Callable]] = None,
     ) -> None:
         self.path: str = path
-        self._reader: Callable = reader
-        self._preprocessor: Callable = self._get_preprocessor(processors)
+        self._reader = reader
+        self._preprocessor: command.CommandChainCreator = (
+            self._get_preprocessor(processors)
+        )
 
         self._metadata: NamedTuple
-        self._data = self._get_data()
+        self._data: pd.DataFrame = self._get_data()
 
     @property
     def data(self) -> pd.DataFrame:
@@ -33,8 +38,13 @@ class FacebookData:
         return self._metadata
 
     @property
-    def reader(self) -> Union[Dict, List]:
+    def reader(self) -> Callable:
         return utils.read_json if self._reader is None else self._reader
+
+    def _register_processors(
+        self, preprocessor: command.CommandChainCreator
+    ) -> None:
+        raise NotImplementedError()
 
     @property
     def preprocessor(self) -> command.CommandChainCreator:
@@ -45,14 +55,16 @@ class FacebookData:
         return self.preprocessor(raw_data)
 
     def _get_preprocessor(
-        self, processors: List[Callable]
+        self, processors: Union[None, List[Callable]]
     ) -> command.CommandChainCreator:
         preprocessor = command.CommandChainCreator()
         if processors is None:
             self._register_processors(preprocessor)
         else:
-            for func, args, kwargs in processors:
-                preprocessor.register_command(func, *args, **kwargs)
+            for func, args, kwargs in processors:  # type: ignore
+                preprocessor.register_command(
+                    func, *args, **kwargs  # type: ignore
+                )
         return preprocessor
 
     @staticmethod
@@ -60,7 +72,12 @@ class FacebookData:
         return reader(path)
 
     @staticmethod
-    def _get_dataframe(data, field: str = None, **kwargs) -> pd.DataFrame:
+    def _get_dataframe(
+        data: Union[pd.DataFrame, Dict[str, Any]],
+        field: Union[str, None] = None,
+        **kwargs: Any,
+    ) -> pd.DataFrame:
+
         data = data.get(field) if field else data
         return pd.DataFrame(data, **kwargs)
 

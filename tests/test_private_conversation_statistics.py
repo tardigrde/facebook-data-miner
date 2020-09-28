@@ -13,11 +13,16 @@ class TestPrivateStatisticsWithFiltering:
         assert stats.unique_mc == 6
         assert stats.unique_wc == 9
         assert isinstance(stats.most_used_msgs, pd.DataFrame)
-        assert list(stats.most_used_msgs.columns) == ["unique_values", "counts"]
+        assert list(stats.most_used_msgs.columns) == [
+            "unique_values",
+            "counts",
+        ]
         assert stats.most_used_msgs.iloc[0].unique_values == "yo"
 
     def test_stats_toke_hal_me(self, panalyzer):
-        stats = panalyzer.filter(channels="Tőke Hal").stats.filter(senders="me")
+        stats = panalyzer.filter(channels="Tőke Hal").stats.filter(
+            senders="me"
+        )
 
         assert stats.mc == 4
         assert stats.wc == 6
@@ -28,7 +33,9 @@ class TestPrivateStatisticsWithFiltering:
         assert stats.most_used_msgs.iloc[0].counts == 1
 
     def test_stats_toke_hal_partner(self, panalyzer):
-        stats = panalyzer.filter(channels="Tőke Hal").stats.filter(senders="partner")
+        stats = panalyzer.filter(channels="Tőke Hal").stats.filter(
+            senders="partner"
+        )
 
         assert stats.mc == 3
         assert stats.wc == 5
@@ -87,7 +94,9 @@ class TestPrivateStatisticsWithFiltering:
         assert stats.unique_wc == 7
 
     def test_stats_teflon_musk_me(self, panalyzer):
-        stats = panalyzer.filter(channels="Bugs Bunny").stats.filter(senders="me")
+        stats = panalyzer.filter(channels="Bugs Bunny").stats.filter(
+            senders="me"
+        )
         assert stats.mc == 3
         assert stats.wc == 12
         assert stats.cc == 46
@@ -95,7 +104,9 @@ class TestPrivateStatisticsWithFiltering:
         assert stats.unique_wc == 6
 
     def test_stats_teflon_musk_partner(self, panalyzer):
-        stats = panalyzer.filter(channels="Bugs Bunny").stats.filter(senders="partner")
+        stats = panalyzer.filter(channels="Bugs Bunny").stats.filter(
+            senders="partner"
+        )
         assert stats.mc == 3
         assert stats.wc == 2
         assert stats.cc == 4

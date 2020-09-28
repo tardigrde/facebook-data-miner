@@ -6,10 +6,10 @@ import os
 import time
 import zipfile
 from datetime import datetime
-from typing import Union, List, Dict, Callable, Tuple
+from typing import Any, Callable, Dict, List, Tuple, Union
 
 import pandas as pd
-from yaml import load, FullLoader
+from yaml import FullLoader, load
 
 from miner.utils import const, decorators
 
@@ -26,21 +26,26 @@ class NonExistentChannel(Exception):
     pass
 
 
-def get_participant_to_channel_mapping(data):
+def particip_to_channel_mapping(data):
     group_convo_map = {}
     if not data:
         return group_convo_map
     for channel, convo in data.items():
         for participant in convo.metadata.participants:
-            group_convo_map = fill_dict(group_convo_map, participant, [channel])
+            group_convo_map = fill_dict(
+                group_convo_map, participant, [channel]
+            )
             group_convo_map[participant] = list(
                 set(group_convo_map.get(participant))
-            )  # just making sure there is no duplicate, so I don't have to go over it again later
+            )  # just making sure there is no duplicate,
+            # so I don't have to go over it again later
     return group_convo_map
 
 
 def get_period_map(join_date):
-    const.PERIOD_MAP["y"] = list(range(join_date.year, datetime.now().year + 1))
+    const.PERIOD_MAP["y"] = list(
+        range(join_date.year, datetime.now().year + 1)
+    )
     return const.PERIOD_MAP
 
 
@@ -112,7 +117,7 @@ def ts_to_date(date):
     return datetime.fromtimestamp(date)
 
 
-def dt(y: int = 2004, m: int = 1, d: int = 1, h: int = 0, **kwargs):
+def dt(y: int = 2004, m: int = 1, d: int = 1, h: int = 0, **kwargs: Any):
     return datetime(year=y, month=m, day=d, hour=h, **kwargs)
 
 
@@ -203,8 +208,8 @@ def utf8_decoder(string):
 
 
 def decode_data(
-    obj: Union[str, List, Dict], decoder: Callable,
-) -> Union[str, List, Dict]:
+    obj: Union[str, list, dict], decoder: Callable,
+) -> Union[str, list, dict]:
     if isinstance(obj, str):
         return decoder(obj)
 
@@ -250,7 +255,9 @@ def filter_by_date(df: pd.DataFrame, start=None, end=None, period=None):
 @decorators.column_checker
 @decorators.string_kwarg_to_list_converter("channels")
 def filter_by_channel(
-    df: pd.DataFrame, column: str = "partner", channels: Union[str, List[str]] = None
+    df: pd.DataFrame,
+    column: str = "partner",
+    channels: Union[str, List[str]] = None,
 ):
     if not channels or not len(df):
         return df
@@ -263,7 +270,7 @@ def filter_by_sender(
     df: pd.DataFrame,
     column: str = "sender_name",
     senders: Union[str, List[str]] = None,
-    me: str = None,
+    me: Union[str, None] = None,
 ):
     if not senders or not len(df):
         return df
@@ -279,14 +286,17 @@ def handle_filter_df(df, column, filter_params):
     match = df[df[column].isin(filter_params)]
     if match is None or len(match) == 0:
         logging.debug(
-            f"None of the filter parameters ({filter_params}) you specified exist in this df's `{column}` column."
+            f"None of the filter parameters ({filter_params}) you specified "
+            f"exist in this df's `{column}` column."
         )
         return df[0:0]
     return match
 
 
 def filter_empty_cols(df: pd.DataFrame):
-    non_null_columns = [col for col in df.columns if df.loc[:, col].notna().any()]
+    non_null_columns = [
+        col for col in df.columns if df.loc[:, col].notna().any()
+    ]
     if len(df) or len(df.columns):
         df = df[non_null_columns]
     return df
@@ -299,7 +309,7 @@ def generate_date_series(join_date, period="y", start=None, end=None):
     end = end or datetime.now()
 
     intermediate = start
-    while intermediate <= end:  # means that we want to have the end in it as well
+    while intermediate <= end:  # we want to have the end in it as well
         dates.append(intermediate)
         intermediate = intermediate + const.DELTA_MAP.get(period)
     return dates
@@ -322,7 +332,9 @@ def get_top_N_people(
     count_dict, percent_dict, top
 ) -> Tuple[Dict[str, int], Dict[str, float]]:
     count_dict = {k: count_dict[k] for k in list(count_dict.keys())[:top]}
-    percent_dict = {k: percent_dict[k] for k in list(percent_dict.keys())[:top]}
+    percent_dict = {
+        k: percent_dict[k] for k in list(percent_dict.keys())[:top]
+    }
     return count_dict, percent_dict
 
 

@@ -1,14 +1,16 @@
-#!/home/levente/anaconda3/envs/fb/bin/python
 # TODO change hashbang
 
 import logging
 import traceback
-from typing import List, Union
+from typing import Any, List, Union
 
 from fire import Fire
 
 from miner.app import App
-from miner.cli_adapters import MessagingAnalyzerFacade, MessagingAnalyzerManagerFacade
+from miner.cli_adapters import (
+    MessagingAnalyzerFacade,
+    MessagingAnalyzerManagerFacade,
+)
 from miner.visualizer.plotter import Plotter
 from miner.visualizer.table_creator import TableCreator
 
@@ -20,34 +22,46 @@ class CLI:
     Entrypoint for the Command-Line Interface.
     """
 
-    def __init__(self, app):
+    def __init__(self, app: App) -> None:
         self._app = app
 
-    def friends(self, sort="date", dates=True, output=None):
+    def friends(
+        self,
+        sort: str = "date",
+        dates: bool = True,
+        output: Union[str, None] = None,
+    ) -> str:
         """
         Exposed function for getting data on our Facebook friends.
 
-        @param sort: the column we want to sort by. Can be either of {date|name}. Default is `dates`.
-        @param dates: boolean flag on do we want the dates column. Default is `True`.
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
-        @return: either the data formatted as csv or json, or a success message about where was the data saved.
+        @param sort: the column we want to sort by.
+        Can be either of {date|name}. Default is `dates`.
+        @param dates: boolean flag on do we want the dates column.
+        Default is `True`.
+        @param output: where do we want to write the return value,
+        can be any of: {csv|json|/some/path.{json|csv}}.
+        @return: either the data formatted as csv or json,
+        or a success message about where was the data saved.
         """
         return self._app.friends.get(sort=sort, dates=dates, output=output)
 
     def conversations(
         self,
         kind: str = "private",
-        channels: str = None,
-        cols: List[str] = None,
-        output: str = None,
-    ):
+        channels: Union[str, None] = None,
+        cols: Union[List[str], None] = None,
+        output: Union[str, None] = None,
+    ) -> str:
         """
 
-        @param kind: one of private or group, depending on which messaging do you want to analyze.
+        @param kind: one of private or group,
+        depending on which messaging do you want to analyze.
         @param channels: channel names you want to filter for.
         @param cols: column names you want to include in the output.
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
-        @return: either the data formatted as csv or json, or a success message about where was the data saved.
+        @param output: where do we want to write the return value,
+        can be any of: {csv|json|/some/path.{json|csv}}.
+        @return: either the data formatted as csv or json,
+        or a success message about where was the data saved.
         """
         return self._app.conversations.get(
             kind=kind, channels=channels, cols=cols, output=output
@@ -55,20 +69,23 @@ class CLI:
 
     def analyzer(
         self,
-        kind: str = None,
-        channels: str = None,
-        participants: str = None,
-        senders: str = None,
-        **kwargs,
-    ) -> Union[MessagingAnalyzerManagerFacade, MessagingAnalyzerFacade]:
+        kind: Union[str, None] = None,
+        channels: Union[str, None] = None,
+        participants: Union[str, None] = None,
+        senders: Union[str, None] = None,
+        **kwargs: Any,
+    ) -> Any:
         """
 
-        @param kind: one of private or group, depending on which messaging do you want to analyze.
+        @param kind: one of private or group,
+        depending on which messaging do you want to analyze.
         @param channels: channel names you want to filter for.
         @param participants: participant names you want to filter for.
         @param senders: sender names you want to filter for.
-        @param kwargs: further filtering parameters, can be start, end and/or period.
-        @return: one of {MessagingAnalyzerManagerFacade|MessagingAnalyzerFacade} with the exposed functions.
+        @param kwargs: further filtering parameters, can be start,
+        end and/or period.
+        @return: exposed function from one of
+        {MessagingAnalyzerManagerFacade|MessagingAnalyzerFacade}.
         """
         if kind is None:
             return MessagingAnalyzerManagerFacade(self._app.analyzer)
@@ -81,23 +98,25 @@ class CLI:
             **kwargs,
         )
 
-    def people(self):
+    def people(self) -> str:
         """
         Exposed function for getting data on people.
 
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
-        @return: either the data formatted as csv or json, or a success message about where was the data saved.
+        @param output: where do we want to write the return value,
+        can be any of: {csv|json|/some/path.{json|csv}}.
+        @return: either the data formatted as csv or json,
+        or a success message about where was the data saved.
         """
         return self._app.people.get()
 
-    def report(self) -> TableCreator:
+    def report(self) -> Any:
         """
 
         @return: a TableCreator instance's exposed methods.
         """
         return TableCreator(self._app.analyzer, self._app.config)
 
-    def plot(self) -> Plotter:
+    def plot(self) -> Any:
         """
 
         @return: a Plotter instance's exposed methods.

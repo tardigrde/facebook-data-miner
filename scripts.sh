@@ -1,0 +1,1 @@
+export PYTHONPATH="$PWD" && cd tests/ && coverage run -m pytest

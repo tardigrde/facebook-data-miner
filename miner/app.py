@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Dict
+from typing import Dict, Union
 
 from miner.friends import Friends
 from miner.message.conversations import Conversations
@@ -20,10 +20,11 @@ class App:
     Entrypoint for miner package.
     """
 
-    def __init__(self, path: str = None):
+    def __init__(self, path: Union[str, None] = None):
         if not path:
             config = utils.read_yaml(
-                f"{os.path.dirname(os.path.dirname(__file__))}/configuration.yml"
+                f"{os.path.dirname(os.path.dirname(__file__))}"
+                f"/configuration.yml"
             )
             path = config.get("general").get("DATA_PATH")
 
@@ -56,11 +57,11 @@ class App:
         return self._people
 
     @property
-    def config(self) -> Dict[str, str]:
+    def config(self) -> Dict[str, ProfileInformation]:
         return self._config
 
     @property
-    def profile_information(self) -> Dict[str, str]:
+    def profile_information(self) -> ProfileInformation:
         return ProfileInformation(self._path)
 
     def _get_friends(self) -> Friends:
@@ -75,7 +76,7 @@ class App:
     def _get_people(self) -> People:
         return People(friends=self._friends, conversations=self._conversations)
 
-    def _build_config(self) -> Dict[str, str]:
+    def _build_config(self) -> Dict[str, ProfileInformation]:
         return {"profile": self.profile_information}
 
     @staticmethod

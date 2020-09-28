@@ -8,7 +8,7 @@ from miner.utils import const
 # NOTE this class is a little bit to verbose
 class PeriodManager:
     @staticmethod
-    def set_df_grouping_indices_to_datetime(df, timeframe):
+    def set_df_indices_to_datetime(df, timeframe):
         datetimes = []
         for index, row in df.iterrows():
             key = PERIOD_MANAGER.ordinal_to_datetime(timeframe, index)

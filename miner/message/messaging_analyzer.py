@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 import copy
-from typing import List, Dict, Tuple, Any, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import pandas as pd
 
 from miner.message.conversation import Conversation
 from miner.message.conversation_stats import ConversationStats
 from miner.message.conversations import Conversations
-from miner.utils import utils, decorators, command
+from miner.utils import command, decorators, utils
 
 pd.set_option("mode.chained_assignment", "raise")
 
@@ -18,7 +18,9 @@ class MessagingAnalyzerManager:
     Class that analyzes both private ang group conversations.
     """
 
-    def __init__(self, conversations: Conversations, config: Dict[str, Any]) -> None:
+    def __init__(
+        self, conversations: Conversations, config: Dict[str, Any]
+    ) -> None:
         self.conversations = conversations
         self.config = config
         self.private_messaging_analyzer = MessagingAnalyzer(
@@ -42,7 +44,9 @@ class MessagingAnalyzerManager:
 
     @property
     def people_i_have_group_convo_with(self) -> List[str]:
-        return list(self.group_messaging_analyzer.participant_to_channel_map.keys())
+        return list(
+            self.group_messaging_analyzer.participant_to_channel_map.keys()
+        )
 
     def get_who_i_have_private_convo_with_from_a_group(
         self, group_name: str
@@ -60,10 +64,12 @@ class MessagingAnalyzerManager:
         self, group_name: str
     ) -> Dict[str, int]:
         person_private_stats_map = {}
-        for p in self.get_who_i_have_private_convo_with_from_a_group(group_name):
-            person_private_stats_map[p] = self.private_messaging_analyzer.filter(
-                channels=p
-            ).stats.mc
+        for p in self.get_who_i_have_private_convo_with_from_a_group(
+            group_name
+        ):
+            person_private_stats_map[
+                p
+            ] = self.private_messaging_analyzer.filter(channels=p).stats.mc
         return person_private_stats_map
 
     def all_interactions(
@@ -83,21 +89,24 @@ class MessagingAnalyzerManager:
 
         group_start_times = []
         for g in group.data.keys():
-            start_time = self.group_messaging_analyzer.filter(channels=g).stats.start
+            start_time = self.group_messaging_analyzer.filter(
+                channels=g
+            ).stats.start
             if not start_time:
                 continue
             group_start_times.append(start_time)
 
         return any(
-            [private.stats.start > group_start for group_start in group_start_times]
+            [
+                private.stats.start > group_start
+                for group_start in group_start_times
+            ]
         )
 
     def get_stats_together(self, name: str) -> ConversationStats:
+        stats = self.group_messaging_analyzer.stats_per_channel.values()
         private, group = self.all_interactions(name=name)
-        groups = [
-            group_stats.filter(senders=name).df
-            for group_stats in self.group_messaging_analyzer.stats_per_channel.values()
-        ]
+        groups = [group_stats.filter(senders=name).df for group_stats in stats]
         df = utils.stack_dfs(private.stats.filter(senders=name).df, *groups)
         return ConversationStats(df, self.config)
 
@@ -120,7 +129,7 @@ class MessagingAnalyzer:
 
         self._stats = ConversationStats(self.df, config)
 
-        self._participant_to_channel_map = utils.get_participant_to_channel_mapping(
+        self._participant_to_channel_map = utils.particip_to_channel_mapping(
             data
         )
 
@@ -128,7 +137,10 @@ class MessagingAnalyzer:
         self._stats_per_participant = self._get_stats_per_participant()
 
     def __repr__(self) -> str:
-        return f"<{self._kind.capitalize()}-MessagingAnalyzer for {self.__len__()} channels>"
+        return (
+            f"<{self._kind.capitalize()}-MessagingAnalyzer "
+            f"for {self.__len__()} channels>"
+        )
 
     def __len__(self) -> int:
         return len(self.data.keys())
@@ -137,7 +149,8 @@ class MessagingAnalyzer:
     def is_group(self) -> bool:
         """
 
-        @return: returns True if we are analyzing group messages, False otherwise.
+        @return: returns True if we are analyzing group messages,
+        False otherwise.
         """
         return self._kind == "group"
 
@@ -145,7 +158,8 @@ class MessagingAnalyzer:
     def stats(self) -> ConversationStats:
         """
 
-        @return: ConversationStats object containing stats on the current self.df.
+        @return: ConversationStats object containing stats
+        on the current self.df.
         """
         return self._stats
 
@@ -153,7 +167,8 @@ class MessagingAnalyzer:
     def stats_per_channel(self) -> Dict[str, ConversationStats]:
         """
 
-        @return: a dict that contains a ConversationStats object for every channel in self.data.
+        @return: a dict that contains a ConversationStats object
+        for every channel in self.data.
         """
         return self._get_stats_per_channel()
 
@@ -161,7 +176,8 @@ class MessagingAnalyzer:
     def stats_per_participant(self) -> Dict[str, ConversationStats]:
         """
 
-        @return: a dict that contains a ConversationStats object for every participant in self.data.
+        @return: a dict that contains a ConversationStats object
+        for every participant in self.data.
         """
         return self._get_stats_per_participant()
 
@@ -192,7 +208,9 @@ class MessagingAnalyzer:
 
         @return: number of conversations started by the user.
         """
-        return sum([stat.created_by_me for stat in self.stats_per_channel.values()])
+        return sum(
+            [stat.created_by_me for stat in self.stats_per_channel.values()]
+        )
 
     @property
     def min_channel_size(self) -> int:
@@ -229,7 +247,8 @@ class MessagingAnalyzer:
 
         @param name: name of the subject we are interested in.
         Anyone who is a participant in at least one conversation.
-        @return: all the channels (max 1 private, and any number of group conversations) the subject is in.
+        @return: all the channels (max 1 private,
+        and any number of group conversations) the subject is in.
         """
         groups = []
         for k, g in self.data.items():
@@ -237,7 +256,7 @@ class MessagingAnalyzer:
                 groups.append(k)
         return list(set(groups))
 
-    def get_stat_count(self, attribute: str = "mc", **kwargs) -> int:
+    def get_stat_count(self, attribute: str = "mc", **kwargs: Any) -> int:
         """
 
         @param attribute: attribute we are interested in.
@@ -254,9 +273,11 @@ class MessagingAnalyzer:
         """
 
         @param statistic: attribute we are interested in.
-        Can be any of the ConversationStats properties, but it has to be numeric.
+        Can be any of the ConversationStats properties,
+        but it has to be numeric.
         @param top: used to limit the number of results for better readability.
-        @return: dictionary containing ranking both in percent and absolute values.
+        @return: dictionary containing ranking
+        both in percent and absolute values.
         """
 
         stats_per_people = self._get_stats_per_people()
@@ -288,7 +309,9 @@ class MessagingAnalyzer:
         data = copy.copy(self.data)
 
         filter_messages = command.CommandChainCreator()
-        filter_messages.register_command(self._filter_by_channels, channels=channels)
+        filter_messages.register_command(
+            self._filter_by_channels, channels=channels
+        )
         # this is useless if this is private messaging analyzer
         filter_messages.register_command(
             self._filter_by_participants, participants=participants,
@@ -298,7 +321,9 @@ class MessagingAnalyzer:
 
     def _get_stats_per_people(self):
         stats_per_people = (
-            self.stats_per_participant if self.is_group else self.stats_per_channel
+            self.stats_per_participant
+            if self.is_group
+            else self.stats_per_channel
         )
         return stats_per_people
 

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import os
-from typing import List, Dict, Callable, Union
+from typing import Callable, Dict, List, Union
 
 from miner.message.conversation import Conversation
-from miner.utils import utils, const, decorators
+from miner.utils import const, decorators, utils
 
 
 class Conversations:
@@ -15,7 +15,9 @@ class Conversations:
     def __init__(self, path: str) -> None:
         self.path: str = path
 
-        paths_factory: ConversationPathFactory = ConversationPathFactory(self.path)
+        paths_factory: ConversationPathFactory = ConversationPathFactory(
+            self.path
+        )
 
         self._private: Dict[str, Conversation] = self._get_convos(
             directories=paths_factory.get_dirs(ctype="private"),
@@ -50,18 +52,26 @@ class Conversations:
     ):
         """
 
-        @param kind: one of private or group, depending on which messaging do you want to analyze.
+        @param kind: one of private or group,
+        depending on which messaging do you want to analyze.
         @param channels: channel names you want to filter for.
         @param cols: column names you want to include in the output.
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
-        @return: either the data formatted as csv or json, or a success message about where was the data saved.
+        @param output: where do we want to write the return value,
+        can be any of: {csv|json|/some/path.{json|csv}}.
+        @return: either the data formatted as csv or json,
+        or a success message about where was the data saved.
         """
         data = getattr(self, kind)
         filtered_channels = (
-            data.keys() if channels is None else list(set(data.keys()) & set(channels))
+            data.keys()
+            if channels is None
+            else list(set(data.keys()) & set(channels))
         )
         if not filtered_channels:
-            return f"Could not filter for these channels: {channels}. Please double-check the channel names."
+            return (
+                f"Could not filter for these channels: {channels}. "
+                f"Please double-check the channel names."
+            )
         res = utils.stack_dfs(
             *[data.get(channel).data for channel in filtered_channels]
         )
@@ -72,7 +82,8 @@ class Conversations:
         )
         if not filtered_cols:
             return (
-                f"Could not filter for these columns: {cols}. Please double-check the column names. Hint: if cols "
+                f"Could not filter for these columns: {cols}. "
+                f"Please double-check the column names. Hint: if cols "
                 f"is None, all columns will be returned. "
             )
 
@@ -84,7 +95,9 @@ class Conversations:
         name_convo_map = {}
         for directory in directories:
             jsons = dir_lister(directory)
-            name_convo_map = self._merge_convo_files_if_needed(name_convo_map, jsons)
+            name_convo_map = self._merge_convo_files_if_needed(
+                name_convo_map, jsons
+            )
         return name_convo_map
 
     @staticmethod
@@ -105,7 +118,10 @@ class Conversations:
     def _get_json_paths(path: str) -> List[str]:
 
         return utils.walk_directory_and_search(
-            path, utils.get_all_jsons, extension=".json", contains_string="message_"
+            path,
+            utils.get_all_jsons,
+            extension=".json",
+            contains_string="message_",
         )
 
 
@@ -131,7 +147,9 @@ class ConversationsPaths:
         self.thread_type: str = const.MESSAGE_TYPE_MAP.get(self.ctype)
         self.data_path: str = path
 
-        self.paths_json: str = f"{self.data_path}/{self.sub_path}/{self.ctype}_messages.json"
+        self.paths_json: str = (
+            f"{self.data_path}/{self.sub_path}/{self.ctype}_messages.json"
+        )
 
         self._directories: List[str] = []
 

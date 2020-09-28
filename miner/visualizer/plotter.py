@@ -1,3 +1,5 @@
+from typing import Any, Union
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -13,8 +15,8 @@ class Plotter:
         self,
         kind: str = "private",
         stat: str = "mc",
-        channels: str = None,
-        participants: str = None,
+        channels: Union[str, None] = None,
+        participants: Union[str, None] = None,
         **kwargs,
     ) -> None:
         # NOTE this only plots time series/year not else.
@@ -26,9 +28,9 @@ class Plotter:
             stat=stat,
             **kwargs,
         )
-        df = pd.DataFrame({"date": index, "me": me, "partner": partner}).set_index(
-            "date"
-        )
+        df = pd.DataFrame(
+            {"date": index, "me": me, "partner": partner}
+        ).set_index("date")
 
         self._plot_time_series_data(
             df,
@@ -38,7 +40,7 @@ class Plotter:
         )
 
     @staticmethod
-    def _plot_time_series_data(df: pd.DataFrame, **kwargs) -> None:
+    def _plot_time_series_data(df: pd.DataFrame, **kwargs: Any) -> None:
         df.plot(kind="line", linestyle="dashdot", figsize=(16, 5))
         plt.gca().set(**kwargs)
         plt.legend()
@@ -49,8 +51,8 @@ class Plotter:
         kind: str = "private",
         timeframe: str = "y",
         stat: str = "mc",
-        channels: str = None,
-        participants: str = None,
+        channels: Union[str, None] = None,
+        participants: Union[str, None] = None,
         **kwargs,
     ):
         index, me, partner = self._adapter.get_stat_per_time_data(
@@ -71,7 +73,7 @@ class Plotter:
         )
 
     @staticmethod
-    def _plot_stat_per_time(index, me, partner, **kwargs):
+    def _plot_stat_per_time(index, me, partner, **kwargs: Any):
         # Stacked bar chart
         width = 0.35
         plt.figure(figsize=(12, 12), dpi=100)
@@ -85,8 +87,8 @@ class Plotter:
         self,
         kind: str = "private",
         stat: str = "mc",
-        channels: str = None,
-        participants: str = None,
+        channels: Union[str, None] = None,
+        participants: Union[str, None] = None,
     ):
         y, x = self._adapter.get_ranking_of_friends_by_message_stats(
             kind=kind, stat=stat, channels=channels, participants=participants
@@ -100,7 +102,7 @@ class Plotter:
         )
 
     @staticmethod
-    def _plot_horizontal_bar_chart(y, x, **kwargs):
+    def _plot_horizontal_bar_chart(y, x, **kwargs: Any):
         y_pos = np.arange(len(y))
 
         plt.figure(figsize=(12, 12), dpi=100)
@@ -112,9 +114,9 @@ class Plotter:
     def plot_msg_type_ratio(
         self,
         kind: str = "private",
-        channels: str = None,
-        participants: str = None,
-        senders: str = None,
+        channels: Union[str, None] = None,
+        participants: Union[str, None] = None,
+        senders: Union[str, None] = None,
         **kwargs,
     ):
         analyzer = getattr(self._adapter.analyzer, kind).filter(
@@ -138,13 +140,17 @@ class Plotter:
         labels, data,
     ):
         fig1, ax1 = plt.subplots()
-        ax1.pie(data, labels=labels, autopct="%1.1f%%", shadow=True, startangle=90)
-        ax1.axis("equal")  # Equal aspect ratio ensures that pie is drawn as a circle.
+        ax1.pie(
+            data, labels=labels, autopct="%1.1f%%", shadow=True, startangle=90
+        )
+        ax1.axis("equal")
 
         plt.show()
 
     def plot_convo_type_ratio(self, stat: str = "mc"):
-        prv_mc = getattr(getattr(self._adapter.analyzer, "private").stats, stat)
+        prv_mc = getattr(
+            getattr(self._adapter.analyzer, "private").stats, stat
+        )
         grp_mc = getattr(getattr(self._adapter.analyzer, "group").stats, stat)
 
         data = [prv_mc, grp_mc]

@@ -1,6 +1,8 @@
+from typing import Any, Union
+
 import pandas as pd
 
-from miner.utils import utils, const
+from miner.utils import const, utils
 
 
 class DataAdapter:
@@ -16,15 +18,15 @@ class DataAdapter:
     def group(self):
         return self.analyzer.group
 
-    def get_private_stats(self, channels=None, senders=None, **kwargs):
-        return self.private.filter(channels=channels, senders=senders).stats.filter(
-            **kwargs
-        )
+    def get_private_stats(self, channels=None, senders=None, **kwargs: Any):
+        return self.private.filter(
+            channels=channels, senders=senders
+        ).stats.filter(**kwargs)
 
-    def get_group_stats(self, channels=None, senders=None, **kwargs):
-        return self.group.filter(channels=channels, senders=senders).stats.filter(
-            **kwargs
-        )
+    def get_group_stats(self, channels=None, senders=None, **kwargs: Any):
+        return self.group.filter(
+            channels=channels, senders=senders
+        ).stats.filter(**kwargs)
 
 
 class TableDataAdapter(DataAdapter):
@@ -46,7 +48,7 @@ class TableDataAdapter(DataAdapter):
         analyzer = getattr(self.analyzer, kind)
         return (
             ["Unique message", "Unique word"],
-            [analyzer.stats.unique_mc, analyzer.stats.unique_wc,],
+            [analyzer.stats.unique_mc, analyzer.stats.unique_wc],
         )
 
     def get_stat_per_timeframe_data(
@@ -70,7 +72,9 @@ class PlotDataAdapter(DataAdapter):
     def __init__(self, analyzer, config):
         super().__init__(analyzer, config)
 
-    def set_up_time_series_data(self, timeframe, stat="text_mc", **kwargs):
+    def set_up_time_series_data(
+        self, timeframe, stat="text_mc", **kwargs: Any
+    ):
         stats = self.analyzer.stats.filter(**kwargs)
         return stats.get_grouped_time_series_data(timeframe)[stat]
 
@@ -92,32 +96,38 @@ class PlotDataAdapter(DataAdapter):
         kind: str = "private",
         timeframe: str = "y",
         stat: str = "mc",
-        channels: str = None,
-        participants: str = None,
-        **kwargs
+        channels: Union[str, None] = None,
+        participants: Union[str, None] = None,
+        **kwargs,
     ):
         analyzer = getattr(self.analyzer, kind).filter(
             channels=channels, participants=participants
         )
-        me_stat = analyzer.stats.filter(senders="me", **kwargs).stats_per_timeframe(
-            timeframe, statistic=stat
-        )
+        me_stat = analyzer.stats.filter(
+            senders="me", **kwargs
+        ).stats_per_timeframe(timeframe, statistic=stat)
         partner_stat = analyzer.stats.filter(
             senders="partner", **kwargs
         ).stats_per_timeframe(timeframe, statistic=stat)
-        return list(me_stat.keys()), list(me_stat.values()), list(partner_stat.values())
+        return (
+            list(me_stat.keys()),
+            list(me_stat.values()),
+            list(partner_stat.values()),
+        )
 
     def get_ranking_of_friends_by_message_stats(
         self,
         kind: str = "private",
         stat="mc",
-        channels: str = None,
-        participants: str = None,
+        channels: Union[str, None] = None,
+        participants: Union[str, None] = None,
     ):
         analyzer = getattr(self.analyzer, kind).filter(
             channels=channels, participants=participants
         )
-        ranking = analyzer.get_ranking_of_people_by_convo_stats(statistic=stat, top=20)
+        ranking = analyzer.get_ranking_of_people_by_convo_stats(
+            statistic=stat, top=20
+        )
         sorted_dict = utils.sort_dict(
             ranking.get("count"), func=lambda item: item[1], reverse=True,
         )

@@ -2,7 +2,6 @@ import json
 import os
 import tempfile
 
-import pandas as pd
 import pytest
 from helpers import lower_string, add_string, split_string, tempfile_tree
 
@@ -52,7 +51,10 @@ class TestUtils:
 
     def test_walk_directory_and_search_dirs_that_contain_(self):
         parent = utils.walk_directory_and_search(
-            "/tmp", utils.get_parent_directory_of_file_with_extension, ".json", ""
+            "/tmp",
+            utils.get_parent_directory_of_file_with_extension,
+            ".json",
+            "",
         )
         assert "/tmp" in list(parent)
 
@@ -86,30 +88,28 @@ class TestUtils:
         res = utils.basedir_exists("/home/whatever/a/gibberish")
         assert not res
 
-    def test_df_to_file(self):
+    def test_df_to_file(self, sample_df):
         path = f"{os.path.dirname(os.path.realpath(__file__))}/test.csv"
-        df = pd.DataFrame(
-            {"num_legs": [2, 4,], "num_wings": [2, 0,]}, index=["falcon", "dog",]
-        )
-        res = utils.df_to_file(path, df)
+
+        res = utils.df_to_file(path, sample_df)
         assert res == f"Data was written to {path}"
         os.unlink(path)
 
         path = f"{os.path.dirname(os.path.realpath(__file__))}/test.json"
-        res = utils.df_to_file(path, df)
+        res = utils.df_to_file(path, sample_df)
         assert res == f"Data was written to {path}"
         os.unlink(path)
 
         path = "csv"
-        res = utils.df_to_file(path, df)
+        res = utils.df_to_file(path, sample_df)
         assert isinstance(res, str)
 
         path = "json"
-        res = utils.df_to_file(path, df)
+        res = utils.df_to_file(path, sample_df)
         assert isinstance(res, str)
         assert isinstance(json.loads(res), dict)
 
-        res = utils.df_to_file("/home/whatever/a/gibberish", df)
+        res = utils.df_to_file("/home/whatever/a/gibberish", sample_df)
         assert res == "Directory does not exist: `/home/whatever/a`"
 
     def test_get_start_based_on_period(self):
@@ -137,22 +137,22 @@ class TestDataFrameUtils:
         df = friends.data
 
         filtered = utils.filter_by_date(
-            df, start=utils.dt(y=2020, m=3, d=1), end=utils.dt(y=2020, m=4, d=30),
+            df,
+            start=utils.dt(y=2020, m=3, d=1),
+            end=utils.dt(y=2020, m=4, d=30),
         )
         assert len(filtered) == 3
 
-        filtered = utils.filter_by_date(df, start="2020-03-01", end="2020-04-30")
+        filtered = utils.filter_by_date(
+            df, start="2020-03-01", end="2020-04-30"
+        )
         assert len(filtered) == 3
 
-    def test_df_to_str(self):
-        df = pd.DataFrame(
-            {"num_legs": [2, 4,], "num_wings": [2, 0,]}, index=["falcon", "dog",]
-        )
-
-        res = utils.df_to_str("csv", df)
+    def test_df_to_str(self, sample_df):
+        res = utils.df_to_str("csv", sample_df)
         assert isinstance(res, str)
         assert ",num_legs,num_wings" in res
 
-        res = utils.df_to_str("json", df)
+        res = utils.df_to_str("json", sample_df)
         assert isinstance(res, str)
         assert isinstance(json.loads(res), dict)

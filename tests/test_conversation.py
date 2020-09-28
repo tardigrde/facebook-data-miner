@@ -9,7 +9,8 @@ from miner.message.conversation import Conversation
 @pytest.fixture(scope="session")
 def convo():
     return Conversation(
-        path=f"{os.getcwd()}/test_data/messages/inbox/tokehal_sdf7fs9d876/message_1.json"
+        path=f"{os.getcwd()}"
+        f"/tests/test_data/messages/inbox/tokehal_sdf7fs9d876/message_1.json"
     )
 
 
@@ -43,7 +44,10 @@ def test_title(convo):
 
 
 def test_participants(convo, app):
-    assert convo.metadata.participants == ["Tőke Hal", app._config.get("profile").name]
+    assert convo.metadata.participants == [
+        "Tőke Hal",
+        app._config.get("profile").name,
+    ]
 
 
 def test_thread_path(convo):

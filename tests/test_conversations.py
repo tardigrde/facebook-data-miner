@@ -32,7 +32,9 @@ def test_get_all_people_from_convo(conversations):
     people += list(conversations.private.keys())
     # group
     people_from_groups = [
-        p for convo in conversations.group.values() for p in convo.metadata.participants
+        p
+        for convo in conversations.group.values()
+        for p in convo.metadata.participants
     ]
 
     people += people_from_groups
@@ -54,5 +56,8 @@ def test_get_all_people_from_convo(conversations):
 
 def test_groups_have_more_than_two_participates(conversations):
     assert all(
-        [len(data.metadata.participants) > 2 for data in conversations.group.values()]
+        [
+            len(data.metadata.participants) > 2
+            for data in conversations.group.values()
+        ]
     )

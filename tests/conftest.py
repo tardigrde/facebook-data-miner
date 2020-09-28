@@ -1,6 +1,7 @@
 import os
 
 import pytest
+import pandas as pd
 
 from miner.app import App
 from miner.friends import Friends
@@ -62,3 +63,10 @@ def priv_stats(panalyzer):
 @pytest.fixture(scope="session")
 def group_stats(ganalyzer):
     return ganalyzer._stats
+
+
+@pytest.fixture(scope="session")
+def sample_df():
+    return pd.DataFrame(
+        {"num_legs": [2, 4], "num_wings": [2, 0]}, index=["falcon", "dog"]
+    )

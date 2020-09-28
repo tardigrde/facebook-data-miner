@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import math
-from typing import Union, List, Dict, Any
+from typing import Any, Dict, List, Union
 
 import numpy as np
 import pandas as pd
@@ -10,14 +10,15 @@ import polyglot
 from polyglot.detect import Detector
 from polyglot.detect.base import logger as polyglot_logger
 
-from miner.utils import utils, period_manager, command, const
+from miner.utils import command, const, period_manager, utils
 
 polyglot_logger.setLevel("ERROR")
 
 
 class ConversationStats:
     """
-    Class for calculating and storing information and statistics of messages based on an input `Conversations.data`.
+    Class for calculating and storing information and statistics of messages
+    based on an input `Conversations.data`.
     """
 
     def __init__(self, df: pd.DataFrame, config: Dict[str, Any]) -> None:
@@ -48,7 +49,9 @@ class ConversationStats:
         """
         return self._config
 
-    def filter(self, df: pd.DataFrame = None, **kwargs) -> ConversationStats:
+    def filter(
+        self, df: pd.DataFrame = None, **kwargs: Any
+    ) -> ConversationStats:
         """
 
         @param df:
@@ -84,9 +87,14 @@ class ConversationStats:
     def contributors(self) -> List[str]:
         """
 
-        @return: all the participants who sent a message in any channels at least once.
+        @return: all the participants who sent a message in any channels
+        at least once.
         """
-        return list(self.df.sender_name.unique()) if "sender_name" in self.df else []
+        return (
+            list(self.df.sender_name.unique())
+            if "sender_name" in self.df
+            else []
+        )
 
     @property
     def number_of_contributors(self) -> int:
@@ -106,7 +114,6 @@ class ConversationStats:
             return ""
         if self.number_of_channels > 1:
             logging.warning("Too many `channels` to calculate this.")
-            # raise utils.TooManyChannelsError("Too many `channels` to calculate this.")
             return ""
         return self.df.iloc[0].sender_name
 
@@ -318,7 +325,7 @@ class ConversationStats:
 
         @return: all the messages which are files sent.
         """
-        return self.media_message_extractor("files")
+        return self._media_message_extractor("files")
 
     @property
     def photos(self) -> pd.Series:
@@ -326,7 +333,7 @@ class ConversationStats:
 
         @return: all the messages which are photos sent.
         """
-        return self.media_message_extractor("photos")
+        return self._media_message_extractor("photos")
 
     @property
     def videos(self) -> pd.Series:
@@ -334,7 +341,7 @@ class ConversationStats:
 
         @return: all the messages which are videos sent.
         """
-        return self.media_message_extractor("videos")
+        return self._media_message_extractor("videos")
 
     @property
     def audios(self) -> pd.Series:
@@ -342,7 +349,7 @@ class ConversationStats:
 
         @return: all the messages which are audio files sent.
         """
-        return self.media_message_extractor("audio_files")
+        return self._media_message_extractor("audio_files")
 
     @property
     def gifs(self) -> pd.Series:
@@ -350,7 +357,7 @@ class ConversationStats:
 
         @return: all the messages which are gifs sent.
         """
-        return self.media_message_extractor("gifs")
+        return self._media_message_extractor("gifs")
 
     @property
     def average_word_length(self) -> float:
@@ -385,8 +392,8 @@ class ConversationStats:
     ) -> Dict[str, Union[Dict[str, int], Dict[str, float]]]:
         """
 
-         @return: detected (with polyglot library) language ratio.
-         """
+        @return: detected (with polyglot library) language ratio.
+        """
         count_dict = {}
         for v in self.message_language_map.values():
             if not v:
@@ -398,15 +405,21 @@ class ConversationStats:
         )
         percent_dict = utils.get_percent_dict(count_dict)
         # NOTE top is 100 languages
-        count_dict, percent_dict = utils.get_top_N_people(count_dict, percent_dict, 100)
+        count_dict, percent_dict = utils.get_top_N_people(
+            count_dict, percent_dict, 100
+        )
 
         return {"count": count_dict, "percent": percent_dict}
 
-    def get_grouped_time_series_data(self, timeframe: str = "y") -> pd.DataFrame:
+    def get_grouped_time_series_data(
+        self, timeframe: str = "y"
+    ) -> pd.DataFrame:
         """
 
-        @param timeframe: in which timeframe you want to group the messages. One of {y|m|d|h}.
-        @return: numeric statistics like message, word, char, etc. count grouped by datetime according the timeframe.
+        @param timeframe: in which timeframe you want to group the messages.
+        One of {y|m|d|h}.
+        @return: numeric statistics like message, word, char, etc. count
+        grouped by datetime according the timeframe.
         """
         if not len(self._stats_df):
             return pd.DataFrame()
@@ -414,20 +427,27 @@ class ConversationStats:
             timeframe, self._stats_df
         )
         groups_df = self._stats_df.groupby(grouping_rule).sum()
-        return period_manager.PERIOD_MANAGER.set_df_grouping_indices_to_datetime(
+        return period_manager.PERIOD_MANAGER.set_df_indices_to_datetime(
             groups_df, timeframe=timeframe
         )
 
-    def stats_per_timeframe(self, timeframe: str, statistic: str = "mc") -> Dict:
+    def stats_per_timeframe(
+        self, timeframe: str, statistic: str = "mc"
+    ) -> Dict:
         """
 
-        @param timeframe: in which timeframe you want to group the messages. One of {y|m|d|h}.
-        @return: numeric statistics like message, word, character, etc. broken down to the timeframe.
+        @param timeframe: in which timeframe you want to group the messages.
+        One of {y|m|d|h}.
+        @return: numeric statistics like message, word, character, etc.
+        broken down to the timeframe.
         """
         interval_stats = self.get_grouped_time_series_data(timeframe=timeframe)
         return self._count_stat_for_period(
             interval_stats, timeframe, statistic=statistic
         )
+
+    def _media_message_extractor(self, kind: str) -> pd.Series:
+        return self.df[kind].dropna() if kind in self.df else pd.Series()
 
     @staticmethod
     def _get_words(messages) -> pd.Series:
@@ -447,9 +467,9 @@ class ConversationStats:
             return periods
         periods = utils.prefill_dict(
             periods,
-            utils.get_period_map(self.config.get("profile").registration_timestamp).get(
-                period
-            ),
+            utils.get_period_map(
+                self.config.get("profile").registration_timestamp
+            ).get(period),
             0,
         )
 
@@ -498,15 +518,21 @@ class StatsDataframe:
         self.df = pd.DataFrame(index=df.index)
 
         # all message count
-        self.df["mc"] = pd.Series([1 for _ in range(len(df))]).values if len(df) else 0
+        self.df["mc"] = (
+            pd.Series([1 for _ in range(len(df))]).values if len(df) else 0
+        )
 
         # text message count
         self.df["text_mc"] = (
-            df.content.map(self.calculate_text_mc).values if "content" in df else 0
+            df.content.map(self.calculate_text_mc).values
+            if "content" in df
+            else 0
         )
         # media message count
         self.df["media_mc"] = (
-            df.content.map(self.calculate_media_mc).values if "content" in df else 0
+            df.content.map(self.calculate_media_mc).values
+            if "content" in df
+            else 0
         )
         # word count
         self.df["wc"] = (
@@ -533,5 +559,7 @@ class StatsDataframe:
     @staticmethod
     def calculate_cc(content: Union[str, math.nan]) -> int:
         return (
-            0 if utils.is_nan(content) else sum([len(word) for word in content.split()])
+            0
+            if utils.is_nan(content)
+            else sum([len(word) for word in content.split()])
         )

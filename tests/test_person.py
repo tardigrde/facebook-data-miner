@@ -1,4 +1,5 @@
 import pytest
+
 from miner.person import Person
 
 
@@ -8,7 +9,7 @@ def test_add_two_person():
     onetwo = one + two
 
     assert onetwo.name == "Test Test"
-    assert onetwo.friend == True
+    assert onetwo.friend is True
     assert onetwo.compact_name == "testtest"
 
 

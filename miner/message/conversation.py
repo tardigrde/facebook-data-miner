@@ -3,12 +3,12 @@ from __future__ import annotations
 import logging
 import os
 from collections import namedtuple
-from typing import List, Dict, Callable
+from typing import Callable, Dict, List
 
 import pandas as pd
 
 from miner.data import FacebookData
-from miner.utils import utils, const
+from miner.utils import const, utils
 
 
 class Conversation(FacebookData):
@@ -17,7 +17,10 @@ class Conversation(FacebookData):
     """
 
     def __init__(
-        self, path: str, reader: Callable = None, processors: List[Callable] = None
+        self,
+        path: str,
+        reader: Callable = None,
+        processors: List[Callable] = None,
     ) -> None:
         super().__init__(path, reader=reader, processors=processors)
 
@@ -29,7 +32,9 @@ class Conversation(FacebookData):
         preprocessor.register_command(utils.decode_data, utils.utf8_decoder)
         preprocessor.register_command(self._set_metadata)
         preprocessor.register_command(self._get_dataframe, field="messages")
-        preprocessor.register_command(self._set_date_as_index, column="timestamp_ms")
+        preprocessor.register_command(
+            self._set_date_as_index, column="timestamp_ms"
+        )
         preprocessor.register_command(self._add_partner_column)
         preprocessor.register_command(self._split_media_column)
         return preprocessor
@@ -62,7 +67,9 @@ class Conversation(FacebookData):
 
     @staticmethod
     def _get_participants(data: Dict) -> List[str]:
-        return [participant.get("name") for participant in data.get("participants")]
+        return [
+            participant.get("name") for participant in data.get("participants")
+        ]
 
     @staticmethod
     def _get_dirname(dirname: str) -> str:
@@ -71,11 +78,16 @@ class Conversation(FacebookData):
         elif "archived_threads/" in dirname:
             return dirname.split("archived_threads/")[1]
         else:
-            logging.warning("WARNING! Missing thread_path for messages or media.")
+            logging.warning(
+                "WARNING! Missing thread_path for messages or media."
+            )
 
     def _split_media_column(self, data: pd.DataFrame) -> pd.DataFrame:
-        # NOTE: THIS DOES NOTHING ATM; later can be used to prettify media output
-        # 2020-03-09 11:48:48.047,"[{'uri': 'messages/inbox/FooBar_n5fd6gG50h/audio/audioclip15905232600004598_2621787141481389.mp4', 'creation_timestamp': 1583750927}]"
+        # NOTE: THIS DOES NOTHING ATM;
+        # later can be used to prettify media output
+        # 2020-03-09 11:48:48.047,"[{'uri':
+        # 'messages/inbox/FooBar_n5fd6gG50h/audio/audioclip.mp4',
+        # 'creation_timestamp': 1583750927}]"
         # if intersection := list(set(data) & set(const.MEDIA_DIRS)):
         #     media_cols = data.get(intersection)
         #     for col in media_cols:

@@ -1,8 +1,8 @@
 from collections import namedtuple
-from typing import List, Dict, Callable
+from typing import Callable, Dict, List, Union
 
 from miner.data import FacebookData
-from miner.utils import utils, command
+from miner.utils import command, utils
 
 
 # NOTE stats per making friends yet to be implemented
@@ -12,18 +12,30 @@ class Friends(FacebookData):
     """
 
     def __init__(
-        self, path: str, reader: Callable = None, processors: List[Callable] = None
+        self,
+        path: str,
+        reader: Union[None, Callable] = None,
+        processors: Union[None, List[Callable]] = None,
     ) -> None:
         super().__init__(path, reader=reader, processors=processors)
 
-    def get(self, sort="date", dates: bool = True, output: str = None) -> str:
+    def get(
+        self,
+        sort: str = "date",
+        dates: bool = True,
+        output: Union[str, None] = None,
+    ) -> str:
         """
         Exposed function for getting data on our Facebook friends.
 
-        @param sort: the column we want to sort by. Can be either of {date|name}. Default is `dates`.
-        @param dates: boolean flag on do we want the dates column. Default is `True`.
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
-        @return: either the data formatted as csv or json, or a success message about where was the data saved.
+        @param sort: the column we want to sort by.
+        Can be either of {date|name}. Default is `dates`.
+        @param dates: boolean flag on do we want the dates column.
+        Default is `True`.
+        @param output: where do we want to write the return value,
+        can be any of: {csv|json|/some/path.{json|csv}}.
+        @return: either the data formatted as csv or json,
+        or a success message about where was the data saved.
         """
         data = self.data
         if sort == "name":
@@ -41,10 +53,14 @@ class Friends(FacebookData):
         preprocessor.register_command(
             self._get_dataframe, field="friends", columns=["name", "timestamp"]
         )
-        preprocessor.register_command(self._set_date_as_index, column="timestamp")
+        preprocessor.register_command(
+            self._set_date_as_index, column="timestamp"
+        )
         return preprocessor
 
-    def _set_metadata(self, data: Dict) -> namedtuple:
+    def _set_metadata(self, data: Dict[str, Dict[str, str]]) -> Dict:
         metadata = namedtuple("metadata", ["length", "path"])
-        self._metadata = metadata(length=len(data.get("friends")), path=self.path)
+        self._metadata = metadata(
+            length=len(data.get("friends")), path=self.path  # type: ignore
+        )
         return data

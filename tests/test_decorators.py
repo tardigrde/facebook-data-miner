@@ -1,17 +1,13 @@
 import json
 
-import pandas as pd
 import pytest
 
 from miner.utils import decorators
 
 
-def test_outputter():
+def test_outputter(sample_df):
     def mock_func(output: str = "json"):
-        df = pd.DataFrame(
-            {"num_legs": [2, 4,], "num_wings": [2, 0,]}, index=["falcon", "dog",]
-        )
-        return df
+        return sample_df
 
     res = decorators.outputter(mock_func)(output="json")
     assert isinstance(res, str)

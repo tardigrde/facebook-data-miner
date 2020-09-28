@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Union, List, Dict
+from typing import Any, Union
 
 from miner.utils import utils
 
@@ -11,10 +11,10 @@ class ProfileInformation:
 
     def __init__(self, path: str):
         self.path = path + "/profile_information/profile_information.json"
-        self.data = self._read()
+        self.data: Any = self._read()
 
     @property
-    def name(self) -> str:
+    def name(self) -> Union[str, None]:
         """
 
         @return: name of the user.
@@ -22,13 +22,17 @@ class ProfileInformation:
         return self.data.get("profile").get("name").get("full_name")
 
     @property
-    def registration_timestamp(self) -> datetime:
+    def registration_timestamp(self) -> Union[None, datetime]:
         """
 
         @return: the date when the user registered to Facebook.
         """
 
-        return utils.ts_to_date(self.data.get("profile").get("registration_timestamp"))
+        return utils.ts_to_date(
+            self.data.get("profile").get("registration_timestamp")
+        )
 
-    def _read(self) -> Union[str, List, Dict]:
-        return utils.decode_data(utils.read_json(self.path), utils.utf8_decoder)
+    def _read(self) -> Any:
+        return utils.decode_data(
+            utils.read_json(self.path), utils.utf8_decoder
+        )

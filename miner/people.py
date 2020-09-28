@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Dict, Callable, Any
+from typing import Any, Callable, Dict, List, Union
 
 import pandas as pd
 
@@ -12,23 +12,27 @@ from miner.utils import utils
 
 class People:
     """
-    Class that manages and represents people from different kind of Facebook interactions.
+    Class that manages and represents people from different kind of
+    Facebook interactions.
     """
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, **kwargs: Any) -> None:
         self.source_map = self._get_source_map()
         self._data: Dict[str, Person] = self._get_data_from_source(**kwargs)
 
     def __iter__(self) -> Any:
-        # NOTE: not sure if this is needed. Wanted to try out object as its own iterator.
+        # NOTE: not sure if this is needed.
+        # Wanted to try out object as its own iterator.
         return PeopleIterator(self)
 
-    def get(self, output: str = None) -> str:
+    def get(self, output: Union[str, None] = None) -> str:
         """
         Exposed function for getting data on people.
 
-        @param output: where do we want to write the return value, can be any of: {csv|json|/some/path.{json|csv}}.
-        @return: either the data formatted as csv or json, or a success message about where was the data saved.
+        @param output: where do we want to write the return value,
+        an be any of: {csv|json|/some/path.{json|csv}}.
+        @return: either the data formatted as csv or json,
+        or a success message about where was the data saved.
         """
         name = [person.name for person in self.data.values()]
         friend = [person.friend for person in self.data.values()]
@@ -60,8 +64,8 @@ class People:
             "conversations": self._convert_conversation_partners_to_persons,
         }
 
-    def _get_data_from_source(self, **kwargs) -> Dict[str, Person]:
-        data = {}
+    def _get_data_from_source(self, **kwargs: Any) -> Dict[str, Person]:
+        data: Dict[str, Person] = {}
         for key, source in kwargs.items():
             other = data
             this = self.source_map[key](source)
@@ -76,7 +80,7 @@ class People:
             if not other.get(name):
                 other[name] = person
             else:
-                other[name] = other.get(name) + person
+                other[name] = other.get(name) + person  # type: ignore
         return other
 
     @staticmethod
@@ -90,7 +94,7 @@ class People:
     def _convert_conversation_partners_to_persons(
         conversations: Conversations,
     ) -> Dict[str, Person]:
-        participant_to_channel_map = utils.get_participant_to_channel_mapping(
+        participant_to_channel_map = utils.particip_to_channel_mapping(
             conversations.group
         )
         persons = {}
@@ -113,12 +117,12 @@ class People:
 
 
 class PeopleIterator:
-    def __init__(self, container) -> None:
+    def __init__(self, container: People) -> None:
         self.container = container
         self.n = -1
         self.max = len(self.container.names)
 
-    def __next__(self) -> People:
+    def __next__(self) -> Person:
         self.n += 1
         if self.n > self.max:
             raise StopIteration

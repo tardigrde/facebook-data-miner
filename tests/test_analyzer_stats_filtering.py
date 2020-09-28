@@ -22,24 +22,33 @@ class TestAnalyzerStatsFiltering:
         afp = analyzer.private.filter(participants="Bugs Bunny")
         assert len(afc) == len(afp)
         assert len(afc.participants) == len(afp.participants)
-        assert afc.number_of_convos_created_by_me == afp.number_of_convos_created_by_me
+        assert (
+            afc.number_of_convos_created_by_me
+            == afp.number_of_convos_created_by_me
+        )
         assert afc.stats.df.shape == afp.stats.df.shape
 
         afc = analyzer.private.filter(channels=["Bugs Bunny", "Foo Bar"])
         afp = analyzer.private.filter(participants=["Bugs Bunny", "Foo Bar"])
         assert len(afc) == len(afp)
         assert len(afc.participants) == len(afp.participants)
-        assert afc.number_of_convos_created_by_me == afp.number_of_convos_created_by_me
-        assert len(afc.get_ranking_of_people_by_convo_stats().get("count")) == len(
-            afp.get_ranking_of_people_by_convo_stats().get("count")
+        assert (
+            afc.number_of_convos_created_by_me
+            == afp.number_of_convos_created_by_me
         )
+        assert len(
+            afc.get_ranking_of_people_by_convo_stats().get("count")
+        ) == len(afp.get_ranking_of_people_by_convo_stats().get("count"))
 
     def test_group_analyzer_filter(self, analyzer):
         afc = analyzer.group.filter(channels="marathon")
         afp = analyzer.group.filter(participants="Bugs Bunny")
         assert len(afc) != len(afp)
         assert len(afc.participants) != len(afp.participants)
-        assert afc.number_of_convos_created_by_me != afp.number_of_convos_created_by_me
+        assert (
+            afc.number_of_convos_created_by_me
+            != afp.number_of_convos_created_by_me
+        )
 
     def test_group_analyzer_filter_switched_kwargs(self, analyzer):
         afc = analyzer.group.filter(channels="Bugs Bunny")
@@ -57,7 +66,8 @@ class TestAnalyzerStatsFiltering:
         assert len(afcpm) == len(afcpp)
         assert len(afcpm.participants) == len(afcpp.participants)
         assert (
-            afcpm.number_of_convos_created_by_me == afcpp.number_of_convos_created_by_me
+            afcpm.number_of_convos_created_by_me
+            == afcpp.number_of_convos_created_by_me
         )
         with pytest.raises(utils.TooFewPeopleError):
             assert len(
@@ -69,24 +79,31 @@ class TestAnalyzerStatsFiltering:
         afp = analyzer.group.filter(participants=["Bugs Bunny", "Foo Bar"])
         assert len(afp) != len(afc)
         assert len(afp.participants) != len(afc.participants)
-        assert afp.number_of_convos_created_by_me != afc.number_of_convos_created_by_me
-        assert len(afp.get_ranking_of_people_by_convo_stats().get("count")) != len(
-            afc.get_ranking_of_people_by_convo_stats().get("count")
+        assert (
+            afp.number_of_convos_created_by_me
+            != afc.number_of_convos_created_by_me
         )
+        assert len(
+            afp.get_ranking_of_people_by_convo_stats().get("count")
+        ) != len(afc.get_ranking_of_people_by_convo_stats().get("count"))
 
     def test_private_analyzer_stats_filter(self, analyzer):
         afc = analyzer.private.filter(channels="Bugs Bunny")
         sfp = analyzer.private.stats.filter(channels="Bugs Bunny",)
         assert len(afc.stats.df) == len(sfp)
         assert len(afc.participants) == len(sfp.contributors)
-        assert afc.number_of_convos_created_by_me == 1 if sfp.created_by_me else 0
+        assert (
+            afc.number_of_convos_created_by_me == 1 if sfp.created_by_me else 0
+        )
         assert afc.stats.df.shape == sfp.df.shape
 
         afc = analyzer.private.filter(participants="Bugs Bunny")
         sfp = analyzer.private.stats.filter(channels="Bugs Bunny")
         assert len(afc.stats.df) == len(sfp)
         assert len(afc.participants) == len(sfp.contributors)
-        assert afc.number_of_convos_created_by_me == 1 if sfp.created_by_me else 0
+        assert (
+            afc.number_of_convos_created_by_me == 1 if sfp.created_by_me else 0
+        )
         assert afc.stats.df.shape == sfp.df.shape
 
     def test_private_analyzer_stats_filter_by_senders(self, analyzer):
@@ -101,7 +118,9 @@ class TestAnalyzerStatsFiltering:
         assert afc.stats.df.shape == sfp.df.shape
 
         afc = analyzer.private.filter(participants="Bugs Bunny")
-        sfp = analyzer.private.stats.filter(channels="Bugs Bunny", senders="Bugs Bunny")
+        sfp = analyzer.private.stats.filter(
+            channels="Bugs Bunny", senders="Bugs Bunny"
+        )
         assert len(afc.stats.df) > len(sfp)
         assert len(afc.participants) > len(sfp.contributors)
         assert afc.number_of_convos_created_by_me == 1
@@ -136,7 +155,9 @@ class TestAnalyzerStatsFiltering:
         assert afc.stats.df.shape == sfp.df.shape
 
         afc = analyzer.group.filter(participants="Bugs Bunny")
-        sfp = analyzer.group.stats.filter(channels="Bugs Bunny", senders="Bugs Bunny")
+        sfp = analyzer.group.stats.filter(
+            channels="Bugs Bunny", senders="Bugs Bunny"
+        )
         assert len(afc.stats.df) > len(sfp)
         assert len(afc.participants) > len(sfp.contributors)
         assert afc.number_of_convos_created_by_me == 2
