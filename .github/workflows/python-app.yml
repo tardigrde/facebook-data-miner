@@ -8,30 +8,29 @@ on:
     branches: [ dev, master ]
   pull_request:
     branches: [ dev, master ]
-    
+
 jobs:
   build:
 
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-    - name: Install dependecies
-      uses: VaultVulp/action-pipenv@v2.0.1
-      with:
-        command: install -d # Install all dependencies, including development ones
-    - name: Lint
-      uses: VaultVulp/action-pipenv@v2.0.1
-      with:
-          command: make test # Run custom `test` command defined in the `[scripts]` block of Pipfile
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install dependecies
+        uses: VaultVulp/action-pipenv@v2.0.1
+        with:
+          command: install -d # Install all dependencies, including development ones
+      - name: Lint
+        uses: VaultVulp/action-pipenv@v2.0.1
+        with:
+          command: run lint
+      - name: Test
+        uses: VaultVulp/action-pipenv@v2.0.1
+        with:
+          command: run test
 
-    - name: Test
-      uses: VaultVulp/action-pipenv@v2.0.1
-      with:
-        command: make test # Run custom `test` command defined in the `[scripts]` block of Pipfile
-#      run: |
-#        make test
+
