@@ -6,10 +6,10 @@ import os
 import time
 import zipfile
 from datetime import datetime
-from datetime import timezone
 from typing import Any, Callable, Dict, List, Tuple, Union
 
 import pandas as pd
+import pytz
 from yaml import FullLoader, load
 
 from miner.utils import const, decorators
@@ -118,9 +118,18 @@ def ts_to_date(date):
     return datetime.fromtimestamp(date)
 
 
-def dt(y: int = 2004, m: int = 1, d: int = 1, h: int = 0, **kwargs: Any):
+def dt(
+    y: int = 2004,
+    m: int = 1,
+    d: int = 1,
+    h: int = 0,
+    tz: str = None,
+    **kwargs: Any,
+):
     d_t = datetime(year=y, month=m, day=d, hour=h, **kwargs)
-    d_t.replace(tzinfo=timezone.utc)
+    if tz:
+        target_tz = pytz.timezone(tz)
+        d_t = target_tz.localize(d_t).astimezone(pytz.timezone(tz))
     return d_t
 
 

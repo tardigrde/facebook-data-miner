@@ -27,6 +27,7 @@ PyICU = "==2.5"
 Morfessor = "==2.0.6"
 PyYAML = "==5.3.1"
 fire = "*"
+pytz = "*"
 
 [requires]
 python_version = "3.8"
@@ -37,3 +38,4 @@ allow_prereleases = true
 [scripts]
 lint = "make lint"
 test = "make test"
+publish = "pipenv run python setup.py sdist bdist bdist_wheel; pipenv run twine upload dist/*"

@@ -3,6 +3,7 @@ import os
 import tempfile
 
 import pytest
+import pytz
 from helpers import lower_string, add_string, split_string, tempfile_tree
 
 from miner.utils import utils, command
@@ -36,10 +37,17 @@ class TestCommandChainCreator:
 
 
 class TestUtils:
-    def test_ts_to_date_and_dt(self):
+    def test_ts_to_date_and_dt(self, tz):
         date = 1598046630000
-        expected_date = utils.dt(y=2020, m=8, d=21, h=23, minute=50, second=30)
-        assert expected_date == utils.ts_to_date(date)
+        target_tz = pytz.timezone(tz)
+        with_tz = target_tz.localize(utils.ts_to_date(date)).astimezone(
+            pytz.timezone(tz)
+        )
+
+        expected_date = utils.dt(
+            y=2020, m=8, d=21, h=23, minute=50, second=30, tz=tz
+        )
+        assert expected_date == with_tz
 
     def test_walk_directory_and_search_jsons(self, tempfiles):
         jsons_found = utils.walk_directory_and_search(
