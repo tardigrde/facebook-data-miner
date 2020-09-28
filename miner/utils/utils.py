@@ -6,6 +6,7 @@ import os
 import time
 import zipfile
 from datetime import datetime
+from datetime import timezone
 from typing import Any, Callable, Dict, List, Tuple, Union
 
 import pandas as pd
@@ -118,7 +119,9 @@ def ts_to_date(date):
 
 
 def dt(y: int = 2004, m: int = 1, d: int = 1, h: int = 0, **kwargs: Any):
-    return datetime(year=y, month=m, day=d, hour=h, **kwargs)
+    d_t = datetime(year=y, month=m, day=d, hour=h, **kwargs)
+    d_t.replace(tzinfo=timezone.utc)
+    return d_t
 
 
 def get_start_based_on_period(join_date, period):
