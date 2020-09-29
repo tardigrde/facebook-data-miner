@@ -314,7 +314,8 @@ class MessagingAnalyzer:
         )
         # this is useless if this is private messaging analyzer
         filter_messages.register_command(
-            self._filter_by_participants, participants=participants,
+            self._filter_by_participants,
+            participants=participants,
         )
         data = filter_messages(data)
         return MessagingAnalyzer(data, self.config, self._kind)

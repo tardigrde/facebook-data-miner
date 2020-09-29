@@ -19,6 +19,9 @@ class Friends(FacebookData):
     ) -> None:
         super().__init__(path, reader=reader, processors=processors)
 
+    def __repr__(self) -> str:
+        return f"<Storing {len(self.data)} friends>"
+
     def get(
         self,
         sort: str = "date",

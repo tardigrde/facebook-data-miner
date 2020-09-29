@@ -71,7 +71,7 @@ def dump_to_json(file, data=None):
 
 def df_to_str(kind, df):
     if kind == "json":
-        return df.to_json()
+        return df.to_json(orient="table")
     return df.to_csv()
 
 
@@ -218,7 +218,8 @@ def utf8_decoder(string):
 
 
 def decode_data(
-    obj: Union[str, list, dict], decoder: Callable,
+    obj: Union[str, list, dict],
+    decoder: Callable,
 ) -> Union[str, list, dict]:
     if isinstance(obj, str):
         return decoder(obj)

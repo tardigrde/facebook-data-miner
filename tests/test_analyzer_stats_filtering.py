@@ -89,7 +89,9 @@ class TestAnalyzerStatsFiltering:
 
     def test_private_analyzer_stats_filter(self, analyzer):
         afc = analyzer.private.filter(channels="Bugs Bunny")
-        sfp = analyzer.private.stats.filter(channels="Bugs Bunny",)
+        sfp = analyzer.private.stats.filter(
+            channels="Bugs Bunny",
+        )
         assert len(afc.stats.df) == len(sfp)
         assert len(afc.participants) == len(sfp.contributors)
         assert (

@@ -129,7 +129,9 @@ class PlotDataAdapter(DataAdapter):
             statistic=stat, top=20
         )
         sorted_dict = utils.sort_dict(
-            ranking.get("count"), func=lambda item: item[1], reverse=True,
+            ranking.get("count"),
+            func=lambda item: item[1],
+            reverse=True,
         )
 
         cleared_dict = utils.remove_items_where_value_is_falsible(sorted_dict)

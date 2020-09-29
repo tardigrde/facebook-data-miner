@@ -2,69 +2,101 @@
 
 [![BCH compliance](https://bettercodehub.com/edge/badge/tardigrde/facebook-data-miner?branch=master)](https://bettercodehub.com/)
 
-This repository provides a set of tools integrated into one conscise Command-Line Interface that can help you analyze the data that Facebook has on you.
+Facebook-Data-Miner provides a set of tools that can help you analyze the data 
+that Facebook has on you.
 
-The vision is to support both data extraction, data analysis and data visualization capabilities through any of the interfaces.
+The vision is to support both data extraction, data analysis and data 
+visualization capabilities through any of the interfaces.
 
-All computation happens on your machine so no data gets sent to remote computers or third-parties.
-
-**NOTE:** The codebase is under development.
-
-Features will be added gradually, starting with basic analysis of the messages.
+All computation happens on your machine so no data gets sent to remote 
+computers or third-parties.
 
 ## Prerequisites
+As of now the package was only tested on Linux, however with `pipenv` 
+it is should be easy to set the application up on Windows.
 
 ### Python
 
-You will need Python for running this piece of software.
-
 The application was tested on Debian 10 and Python v3.8.3.
+You will need Python 3.8 (some features are used).
 
-To download Python refer to the official Python [distribution page](https://www.python.org/getit/).
+To download Python refer to the official Python 
+[distribution page](https://www.python.org/getit/).
 
 ### Your Facebook data
 
 This package works by analyzing your Facebook data, so you have to download it.
 
-Please refer to the following [link](https://www.facebook.com/help/212802592074644) in order to do so. IMPORTANT NOTE: you have to set Facebook's language to English(US) for the time being you request your data. This change can of course be reverted later.
+Please refer to the following 
+[link](https://www.facebook.com/help/212802592074644) in order to do so. 
 
-You will only need the zip file's absolute path later to use this software. NOTE: `fb-data-miner` will extract your zip file in the same directory. For this you may need several GBs of free space depending on the volume of the data.
+IMPORTANT NOTE: you have to set Facebook's language to English(US) for the 
+time being you request your data. This change can of course be reverted later.
+
+You will only need the zip file's absolute path later to use this software.
+
+You have to change the `DATA_PATH` variable in the 
+[configuration.yml](configuration.yml).
+
+NOTE: `facebook-data-miner` will extract your zip file in the same directory. 
+For this you may need several GBs of free space depending on the volume of the 
+original data.
 
 ### This repository
 Clone this repository by either using SSH:
 
-```bash
+```shell script
 git clone git@github.com:tardigrde/facebook-data-miner.git
 ```
 
 or HTTPS:
 
-```bash
+```shell script
 git clone https://github.com/tardigrde/facebook-data-miner.git
 ```
 
 ### Dependecies
 
-It is preferred to create a new Python virtual environment or conda environment to install the dependecies and run the application in.
+This project uses `pipenv` for dependency and virtual environment management.
 
-After you have created and activated the environment install the dependecies by running:
+Install it by typing:
+```shell script
+pip install --user pipenv
+```
 
-```bash
-pip install -r requirements.txt
+In the project root (where [Pipfile](Pipfile) is) run:
+
+```shell script
+pipenv install
 ```
 
 Make sure you run the application in this environment.
 
 ## Usage
+
+The app has both a CLI and an API. For now, API is the preferred way to 
+run the app since there is no database yet, which would hold your facebook data
+in memory. CLI works but it's slow.
+
 ### Jupyter notebook
 
-I wrote a jupyter notebook in order to showcase the capabilities and features of the application. For now, this is the preferred way to run the app.
-The notebook contains lots of comments to help understand how the app is built, and what kind of information you can access, and how.
+I wrote two jupyter notebooks in order to showcase the capabilities and 
+features of the API and CLI. The notebook contains lots of comments to 
+help understand how the app is built, 
+and what kind of information you can access, and how.
 
-For this you have to start a ipyhton server. Type the following in your terminal if you want to use `jupyer-notebook`:
+For this you have to start a `jupyter` server. 
+As in the notebooks mentioned, you have to set the $PYTHONPATH env var 
+before starting a jupyter server.
 
-```bash
-jupyer-notebook
+```shell script
+export PYTHONPATH="$PWD"
+```
+
+Then type the following in your terminal if you want to use `jupyer notebook`:
+
+```shell script
+jupyer notebook
 ```
 
 or for `jupyter lab`:
@@ -73,21 +105,35 @@ or for `jupyter lab`:
 jupyter lab
 ```
 
-Select `facebook_data_analyzer.ipynb` and start executing the cells. You will only have to change on thing in the notebook (in the first code cell), and that is the `path` to the data zip file.
+Select [notebooks/API.ipynb](notebooks/API.ipynb) 
+(or [notebooks/CLI.ipynb](notebooks/CLI.ipynb)) and start executing the cells. 
 
-### The Command-Line Interface
+### The API
+As in the notebook already described, the entrypoint is 
+[miner/app.py](miner/app.py)'s `App` class. For now the docstring is the only
+documentation.
 
-The command line interface is not too powerful yet, but will be improved as new features will be added.
+Call it from a script (after you set the data path) like:
+```python
+from miner.app import App
+app = App()
+```
+
+### The CLI
+
+The command-line interface has a lot of depth, as you are showed in
+ [notebooks/CLI.ipynb](notebooks/CLI.ipynb), but it is slow, 
+ because the data that gets read in does not stay in RAM.
 
 For running the CLI:
 
-```bash
+```shell script
 export PYTHONPATH="$PWD"
 python ./miner/app.py --help
 ```
 
 ## Contribution
 
-Help is more than welcome. If somebody feel the urge to contribute, I would share my plans with them.
+Help is more than welcome. It is still a long way to go until v1.0.0
 
 Ideas are welcome too. Feel free to open a new issue.

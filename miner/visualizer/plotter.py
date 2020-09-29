@@ -132,12 +132,14 @@ class Plotter:
             "Media",
         )
         self._plot_pie_chart(
-            labels, data,
+            labels,
+            data,
         )
 
     @staticmethod
     def _plot_pie_chart(
-        labels, data,
+        labels,
+        data,
     ):
         fig1, ax1 = plt.subplots()
         ax1.pie(
@@ -159,5 +161,6 @@ class Plotter:
             "Group",
         )
         self._plot_pie_chart(
-            labels, data,
+            labels,
+            data,
         )

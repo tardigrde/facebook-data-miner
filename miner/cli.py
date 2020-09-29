@@ -1,4 +1,5 @@
-# TODO change hashbang
+#!/home/levente/.local/share/virtualenvs/facebook-data-miner--PToUZxx/bin/python
+
 
 import logging
 import traceback
@@ -53,6 +54,7 @@ class CLI:
         output: Union[str, None] = None,
     ) -> str:
         """
+        Conversations.
 
         @param kind: one of private or group,
         depending on which messaging do you want to analyze.
@@ -76,6 +78,7 @@ class CLI:
         **kwargs: Any,
     ) -> Any:
         """
+        Messaging analyzer.
 
         @param kind: one of private or group,
         depending on which messaging do you want to analyze.

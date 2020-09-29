@@ -37,7 +37,8 @@ def conversations():
 
 @pytest.fixture(scope="session")
 def people(
-    friends, conversations,
+    friends,
+    conversations,
 ):
     def _get_people(name=None):
         return People(friends=friends, conversations=conversations)

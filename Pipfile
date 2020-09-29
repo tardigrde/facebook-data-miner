@@ -28,6 +28,7 @@ Morfessor = "==2.0.6"
 PyYAML = "==5.3.1"
 fire = "*"
 pytz = "*"
+pipenv-shebang = "*"
 
 [requires]
 python_version = "3.8"

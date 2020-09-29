@@ -1,6 +1,11 @@
 from miner.message.conversation import Conversation
 
 
+def test_get(conversations):
+    res = conversations.get(kind="private", output="json")
+    assert res
+
+
 def test_if_convos_has_correct_length(conversations):
     assert len(conversations.private) == 4
     assert len(conversations.group) == 3

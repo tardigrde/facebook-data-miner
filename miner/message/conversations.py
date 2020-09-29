@@ -28,6 +28,12 @@ class Conversations:
             dir_lister=self._get_json_paths,
         )
 
+    def __repr__(self):
+        return (
+            f"<Conversations for private{len(self.private)}, "
+            f"group: {len(self.group)}>"
+        )
+
     @property
     def private(self) -> Dict[str, Conversation]:
         return self._private
@@ -51,6 +57,7 @@ class Conversations:
         output: str = "csv",
     ):
         """
+        Conversations.
 
         @param kind: one of private or group,
         depending on which messaging do you want to analyze.

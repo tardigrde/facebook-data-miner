@@ -12,7 +12,10 @@ class TestConversationStatsForGroups:
         assert isinstance(group_stats, ConversationStats)
         assert repr(group_stats) == "ConversationStats for 3 channels"
         assert isinstance(group_stats.messages, pd.DataFrame)
-        assert group_stats.messages.shape == (18, 6,)
+        assert group_stats.messages.shape == (
+            18,
+            6,
+        )
         assert group_stats.number_of_channels == 3
 
     def test_some_stats(self, group_stats):
@@ -51,7 +54,10 @@ class TestConversationStatsForGroups:
         assert filtered.contributors == ["Bugs Bunny"]
         assert filtered.wc == 3
         assert filtered.cc == 18
-        assert filtered.df.shape == (1, 4,)
+        assert filtered.df.shape == (
+            1,
+            4,
+        )
 
     def test_filter_me(self, group_stats):
         filtered = group_stats.filter(senders="me")
@@ -121,7 +127,10 @@ class TestConversationStatsForGroups:
         time_series = group_stats.get_grouped_time_series_data(timeframe="y")
 
         assert isinstance(time_series, pd.DataFrame)
-        assert time_series.shape == (2, 5,)
+        assert time_series.shape == (
+            2,
+            5,
+        )
         assert time_series.index.date[0].year == 2011
         assert time_series.index.date[0].month == 1
         assert time_series.index.date[0].day == 1
