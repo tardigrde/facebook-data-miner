@@ -20,6 +20,6 @@ fixture.diff_ignore = (
 )
 
 
-def test_cli_notebook_output():
+def cli_notebook_output():
     with importlib_resources.path(notebooks, "CLI.ipynb") as path:
         fixture.check(str(path))
