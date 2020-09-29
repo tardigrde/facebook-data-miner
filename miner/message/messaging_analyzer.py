@@ -256,16 +256,16 @@ class MessagingAnalyzer:
                 groups.append(k)
         return list(set(groups))
 
-    def get_stat_count(self, attribute: str = "mc", **kwargs: Any) -> int:
+    def get_stat_count(self, attr: str = "mc", **kwargs: Any) -> int:
         """
 
-        @param attribute: attribute we are interested in.
+        @param attr: attribute we are interested in.
         Can be any of the ConversationStats properties.
         @param kwargs: filtering parameters.
         @return: the statistic one queried for.
         """
         stats = self.stats.filter(**kwargs)
-        return getattr(stats, attribute)
+        return getattr(stats, attr)
 
     def get_ranking_of_people_by_convo_stats(
         self, statistic: str = "mc", top: int = 20

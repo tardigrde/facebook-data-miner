@@ -37,15 +37,26 @@ class TestCommandChainCreator:
 
 
 class TestUtils:
-    def test_ts_to_date_and_dt(self, tz):
-        date = 1598046630000
-        target_tz = pytz.timezone(tz)
-        with_tz = target_tz.localize(utils.ts_to_date(date)).astimezone(
-            pytz.timezone(tz)
-        )
+    def test_ts_to_date(self, tz_name):
+        dt = 1454607689000
+
+        target_tz = pytz.timezone(tz_name)
+
+        with_tz = utils.ts_to_date(dt, target_tz)
 
         expected_date = utils.dt(
-            y=2020, m=8, d=21, h=23, minute=50, second=30, tz=tz
+            y=2016, m=2, d=4, h=17, minute=41, second=29, tz=target_tz
+        )
+        assert expected_date == with_tz
+
+    def test_ts_to_date_and_dt(self, tz_name):
+        date = 1598046630000
+
+        target_tz = pytz.timezone(tz_name)
+        with_tz = utils.ts_to_date(date, target_tz)
+        # Friday, August 21, 2020 9:50:30 PM
+        expected_date = utils.dt(
+            y=2020, m=8, d=21, h=21, minute=50, second=30, tz=target_tz
         )
         assert expected_date == with_tz
 
@@ -141,13 +152,13 @@ class TestDataFrameUtils:
     def test_stack_dfs(self):
         pass
 
-    def test_filter_by_date(self, friends):
+    def test_filter_by_date(self, friends, tz_name):
         df = friends.data
 
         filtered = utils.filter_by_date(
             df,
-            start=utils.dt(y=2020, m=3, d=1),
-            end=utils.dt(y=2020, m=4, d=30),
+            start=utils.dt(y=2020, m=3, d=1, tz=pytz.timezone(tz_name)),
+            end=utils.dt(y=2020, m=4, d=30, tz=pytz.timezone(tz_name)),
         )
         assert len(filtered) == 3
 

@@ -44,9 +44,7 @@ def particip_to_channel_mapping(data):
 
 
 def get_period_map(join_date):
-    const.PERIOD_MAP["y"] = list(
-        range(join_date.year, datetime.now().year + 1)
-    )
+    const.PERIOD_MAP["y"] = list(range(join_date.year, utcnow().year + 1))
     return const.PERIOD_MAP
 
 
@@ -111,11 +109,11 @@ def df_to_file(path, df):
     return f"Data was written to {path}"
 
 
-def ts_to_date(date):
+def ts_to_date(date: int, tz=pytz.timezone("UTC")):
     # Note: not too robust.
     if date > time.time() + const.HUNDRED_YEARS_IN_SECONDS:
         date /= 1000
-    return datetime.fromtimestamp(date)
+    return datetime.fromtimestamp(date, tz=tz)
 
 
 def dt(
@@ -123,21 +121,21 @@ def dt(
     m: int = 1,
     d: int = 1,
     h: int = 0,
-    tz: str = None,
+    tz=pytz.timezone("UTC"),
     **kwargs: Any,
 ):
-    d_t = datetime(year=y, month=m, day=d, hour=h, **kwargs)
-    if tz:
-        target_tz = pytz.timezone(tz)
-        d_t = target_tz.localize(d_t).astimezone(pytz.timezone(tz))
-    return d_t
+    return datetime(year=y, month=m, day=d, hour=h, tzinfo=tz, **kwargs)
+
+
+def utcnow():
+    return pytz.utc.localize(datetime.utcnow())
 
 
 def get_start_based_on_period(join_date, period):
     if period == "y":
-        return datetime(join_date.year, 1, 1)
+        return dt(join_date.year, 1, 1)
     elif period == "m":
-        return datetime(join_date.year, join_date.month, 1)
+        return dt(join_date.year, join_date.month, 1)
     return join_date
 
 
@@ -318,7 +316,7 @@ def filter_empty_cols(df: pd.DataFrame):
 def generate_date_series(join_date, period="y", start=None, end=None):
     dates = []
     start = start or get_start_based_on_period(join_date, period)
-    end = end or datetime.now()
+    end = end or utcnow()
 
     intermediate = start
     while intermediate <= end:  # we want to have the end in it as well

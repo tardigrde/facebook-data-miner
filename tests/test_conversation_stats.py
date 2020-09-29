@@ -213,7 +213,7 @@ class TestConversationStatsForPrivate:
         assert stats.df.index[0].year == 2014
         assert stats.df.index[0].month == 9
         assert stats.df.index[0].day == 24
-        assert stats.df.index[0].hour == 17
+        assert stats.df.index[0].hour == 15
 
     def test_properties(self, priv_stats):
         percentage_of_media_msgs = priv_stats.percentage_of_media_messages
@@ -272,7 +272,7 @@ class TestConversationStatsForPrivate:
         assert len(grouped) == 9
 
         grouped = panalyzer._stats.get_grouped_time_series_data(timeframe="d")
-        assert len(grouped) == 16
+        assert len(grouped) == 17
 
         grouped = panalyzer._stats.get_grouped_time_series_data(timeframe="h")
         assert len(grouped) == 24
@@ -291,7 +291,7 @@ class TestConversationStatsForPrivate:
         assert len(grouped) == 5
 
         grouped = stats.get_grouped_time_series_data("d")
-        assert len(grouped) == 9
+        assert len(grouped) == 10
 
         grouped = stats.get_grouped_time_series_data("h")
         assert len(grouped) == 14
@@ -331,8 +331,8 @@ class TestConversationStatsForPrivate:
 
         daily = panalyzer._stats.stats_per_timeframe("d", "mc")
         assert daily == {
-            "monday": 6,
-            "tuesday": 2,
+            "monday": 7,
+            "tuesday": 1,
             "wednesday": 6,
             "thursday": 3,
             "friday": 6,
@@ -344,28 +344,28 @@ class TestConversationStatsForPrivate:
         assert hourly == {
             0: 1,
             1: 1,
-            2: 1,
-            3: 0,
-            4: 1,
-            5: 0,
-            6: 2,
-            7: 0,
+            2: 0,
+            3: 1,
+            4: 0,
+            5: 2,
+            6: 0,
+            7: 1,
             8: 1,
-            9: 1,
-            10: 0,
-            11: 1,
-            12: 7,
-            13: 1,
-            14: 0,
-            15: 1,
-            16: 1,
+            9: 0,
+            10: 2,
+            11: 6,
+            12: 1,
+            13: 0,
+            14: 1,
+            15: 2,
+            16: 0,
             17: 1,
-            18: 1,
-            19: 1,
-            20: 4,
-            21: 0,
+            18: 3,
+            19: 2,
+            20: 0,
+            21: 3,
             22: 2,
-            23: 3,
+            23: 1,
         }
 
     def test_stats_per_period_ifiltered_for_foo_bar(self, panalyzer):
@@ -404,8 +404,8 @@ class TestConversationStatsForPrivate:
 
         daily = stats.stats_per_timeframe("d", "mc")
         assert daily == {
-            "monday": 1,
-            "tuesday": 2,
+            "monday": 2,
+            "tuesday": 1,
             "wednesday": 1,
             "thursday": 3,
             "friday": 5,
@@ -415,27 +415,27 @@ class TestConversationStatsForPrivate:
         hourly = stats.stats_per_timeframe("h", "mc")
         assert hourly == {
             0: 1,
-            1: 1,
+            1: 0,
             2: 0,
-            3: 0,
-            4: 1,
-            5: 0,
-            6: 2,
-            7: 0,
-            8: 1,
+            3: 1,
+            4: 0,
+            5: 2,
+            6: 0,
+            7: 1,
+            8: 0,
             9: 0,
-            10: 0,
+            10: 2,
             11: 1,
-            12: 2,
-            13: 1,
-            14: 0,
-            15: 1,
+            12: 1,
+            13: 0,
+            14: 1,
+            15: 0,
             16: 0,
-            17: 0,
-            18: 1,
+            17: 1,
+            18: 2,
             19: 0,
-            20: 2,
-            21: 0,
+            20: 0,
+            21: 1,
             22: 0,
             23: 1,
         }

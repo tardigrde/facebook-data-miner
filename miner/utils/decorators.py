@@ -1,6 +1,8 @@
 import os
 from datetime import datetime
-from typing import Any
+from typing import Any, Union
+
+import pytz
 
 from miner.utils import const, utils
 
@@ -103,21 +105,25 @@ def attribute_checker(func):
     return wrapper
 
 
+def read_and_localize(date: Union[str, None, datetime]):
+    if date is None:
+        return None
+    if date and isinstance(date, str):
+        date = datetime.strptime(date, const.DATE_FORMAT)
+    if date.tzinfo is not None and date.tzinfo.utcoffset(date) is not None:
+        return date
+    return pytz.timezone("UTC").localize(date)
+
+
 def start_end_period_checker(func):
     def wrapper(*args, **kwargs: Any):
         if kwargs.get("start") is None and kwargs.get("end") is None:
             kwargs["start"] = const.FACEBOOK_FOUNDATION_DATE
-            kwargs["end"] = datetime.now()
+            kwargs["end"] = utils.utcnow()
             return func(*args, **kwargs)
 
-        if kwargs.get("start") and isinstance(kwargs.get("start"), str):
-            kwargs["start"] = datetime.strptime(
-                kwargs.get("start"), const.DATE_FORMAT
-            )
-        if kwargs.get("end") and isinstance(kwargs.get("end"), str):
-            kwargs["end"] = datetime.strptime(
-                kwargs.get("end"), const.DATE_FORMAT
-            )
+        kwargs["start"] = read_and_localize(kwargs.get("start"))
+        kwargs["end"] = read_and_localize(kwargs.get("end"))
 
         if kwargs.get("period"):
             if const.DELTA_MAP[kwargs.get("period")] is None:

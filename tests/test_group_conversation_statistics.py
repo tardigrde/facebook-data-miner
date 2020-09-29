@@ -25,7 +25,7 @@ class TestGroupStatisticsWithFiltering:
         filtered_stats_me = group_stats.filter(senders="me")
         assert filtered_stats_me.mc == 0
 
-        filtered_stats_from_2011_07_17_15h = group_stats.filter(
-            start=dt(y=2011, m=7, d=17, h=15, minute=0, second=30), period="y"
+        filtered_stats_from_2011_07_17_13h = group_stats.filter(
+            start=dt(y=2011, m=7, d=17, h=13, minute=0, second=30), period="y"
         )
-        assert filtered_stats_from_2011_07_17_15h.mc == 3
+        assert filtered_stats_from_2011_07_17_13h.mc == 3

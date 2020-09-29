@@ -13,8 +13,8 @@ TEST_DATA_PATH = f"{os.path.dirname(os.path.realpath(__file__))}/test_data"
 
 
 @pytest.fixture(scope="session")
-def tz():
-    return "CET"
+def tz_name():
+    return "UTC"
 
 
 @pytest.fixture(scope="session")

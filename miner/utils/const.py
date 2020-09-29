@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
 
+import pytz
 from dateutil.relativedelta import relativedelta
 
 # https://en.wikipedia.org/wiki/ISO_8601
 DATE_FORMAT = "%Y-%m-%d"
 HUNDRED_YEARS_IN_SECONDS = 100 * 365 * 24 * 60 * 60
-FACEBOOK_FOUNDATION_DATE = datetime(year=2004, month=2, day=4)
+FACEBOOK_FOUNDATION_DATE = datetime(year=2004, month=2, day=4, tzinfo=pytz.UTC)
 
 MESSAGE_SUBPATH = "messages/inbox"
 MEDIA_DIRS = ["photos", "gifs", "files", "videos", "audio_files"]

@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Any, Union
 
+import pytz
+
 from miner.utils import utils
 
 
@@ -29,7 +31,7 @@ class ProfileInformation:
         """
 
         return utils.ts_to_date(
-            self.data.get("profile").get("registration_timestamp")
+            self.data.get("profile").get("registration_timestamp"), tz=pytz.UTC
         )
 
     def _read(self) -> Any:
