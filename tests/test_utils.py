@@ -1,88 +1,177 @@
-import unittest
-from miner.utils import *
-from pathlib import Path
-import reusables
-from reusables.cli import *
-from datetime import datetime
+import json
+import os
+import tempfile
 
 import pytest
+import pytz
+from helpers import lower_string, add_string, split_string, tempfile_tree
+
+from miner.utils import utils, command
 
 
-# class TestUtils(unittest.TestCase):
-#     def setUp(self):
-#         self.test_data_path = Path(f'{pwd()}/test_data')
-#
-#     def test_read_json(self):
-#         dummy1 = {'0': 'a', '2': 'c'}
-#         dummy1_path = Path(self.test_data_path / 'dummy1.json')
-#         dump_to_json(file=dummy1_path, data=dummy1)
-#
-#         dummy2 = {'1': 'b', '3': 'd'}
-#         dummy2_path = Path(self.test_data_path / 'dummy2.json')
-#         dump_to_json(file=dummy2_path, data=dummy2)
-#
-#         dummy_unified = get_messages(dummy1_path, dummy2_path)
-#         expected = {'0': 'a', '1': 'b', '2': 'c', '3': 'd'}
-#
-#         self.assertDictEqual(expected, dummy_unified)
-#
-#         dummy1_path.unlink()
-#         dummy2_path.unlink()
-#
-#     def test_decode_text(self):
-#         dummy = {'0': '\u00c5\u0091', '1': '\u00c3\u00a1', '2': ['\u00c5\u0091', {'0': '\u00c3\u00a1'}],
-#                  '3': {'0': '\u00c5\u0091'}}
-#         dummy_path = Path(self.test_data_path / 'dummy.json')
-#         dump_to_json(file=dummy_path, data=dummy)
-#         read = get_messages(dummy_path, decode=True)
-#         expected = {'0': 'ő', '1': 'á', '2': ['ő', {'0': 'á'}],
-#                     '3': {'0': 'ő'}}
-#         self.assertEqual(expected, read)
-#
-#         dummy_path.unlink()
-#
-#     def later_tests(self):
-#         data = {'participants': [{'name': 'Csőke Boglárka'}, {'name': 'Levente Csőke'}],
-#                 'title': 'Csőke Boglárka',
-#                 'is_still_participant': True,
-#                 'thread_type': 'Regular',
-#                 'thread_path': 'inbox/CsokeBoglarka_5A48Zi9P1w',
-#                 'messages': [...]}
-#         msg_element = {'sender_name': 'Levente Csőke',
-#                        'timestamp_ms': 1440948801592,
-#                        'content': 'ahaa',
-#                        'type': 'Generic'}
-#
-#     def test_read_real_data(self):
-#         bogi_msg = Path('/home/levente/projects/facebook-data-miner/data/messages/inbox/csokeboglarka_5a48zi9p1w')
-#         data = get_messages(bogi_msg/'message_1.json', bogi_msg/'message_2.json')
-#         msg = data['messages']
-#
-#
-# decode_text('Minden jot Levii \u00e2\u009d\u00a4\u00ef\u00b8\u008f')
-# decode_text('Hat \u00f0\u009f\u008e\u00a9\u00f0\u009f\u00a4\u0094')
-# decode_text('\u00f0\u009f\u0098\u00a1\u00f0\u009f\u0098\u00a1\u00f0\u009f\u0098\u00a1')
+@pytest.fixture(scope="session")
+def tempfiles():
+    return tempfile_tree()
 
 
-def test_generate_date_series():
-    # TODO resolve
-    start = datetime(2020, 1, 1, 0, 0)
-    end = datetime(2021, 1, 1, 0, 0)
+@pytest.fixture(scope="module")
+def command_chain():
+    ccc = command.CommandChainCreator()
+    ccc.register_command(utils.decode_data, utils.utf8_decoder)
+    ccc.register_command(lower_string)
+    ccc.register_command(add_string, addition="abc")
+    ccc.register_command(utils.replace_accents)
+    ccc.register_command(split_string)
 
-    date_range_year = generate_date_series(period='y', start=start, end=end)
-    assert len(date_range_year) == 1 + 1
+    return ccc
 
-    date_range_month = generate_date_series(period='m', start=start, end=end)
-    assert len(date_range_month) == 12 + 1
 
-    date_range_day = generate_date_series(period='d', start=start, end=end)
-    assert len(date_range_day) == 366 + 1
+class TestCommandChainCreator:
+    def test_register_commands(self, command_chain):
+        command_chain("test")
+        assert len(command_chain.commands) == 5
 
-    date_range_hour = generate_date_series(period='h', start=start, end=end)
-    assert len(date_range_hour) == (366 * 24) + 1
+    def test_commands_applied(self, command_chain):
+        res = command_chain("T\u00c5\u0091ke Hal")
+        assert res == ["toke", "halabc"]
 
-    for day in date_range_day:
-        assert isinstance(day, datetime)
 
-    with pytest.raises(ValueError):
-        faulty_date_range = generate_date_series(start=start, end=end, )
+class TestUtils:
+    def test_ts_to_date(self, tz_name):
+        dt = 1454607689000
+
+        target_tz = pytz.timezone(tz_name)
+
+        with_tz = utils.ts_to_date(dt, target_tz)
+
+        expected_date = utils.dt(
+            y=2016, m=2, d=4, h=17, minute=41, second=29, tz=target_tz
+        )
+        assert expected_date == with_tz
+
+    def test_ts_to_date_and_dt(self, tz_name):
+        date = 1598046630000
+
+        target_tz = pytz.timezone(tz_name)
+        with_tz = utils.ts_to_date(date, target_tz)
+        # Friday, August 21, 2020 9:50:30 PM
+        expected_date = utils.dt(
+            y=2020, m=8, d=21, h=21, minute=50, second=30, tz=target_tz
+        )
+        assert expected_date == with_tz
+
+    def test_walk_directory_and_search_jsons(self, tempfiles):
+        jsons_found = utils.walk_directory_and_search(
+            "/tmp", utils.get_all_jsons, ".json", ""
+        )
+        assert len(tempfiles) == 5
+
+        assert len(list(set(tempfiles) & set(jsons_found))) == 5
+
+    def test_walk_directory_and_search_dirs_that_contain_(self):
+        parent = utils.walk_directory_and_search(
+            "/tmp",
+            utils.get_parent_directory_of_file_with_extension,
+            ".json",
+            "",
+        )
+        assert "/tmp" in list(parent)
+
+    def test_fill_dict_and_sort_dict(self):
+        unsorted = {}
+        unsorted = utils.fill_dict(unsorted, "b", 3)
+        unsorted = utils.fill_dict(unsorted, "a", 2)
+        unsorted = utils.fill_dict(unsorted, "c", 4)
+        unsorted = utils.fill_dict(unsorted, "a", 3)
+        assert unsorted == {"b": 3, "a": 5, "c": 4}
+        sorted_desc = utils.sort_dict(
+            unsorted, func=lambda item: item[1], reverse=False
+        )
+        assert sorted_desc == {"b": 3, "c": 4, "a": 5}
+        sorted_asc = utils.sort_dict(
+            sorted_desc, func=lambda item: item[1], reverse=True
+        )
+        assert sorted_asc == {"a": 5, "c": 4, "b": 3}
+
+    def test_unzip(self):
+        f = tempfile.NamedTemporaryFile()
+        path = utils.unzip(f.name)
+        assert path == f.name
+
+        # Won't test ZipFile code
+
+    def test_basedir_exists(self):
+        res = utils.basedir_exists(os.path.realpath(__file__))
+        assert res
+
+        res = utils.basedir_exists("/home/whatever/a/gibberish")
+        assert not res
+
+    def test_df_to_file(self, sample_df):
+        path = f"{os.path.dirname(os.path.realpath(__file__))}/test.csv"
+
+        res = utils.df_to_file(path, sample_df)
+        assert res == f"Data was written to {path}"
+        os.unlink(path)
+
+        path = f"{os.path.dirname(os.path.realpath(__file__))}/test.json"
+        res = utils.df_to_file(path, sample_df)
+        assert res == f"Data was written to {path}"
+        os.unlink(path)
+
+        path = "csv"
+        res = utils.df_to_file(path, sample_df)
+        assert isinstance(res, str)
+
+        path = "json"
+        res = utils.df_to_file(path, sample_df)
+        assert isinstance(res, str)
+        assert isinstance(json.loads(res), dict)
+
+        res = utils.df_to_file("/home/whatever/a/gibberish", sample_df)
+        assert res == "Directory does not exist: `/home/whatever/a`"
+
+    def test_get_start_based_on_period(self):
+        res = utils.get_start_based_on_period(utils.dt(2014, 2, 2), "y")
+        assert res == utils.dt(2014, 1, 1)
+
+        res = utils.get_start_based_on_period(utils.dt(2014, 2, 2), "m")
+        assert res == utils.dt(2014, 2, 1)
+
+    def test_remove_items_where_value_is_falsible(self):
+        res = utils.remove_items_where_value_is_falsible({1: 0, 2: 1, 3: 2})
+        assert res == {2: 1, 3: 2}
+
+    def test_generate_date_series(self):
+        res = utils.generate_date_series(utils.dt(2010, 10, 10))
+        expected = [utils.dt(i, 2, 4) for i in range(2004, 2021)]
+        assert res == expected
+
+
+class TestDataFrameUtils:
+    def test_stack_dfs(self):
+        pass
+
+    def test_filter_by_date(self, friends, tz_name):
+        df = friends.data
+
+        filtered = utils.filter_by_date(
+            df,
+            start=utils.dt(y=2020, m=3, d=1, tz=pytz.timezone(tz_name)),
+            end=utils.dt(y=2020, m=4, d=30, tz=pytz.timezone(tz_name)),
+        )
+        assert len(filtered) == 3
+
+        filtered = utils.filter_by_date(
+            df, start="2020-03-01", end="2020-04-30"
+        )
+        assert len(filtered) == 3
+
+    def test_df_to_str(self, sample_df):
+        res = utils.df_to_str("csv", sample_df)
+        assert isinstance(res, str)
+        assert ",num_legs,num_wings" in res
+
+        res = utils.df_to_str("json", sample_df)
+        assert isinstance(res, str)
+        assert isinstance(json.loads(res), dict)

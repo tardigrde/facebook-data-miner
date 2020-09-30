@@ -4,18 +4,18 @@
       "name": "T\u00c5\u0091ke Hal"
     },
     {
-      "name": "Levente Cs\u00c5\u0091ke"
+      "name": "Jen\u00c5\u0091 Rejt\u00c5\u0091"
     }
   ],
   "messages": [
     {
-      "sender_name": "Levente CsÅ\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1417619245145,
       "content": "not",
       "type": "Generic"
     },
     {
-      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1415619045145,
       "content": "not much",
       "type": "Generic"
@@ -33,7 +33,7 @@
       "type": "Generic"
     },
     {
-      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1415571228715,
       "content": "yo",
       "type": "Generic"

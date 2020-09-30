@@ -1,0 +1,28 @@
+{
+  "participants": [
+    {
+      "name": "T\u00c5\u0091ke Hal"
+    },
+    {
+      "name": "Jen\u00c5\u0091 Rejt\u00c5\u0091"
+    }
+  ],
+  "messages": [
+    {
+      "sender_name": "T\u00c5\u0091ke Hal",
+      "timestamp_ms": 1415560406047,
+      "content": "testing multiple files",
+      "type": "Generic"
+    },
+    {
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
+      "timestamp_ms": 1415559406047,
+      "content": "older stuff",
+      "type": "Generic"
+    }
+  ],
+  "title": "T\u00c5\u0091ke Hal",
+  "is_still_participant": true,
+  "thread_type": "Regular",
+  "thread_path": "inbox/tokehal_sdf7fs9d876"
+}

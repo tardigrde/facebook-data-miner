@@ -4,12 +4,12 @@
       "name": "Benedek Elek"
     },
     {
-      "name": "Levente Cs\u00c5\u0091ke"
+      "name": "Jen\u00c5\u0091 Rejt\u00c5\u0091"
     }
   ],
   "messages": [
     {
-      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1515619045145,
       "content": "not much",
       "type": "Generic"
@@ -21,7 +21,7 @@
       "type": "Generic"
     },
     {
-      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1515571228715,
       "content": "yo Legyen az, hogy most megprobalok ekezet nelkul irni. Seems pretty easy. I need some english words in here. Right? A magyar szavak felismereset probalom tesztelni ezzekkel a mondatokkal.",
       "type": "Generic"

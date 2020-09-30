@@ -1,0 +1,6 @@
+logging:
+    - level: ERROR
+general:
+  DATA_PATH: '/github/workspace/tests/test_data'
+  date-format: "%Y-%m-%d"
+

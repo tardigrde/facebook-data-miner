@@ -1,15 +1,15 @@
 {
   "participants": [
     {
-      "name": "Teflon Musk"
+      "name": "Bugs Bunny"
     },
     {
-      "name": "Levente Cs\u00c5\u0091ke"
+      "name": "Jen\u00c5\u0091 Rejt\u00c5\u0091"
     }
   ],
   "messages": [
     {
-      "sender_name": "Teflon Musk",
+      "sender_name": "Bugs Bunny",
       "timestamp_ms": 1419620506047,
       "files": [
         {
@@ -19,7 +19,7 @@
       "type": "Generic"
     },
     {
-      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1416619045145,
       "photos": [
         {
@@ -29,31 +29,31 @@
       "type": "Generic"
     },
     {
-      "sender_name": "Teflon Musk",
+      "sender_name": "Bugs Bunny",
       "timestamp_ms": 1415618806047,
       "content": "no",
       "type": "Generic"
     },
     {
-      "sender_name": "Teflon Musk",
+      "sender_name": "Bugs Bunny",
       "timestamp_ms": 1415618506047,
       "content": "no",
       "type": "Generic"
     },
     {
-      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1415571228715,
-      "content": "are you the real teflon musk?",
+      "content": "are you the real Bugs Bunny?",
       "type": "Generic"
     },
     {
-      "sender_name": "Levente Cs\u00c5\u0091ke",
+      "sender_name": "Jen\u00c5\u0091 Rejt\u00c5\u0091",
       "timestamp_ms": 1411570928715,
-      "content": "are you the real teflon musk?",
+      "content": "are you the real Bugs Bunny?",
       "type": "Generic"
     }
   ],
-  "title": "Teflon Musk",
+  "title": "Bugs Bunny",
   "is_still_participant": true,
   "thread_type": "Regular",
   "thread_path": "inbox/teflonmusk_fsd454f"
