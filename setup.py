@@ -4,7 +4,7 @@ from setuptools import setup
 def setup_package() -> None:
     setup(
         name="facebook-data-miner",
-        version="0.0.4",
+        version="0.1.0",
         author="Levente Csőke",
         author_email="leventec3@gmail.com",
         url="https://github.com/tardigrde/facebook-data-miner",
@@ -13,11 +13,9 @@ def setup_package() -> None:
         license="GPL-3.0",
         keywords="facebook-data,facebook-data-miner,facebook-data-analyzer",
         classifiers=[
-            "Development Status :: 3 - Alpha",
             "Intended Audience :: Developers",
             "License :: OSI Approved :: GPL-3.0 License",
             "Operating System :: OS Independent",
-            "Programming Language :: Python :: 3",
             "Programming Language :: Python :: 3.8",
             "Topic :: Software Development :: Libraries :: Python Modules",
         ],

@@ -36,7 +36,7 @@ time being you request your data. This change can of course be reverted later.
 You will only need the zip file's absolute path later to use this software.
 
 You have to change the `DATA_PATH` variable in the 
-[configuration.yml](configuration.yml).
+[configuration.yml](configuration.yml) file.
 
 NOTE: `facebook-data-miner` will extract your zip file in the same directory. 
 For this you may need several GBs of free space depending on the volume of the 
@@ -62,14 +62,33 @@ This project uses `pipenv` for dependency and virtual environment management.
 Install it by typing:
 ```shell script
 pip install --user pipenv
-```
+
+``` 
 
 In the project root (where [Pipfile](Pipfile) is) run:
 
 ```shell script
-pipenv install
+pipenv install --dev
 ```
 
+Make sure you run the application in this environment.
+
+### Lint
+
+With the makefile:
+
+``` shell_script
+make lint
+```
+
+### Run tests
+
+With the makefile:
+
+``` shell_script
+
+make test
+```
 Make sure you run the application in this environment.
 
 ## Usage

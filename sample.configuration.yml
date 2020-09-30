@@ -1,6 +1,0 @@
-logging:
-    - level: ERROR
-general:
-  DATA_PATH: ''
-  date-format: "%Y-%m-%d"
-
