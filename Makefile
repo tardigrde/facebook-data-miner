@@ -12,4 +12,5 @@ lint-test:
 test: lint-test
 	coverage run
 	coverage report
+	coverage xml
 
