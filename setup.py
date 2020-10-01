@@ -14,10 +14,11 @@ def setup_package() -> None:
         keywords="facebook-data,facebook-data-miner,facebook-data-analyzer",
         classifiers=[
             "Intended Audience :: Developers",
-            "License :: OSI Approved :: GPL-3.0 License",
+            "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
             "Operating System :: OS Independent",
             "Programming Language :: Python :: 3.8",
             "Topic :: Software Development :: Libraries :: Python Modules",
+            "Development Status :: 3 - Alpha",
         ],
         packages=["miner"],
     )
