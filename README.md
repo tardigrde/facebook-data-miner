@@ -1,6 +1,7 @@
 # Facebook Data Miner
 
-[![BCH compliance](https://bettercodehub.com/edge/badge/tardigrde/facebook-data-miner?branch=master)](https://bettercodehub.com/)
+
+[![BCH compliance](https://bettercodehub.com/edge/badge/tardigrde/facebook-data-miner?branch=master)](https://bettercodehub.com/)[![codecov](https://codecov.io/gh/tardigrde/facebook-data-miner/branch/master/graph/badge.svg?token=T7SCR6RXG3)](undefined)
 
 Facebook-Data-Miner provides a set of tools that can help you analyze the data 
 that Facebook has on you.
