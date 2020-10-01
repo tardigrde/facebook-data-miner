@@ -7,12 +7,7 @@ from miner.message.conversations import Conversations
 from miner.message.messaging_analyzer import MessagingAnalyzerManager
 from miner.people import People
 from miner.profile_information import ProfileInformation
-from miner.utils import utils
-
-# DATA_PATH = f"{os.path.dirname(os.path.dirname(__file__))}/data"
-
-
-DATA_PATH = f"{os.path.dirname(os.path.dirname(__file__))}/tests/test_data"
+from miner.utils import const, utils
 
 
 class App:
@@ -23,8 +18,10 @@ class App:
     def __init__(self, path: Union[str, None] = None):
         if not path:
             config = utils.read_yaml(
-                f"{os.path.dirname(os.path.dirname(__file__))}"
-                f"/configuration.yml"
+                os.path.join(
+                    f"{os.path.dirname(os.path.dirname(__file__))}",
+                    "configuration.yml",
+                )
             )
             path = config.get("general").get("DATA_PATH")
 
@@ -65,7 +62,7 @@ class App:
         return ProfileInformation(self._path)
 
     def _get_friends(self) -> Friends:
-        return Friends(f"{self._path}/friends/friends.json")
+        return Friends(os.path.join(f"{self._path}", *const.FRIENDS_PATH))
 
     def _get_conversations(self) -> Conversations:
         return Conversations(self._path)

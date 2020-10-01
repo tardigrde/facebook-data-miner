@@ -60,6 +60,7 @@ class TestUtils:
         )
         assert expected_date == with_tz
 
+    # THIS DOES NOT WORK ON WINDOWS
     def test_walk_directory_and_search_jsons(self, tempfiles):
         jsons_found = utils.walk_directory_and_search(
             "/tmp", utils.get_all_jsons, ".json", ""
@@ -108,13 +109,15 @@ class TestUtils:
         assert not res
 
     def test_df_to_file(self, sample_df):
-        path = f"{os.path.dirname(os.path.realpath(__file__))}/test.csv"
+        path = f"{os.path.dirname(os.path.realpath(__file__))}{os.sep}test.csv"
 
         res = utils.df_to_file(path, sample_df)
         assert res == f"Data was written to {path}"
         os.unlink(path)
 
-        path = f"{os.path.dirname(os.path.realpath(__file__))}/test.json"
+        path = (
+            f"{os.path.dirname(os.path.realpath(__file__))}{os.sep}test.json"
+        )
         res = utils.df_to_file(path, sample_df)
         assert res == f"Data was written to {path}"
         os.unlink(path)

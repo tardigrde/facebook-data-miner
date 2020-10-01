@@ -8,8 +8,6 @@ DATE_FORMAT = "%Y-%m-%d"
 HUNDRED_YEARS_IN_SECONDS = 100 * 365 * 24 * 60 * 60
 FACEBOOK_FOUNDATION_DATE = datetime(year=2004, month=2, day=4, tzinfo=pytz.UTC)
 
-MESSAGE_SUBPATH = "messages/inbox"
-MEDIA_DIRS = ["photos", "gifs", "files", "videos", "audio_files"]
 
 MONTHS = [
     "january",
@@ -34,6 +32,12 @@ WEEKDAYS = [
     "saturday",
     "sunday",
 ]
+HUMAN_READABLE_PERIODS = {
+    "y": "Yearly",
+    "m": "Monthly",
+    "d": "Daily",
+    "h": "Hourly",
+}
 PERIOD_MAP = {
     "y": None,
     "m": MONTHS,
@@ -67,9 +71,7 @@ STAT_MAP = {
     "cc": "Character",
 }
 
-HUMAN_READABLE_PERIODS = {
-    "y": "Yearly",
-    "m": "Monthly",
-    "d": "Daily",
-    "h": "Hourly",
-}
+PROFILE_INFORMATION_PATH = ["profile_information", "profile_information.json"]
+MESSAGES_SUBPATH = ["messages", "inbox"]
+FRIENDS_PATH = ["friends", "friends.json"]
+MEDIA_DIRS = ["photos", "gifs", "files", "videos", "audio_files"]

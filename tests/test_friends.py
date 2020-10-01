@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+import os
 
 
 # NOTE we don't know yet what happens when two friends have same name...
@@ -43,7 +44,7 @@ def test_metadata_len(friends):
 
 
 def test_metadata_path(friends):
-    assert "friends/friends.json" in friends.metadata.path
+    assert f"friends{os.sep}friends.json" in friends.metadata.path
 
 
 def test_has_preprocessors(friends):

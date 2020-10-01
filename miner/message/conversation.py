@@ -73,10 +73,10 @@ class Conversation(FacebookData):
 
     @staticmethod
     def _get_dirname(dirname: str) -> str:
-        if "inbox/" in dirname:
-            return dirname.split("inbox/")[1]
-        elif "archived_threads/" in dirname:
-            return dirname.split("archived_threads/")[1]
+        if f"inbox{os.sep}" in dirname:
+            return dirname.split(f"inbox{os.sep}")[1]
+        elif f"archived_threads{os.sep}" in dirname:
+            return dirname.split(f"archived_threads{os.sep}")[1]
         else:
             logging.warning(
                 "WARNING! Missing thread_path for messages or media."

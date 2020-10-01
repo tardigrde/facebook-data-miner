@@ -1,4 +1,4 @@
-#!/home/levente/.local/share/virtualenvs/facebook-data-miner--PToUZxx/bin/python
+#!/usr/bin/env python
 
 
 import logging

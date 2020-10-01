@@ -1,9 +1,10 @@
+import os
 from datetime import datetime
 from typing import Any, Union
 
 import pytz
 
-from miner.utils import utils
+from miner.utils import const, utils
 
 
 class ProfileInformation:
@@ -12,7 +13,7 @@ class ProfileInformation:
     """
 
     def __init__(self, path: str):
-        self.path = path + "/profile_information/profile_information.json"
+        self.path = os.path.join(path, *const.PROFILE_INFORMATION_PATH)
         self.data: Any = self._read()
 
     @property

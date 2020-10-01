@@ -8,42 +8,42 @@ from miner.friends import Friends
 from miner.message.conversations import Conversations
 from miner.message.messaging_analyzer import MessagingAnalyzerManager
 from miner.people import People
+from miner.utils import const
 
-TEST_DATA_PATH = f"{os.path.dirname(os.path.realpath(__file__))}/test_data"
+TEST_DATA_PATH = (
+    f"{os.path.dirname(os.path.realpath(__file__))}" f"{os.sep}test_data"
+)
 
 
 @pytest.fixture(scope="session")
-def tz_name():
-    return "UTC"
+def DATA_PATH():
+    return TEST_DATA_PATH
 
 
 @pytest.fixture(scope="session")
 def app():
-    return App()
+    return App(path=TEST_DATA_PATH)
 
 
 @pytest.fixture(scope="session")
 def friends():
-    return Friends(path=f"{TEST_DATA_PATH}/friends/friends.json")
+    return Friends(path=os.path.join(TEST_DATA_PATH, *const.FRIENDS_PATH))
 
 
 @pytest.fixture(scope="session")
 def conversations():
     yield Conversations(f"{TEST_DATA_PATH}")
     # tear-down
-    os.remove(f"{TEST_DATA_PATH}/messages/inbox/private_messages.json")
-    os.remove(f"{TEST_DATA_PATH}/messages/inbox/group_messages.json")
-
-
-@pytest.fixture(scope="session")
-def people(
-    friends,
-    conversations,
-):
-    def _get_people(name=None):
-        return People(friends=friends, conversations=conversations)
-
-    return _get_people()
+    os.remove(
+        os.path.join(
+            TEST_DATA_PATH, *const.MESSAGES_SUBPATH, "private_messages.json"
+        )
+    )
+    os.remove(
+        os.path.join(
+            TEST_DATA_PATH, *const.MESSAGES_SUBPATH, "group_messages.json"
+        )
+    )
 
 
 @pytest.fixture(scope="session")
@@ -72,7 +72,23 @@ def group_stats(ganalyzer):
 
 
 @pytest.fixture(scope="session")
+def people(
+    friends,
+    conversations,
+):
+    def _get_people(name=None):
+        return People(friends=friends, conversations=conversations)
+
+    return _get_people()
+
+
+@pytest.fixture(scope="session")
 def sample_df():
     return pd.DataFrame(
         {"num_legs": [2, 4], "num_wings": [2, 0]}, index=["falcon", "dog"]
     )
+
+
+@pytest.fixture(scope="session")
+def tz_name():
+    return "UTC"
