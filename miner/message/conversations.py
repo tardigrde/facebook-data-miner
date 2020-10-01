@@ -145,8 +145,6 @@ class ConversationPathFactory:
 
 
 class ConversationsPaths:
-    sub_path: str = "messages/inbox"
-
     def __init__(self, path: str, ctype: str) -> None:
         if ctype not in ("private", "group"):
             raise ValueError("Only `private` and `group` are supported.")
@@ -154,8 +152,11 @@ class ConversationsPaths:
         self.thread_type: str = const.MESSAGE_TYPE_MAP.get(self.ctype)
         self.data_path: str = path
 
-        self.paths_json: str = (
-            f"{self.data_path}/{self.sub_path}/{self.ctype}_messages.json"
+        # a cachefile will be written here
+        self.paths_json: str = os.path.join(
+            self.data_path,
+            *const.MESSAGES_SUBPATH,
+            f"{self.ctype}_messages.json",
         )
 
         self._directories: List[str] = []
@@ -173,7 +174,7 @@ class ConversationsPaths:
         directories = self.get_message_dirs(self.data_path)
         for directory in directories:
             convo = Conversation(
-                path=f"{directory}/message_1.json", processors=[]
+                path=f"{directory}{os.sep}message_1.json", processors=[]
             )  # NOTE we don't want to process it
             if convo.data.get("thread_type") == self.thread_type:
                 self._directories.append(directory)

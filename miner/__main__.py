@@ -1,13 +1,10 @@
 import logging
-import os
 import traceback
 
 from fire import Fire
 
 from miner.app import App
 from miner.cli import CLI
-
-DATA_PATH = f"{os.getcwd()}/tests/test_data"
 
 if __name__ == "__main__":
     try:

@@ -71,10 +71,13 @@ def test_some_as_media_dir(people):
     assert not people.data.get("Benedek Elek").media_dir
 
 
-def test_media_has_one_folder_of_possibles(people):
+def test_media_has_one_folder_of_possibles(people, DATA_PATH):
     listed_dir = os.listdir(
-        f"{os.getcwd()}/tests/test_data/{const.MESSAGE_SUBPATH}/"
-        f"{people.data.get('Bugs Bunny').media_dir}"
+        os.path.join(
+            DATA_PATH,
+            *const.MESSAGES_SUBPATH,
+            people.data.get("Bugs Bunny").media_dir,
+        )
     )
     assert "files" in listed_dir
     assert "photos" in listed_dir
